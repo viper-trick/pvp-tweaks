@@ -38,25 +38,62 @@ public class SoundRedirectMixin {
             if      (ExplosionTracker.isNearCrystal(x, y, z)) profile = cfg.soundCrystal;
             else if (ExplosionTracker.isNearAnchor(x, y, z))  profile = cfg.soundAnchor;
             else                                                profile = cfg.soundExplosion;
-        } else if (path.contains("totem"))                         profile = cfg.soundTotem;
-        else if (path.contains("hurt") || path.contains("damage")) profile = cfg.soundHit;
+        } else if (path.contains("totem"))                          profile = cfg.soundTotem;
+        else if (path.contains("hurt") || path.contains("damage"))  profile = cfg.soundHit;
         else if (path.contains("shield") && path.contains("break")) profile = cfg.soundShieldBreak;
 
         if (profile == null || profile.isDefault()) return;
+
+        // Custom mode: absolute file path
+        if (profile.isCustom()) {
+            if (profile.customPath == null || profile.customPath.isBlank()) return;
+            Identifier customId =
+                com.pvptweaks.sound.CustomSoundManager.registerCustomSound(profile.customPath);
+            if (customId == null) return;
+            WeightedSoundSet customSet = manager.get(customId);
+            if (customSet == null) {
+                PvpTweaksMod.LOGGER.warn("[PVP Tweaks] custom not in registry, reload scheduled: {}", customId);
+                return;
+            }
+            Sound s = customSet.getSound(net.minecraft.util.math.random.Random.create());
+            if (s != null) this.sound = s;
+            PvpTweaksMod.LOGGER.info("[PVP Tweaks] custom played: {} -> {}", path, customId);
+            cir.setReturnValue(customSet);
+            return;
+        }
+
+        // Preset mode
         if (!profile.isPreset() || profile.presetId.isBlank()) return;
 
-        Identifier newId = Identifier.tryParse(profile.presetId);
-        if (newId == null) return;
+        // FIX: vanilla MC sounds are stored without namespace (legacy data).
+        // "entity.firework_rocket.blast" → Identifier.tryParse() = null → silent skip
+        String rawId = profile.presetId.contains(":")
+            ? profile.presetId
+            : "minecraft:" + profile.presetId;
+
+        Identifier newId = Identifier.tryParse(rawId);
+        if (newId == null) {
+            PvpTweaksMod.LOGGER.warn("[PVP Tweaks] bad sound id: '{}'", rawId);
+            return;
+        }
 
         WeightedSoundSet newSet = manager.get(newId);
-        if (newSet == null) return;
-
-        // עדכן גם את this.sound — זה מה שה-engine משמיע בפועל
-        Sound newSound = newSet.getSound(net.minecraft.util.math.random.Random.create());
-        if (newSound != null) {
-            this.sound = newSound;
-            PvpTweaksMod.LOGGER.info("[PVP Tweaks] Sound redirected: {} -> {}", path, newId);
+        if (newSet == null) {
+            if (newId.getNamespace().equals("pvptweaks")) {
+                // File may have been added after last reload — trigger one now
+                PvpTweaksMod.LOGGER.info("[PVP Tweaks] pvptweaks sound not in registry, reloading: {}", newId);
+                net.minecraft.client.MinecraftClient mc =
+                    net.minecraft.client.MinecraftClient.getInstance();
+                if (mc != null) mc.execute(mc::reloadResources);
+            } else {
+                PvpTweaksMod.LOGGER.warn("[PVP Tweaks] sound not in SoundManager: {}", newId);
+            }
+            return;
         }
+
+        Sound newSound = newSet.getSound(net.minecraft.util.math.random.Random.create());
+        if (newSound != null) this.sound = newSound;
+        PvpTweaksMod.LOGGER.info("[PVP Tweaks] redirected: {} -> {}", path, newId);
         cir.setReturnValue(newSet);
     }
 }

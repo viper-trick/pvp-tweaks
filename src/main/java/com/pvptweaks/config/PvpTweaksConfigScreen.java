@@ -143,6 +143,14 @@ public class PvpTweaksConfigScreen {
         shield.addEntry(e.startIntSlider(Text.literal("\u00a7fRotation X  \u00a78Tilt Fwd / Back"), cfg.shieldRotX, -180, 180).setDefaultValue(0).setTooltip(Text.literal("< tilts Forward, > tilts Backward")).setSaveConsumer(v -> { cfg.shieldRotX = v; PvpTweaksConfig.save(); }).build());
         shield.addEntry(e.startIntSlider(Text.literal("\u00a7fRotation Y  \u00a78Turn Left / Right"), cfg.shieldRotY, -180, 180).setDefaultValue(0).setTooltip(Text.literal("< turns Left, > turns Right")).setSaveConsumer(v -> { cfg.shieldRotY = v; PvpTweaksConfig.save(); }).build());
         shield.addEntry(e.startIntSlider(Text.literal("\u00a7fRotation Z  \u00a78Roll Left / Right"), cfg.shieldRotZ, -180, 180).setDefaultValue(0).setTooltip(Text.literal("< rolls Left, > rolls Right")).setSaveConsumer(v -> { cfg.shieldRotZ = v; PvpTweaksConfig.save(); }).build());
+        shield.addEntry(new ButtonEntry(
+            Text.literal("\u00a7a\u25ba Open Live Shield Adjuster"),
+            () -> {
+                MinecraftClient mc = MinecraftClient.getInstance();
+                if (mc != null)
+                    mc.setScreen(new com.pvptweaks.gui.ShieldConfigScreen(mc.currentScreen));
+            }
+        ));
         shield.addEntry(lbl(e, "\u00a7f", "Break Sound"));
         addSoundField(shield, e, cfg.soundShieldBreak);
 

@@ -5,14 +5,15 @@
 
   "name": "PVP Tweaks",
   "description": "Fine-tune End Crystal size, explosion sounds, and PVP particles via a clean GUI.",
-  "authors": [ "YourName" ],
+  "authors": [ "viper-trick" ],
   "contact": {
-    "homepage": "https://github.com/yourname/pvp-tweaks",
-    "issues":   "https://github.com/yourname/pvp-tweaks/issues"
+    "homepage": "https://github.com/viper-trick/pvp-tweaks",
+    "issues":   "https://github.com/viper-trick/pvp-tweaks/issues"
   },
 
   "license": "MIT",
-  "icon":    "assets/pvptweaks/icon.png",
+
+  "icon": "icon.png",
 
   "environment": "client",
 

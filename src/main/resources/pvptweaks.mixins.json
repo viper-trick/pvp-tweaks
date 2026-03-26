@@ -13,15 +13,12 @@
     "ShieldRendererMixin",
     "TotemPopMixin",
     "FireOverlayMixin",
-    "FireEntityMixin",
     "FireBlockRenderMixin",
     "FireRandomTickMixin",
     "InGameHudMixin",
     "SoundRedirectMixin",
     "ExplosionPacketMixin",
-    "ResourcePackInjectMixin",
-    "ClothConfigApplyMixin",
-    "FireHeightMixin"
+    "ResourcePackInjectMixin"
   ],
   "injectors": {
     "defaultRequire": 1

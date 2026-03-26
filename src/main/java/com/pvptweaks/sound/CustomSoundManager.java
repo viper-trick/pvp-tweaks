@@ -3,7 +3,6 @@ package com.pvptweaks.sound;
 import com.pvptweaks.PvpTweaksMod;
 import com.pvptweaks.config.PvpTweaksConfig;
 import net.minecraft.util.Identifier;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,11 +13,15 @@ import java.util.Map;
 
 /**
  * Manages custom sound files.
- * Copies user-provided audio files into the pvptweaks sounds directory
- * and maps them to pvptweaks: Identifiers.
  *
- * Supported formats: .ogg (native), .mp3/.wav/.flac (copy as-is, user must
- * ensure .ogg format – Minecraft only plays .ogg natively).
+ * Supported input formats (requires ffmpeg on PATH):
+ *   .ogg  — native Minecraft format, copied as-is
+ *   .mp3  — converted to mono OGG via ffmpeg
+ *   .wav  — converted to mono OGG via ffmpeg
+ *   .flac — converted to mono OGG via ffmpeg
+ *   .aac / .m4a — converted to mono OGG via ffmpeg
+ *
+ * Result: a .ogg file in SOUNDS_DIR, served by PvpTweaksDynamicPack.
  */
 public class CustomSoundManager {
 
@@ -28,35 +31,55 @@ public class CustomSoundManager {
         if (cache.containsKey(sourcePath)) return cache.get(sourcePath);
 
         try {
-            Path src  = Paths.get(sourcePath);
-            if (!Files.exists(src)) return null;
+            Path src = Paths.get(sourcePath);
+            if (!Files.exists(src)) {
+                PvpTweaksMod.LOGGER.error("[PVP Tweaks] file not found: {}", sourcePath);
+                return null;
+            }
 
             String filename = src.getFileName().toString();
-            // Normalize to .ogg extension for the ID
-            String baseName = filename.contains(".") ? filename.substring(0, filename.lastIndexOf(".")) : filename;
-            String safeId   = baseName.toLowerCase().replaceAll("[^a-z0-9_]", "_");
+            // Safe lowercase ID: strip extension, replace non-alphanumeric with '_'
+            String baseName = filename.contains(".")
+                ? filename.substring(0, filename.lastIndexOf("."))
+                : filename;
+            String safeId = baseName.toLowerCase().replaceAll("[^a-z0-9_]", "_");
 
             Path dest = PvpTweaksConfig.SOUNDS_DIR.resolve(safeId + ".ogg");
             Files.createDirectories(PvpTweaksConfig.SOUNDS_DIR);
-            Files.copy(src, dest, StandardCopyOption.REPLACE_EXISTING);
+
+            if (Mp3Converter.needsConversion(filename)) {
+                // Convert MP3/WAV/FLAC/etc. → mono OGG via ffmpeg
+                boolean ok = Mp3Converter.convertToOgg(src, dest);
+                if (!ok) {
+                    PvpTweaksMod.LOGGER.error(
+                        "[PVP Tweaks] Could not convert {} to OGG. "
+                        + "Install ffmpeg:  sudo apt install ffmpeg", filename);
+                    return null;
+                }
+            } else {
+                // Already .ogg — copy directly
+                Files.copy(src, dest, StandardCopyOption.REPLACE_EXISTING);
+            }
 
             Identifier id = Identifier.of("pvptweaks", "custom/" + safeId);
             cache.put(sourcePath, id);
+            PvpTweaksMod.LOGGER.info("[PVP Tweaks] registered {} -> {}", filename, id);
 
-            PvpTweaksMod.LOGGER.info("[PVP Tweaks] Registered custom sound: {} -> {}", sourcePath, id);
+            // Trigger resource reload so SoundManager picks up the new sounds.json entry
+            net.minecraft.client.MinecraftClient mc =
+                net.minecraft.client.MinecraftClient.getInstance();
+            if (mc != null) mc.execute(mc::reloadResources);
+
             return id;
-
         } catch (IOException e) {
-            PvpTweaksMod.LOGGER.error("[PVP Tweaks] Failed to register custom sound: {}", e.getMessage());
+            PvpTweaksMod.LOGGER.error("[PVP Tweaks] registerCustomSound failed: {}", e.getMessage());
             return null;
         }
     }
 
-    /** Returns all sound events registered in the game registry as strings. */
     public static java.util.List<String> getAllGameSounds() {
         return net.minecraft.registry.Registries.SOUND_EVENT.getIds().stream()
             .map(id -> id.getNamespace() + ":" + id.getPath())
-            .sorted()
-            .collect(java.util.stream.Collectors.toList());
+            .sorted().collect(java.util.stream.Collectors.toList());
     }
 }
