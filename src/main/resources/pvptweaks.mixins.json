@@ -16,6 +16,7 @@
     "FireBlockRenderMixin",
     "FireRandomTickMixin",
     "InGameHudMixin",
+    "GameMenuScreenMixin",
     "SoundRedirectMixin",
     "ExplosionPacketMixin",
     "ResourcePackInjectMixin"

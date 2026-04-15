@@ -4,6 +4,7 @@ import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import net.minecraft.client.MinecraftClient;
+import com.pvptweaks.config.PvpTweaksProfiles;
 import com.pvptweaks.gui.ButtonEntry;
 import com.pvptweaks.gui.SoundPickerScreen;
 import com.pvptweaks.gui.SoundPickerScreen;
@@ -60,7 +61,87 @@ public class PvpTweaksConfigScreen {
 
         ConfigEntryBuilder e = builder.entryBuilder();
 
-        // Item Sizes
+        // ── Main ─────────────────────────────────────────────────────────────
+        ConfigCategory main = builder.getOrCreateCategory(Text.literal("\u00a7a\u2605 Main"));
+
+        // Competitive preset
+        main.addEntry(e.startTextDescription(Text.literal(
+            "\u00a76\u25b6\u00a7r Quick Presets")).build());
+        main.addEntry(new ButtonEntry(
+            Text.literal("\u00a7c\u2694 Apply Competitive Preset"),
+            () -> {
+                PvpTweaksProfiles.applyCompetitive();
+                MinecraftClient mc = MinecraftClient.getInstance();
+                if (mc != null) {
+                    mc.setScreen(build(parent));
+                    mc.reloadResources();
+                }
+            }
+        ));
+        main.addEntry(e.startTextDescription(Text.literal(
+            "\u00a78Quiet crystals/anchors, no particles, flat fire, low overlay")).build());
+        main.addEntry(new ButtonEntry(
+            Text.literal("\u00a77\u21ba Reset to Default"),
+            () -> {
+                PvpTweaksProfiles.applyDefault();
+                MinecraftClient mc = MinecraftClient.getInstance();
+                if (mc != null) {
+                    mc.setScreen(build(parent));
+                    mc.reloadResources();
+                }
+            }
+        ));
+
+        // Profiles
+        main.addEntry(e.startTextDescription(Text.literal("")).build());
+        main.addEntry(e.startTextDescription(Text.literal(
+            "\u00a76\u25b6\u00a7r Custom Profiles")).build());
+        main.addEntry(e.startTextDescription(Text.literal(
+            "\u00a78Note: Save changes first to include them in the profile.")).build());
+
+        // Save current config as profile
+        main.addEntry(new ButtonEntry(
+            Text.literal("\u00a7a\u2714 Save Current as Profile"),
+            () -> {
+                MinecraftClient mc = MinecraftClient.getInstance();
+                if (mc == null) return;
+                // Open a simple name-entry dialog
+                mc.setScreen(new com.pvptweaks.gui.ProfileNameScreen(
+                    mc.currentScreen, null,
+                    name -> {
+                        PvpTweaksProfiles.save(name);
+                        MinecraftClient.getInstance().execute(() -> {
+                            MinecraftClient.getInstance().setScreen(build(parent));
+                        });
+                    }
+                ));
+            }
+        ));
+
+        // List existing profiles with Load/Delete buttons
+        java.util.List<String> profiles = PvpTweaksProfiles.list();
+        if (profiles.isEmpty()) {
+            main.addEntry(e.startTextDescription(Text.literal(
+                "\u00a78No saved profiles yet.")).build());
+        } else {
+            for (String pname : profiles) {
+                final String pn = pname;
+                main.addEntry(new ButtonEntry(
+                    Text.literal("\u00a7b\u25b6 " + pn + "  \u00a77[Load]"),
+                    () -> {
+                        if (PvpTweaksProfiles.load(pn)) {
+                            MinecraftClient mc = MinecraftClient.getInstance();
+                            if (mc != null) {
+                                mc.setScreen(build(parent));
+                                mc.reloadResources();
+                            }
+                        }
+                    }
+                ));
+            }
+        }
+
+        // ── Item Sizes
         ConfigCategory items = builder.getOrCreateCategory(Text.literal("\u00a7b\u2694 Item Sizes"));
         items.addEntry(lbl(e, "\u00a7e", "Melee"));
         items.addEntry(e.startIntSlider(Text.literal("\u00a7fSword"), cfg.swordScalePct, 25, 300).setDefaultValue(100).setSaveConsumer(v -> cfg.swordScalePct = v).build());
@@ -168,6 +249,62 @@ public class PvpTweaksConfigScreen {
         soundCat.addEntry(e.startTextDescription(Text.literal("\u00a7c Explosion: " + soundStatus(cfg.soundExplosion))).build());
         soundCat.addEntry(e.startTextDescription(Text.literal("\u00a74 Hit:       " + soundStatus(cfg.soundHit))).build());
         soundCat.addEntry(e.startTextDescription(Text.literal("\u00a75 Anchor:    " + soundStatus(cfg.soundAnchor))).build());
+
+        // ── Share / Import-Export ────────────────────────────────────────────────
+        ConfigCategory share = builder.getOrCreateCategory(Text.literal("\u00a7d\ud83d\udce4 Share / Import-Export"));
+        share.addEntry(e.startTextDescription(Text.literal(
+            "\u00a77Export your current settings to share with others,")).build());
+        share.addEntry(e.startTextDescription(Text.literal(
+            "\u00a77or import a settings file you received.")).build());
+        share.addEntry(e.startTextDescription(Text.literal("")).build());
+
+        share.addEntry(new ButtonEntry(
+            Text.literal("\u00a7a\u25b2 Export Settings to Clipboard"),
+            () -> {
+                try {
+                    String json = PvpTweaksProfiles.exportJson();
+                    MinecraftClient mc = MinecraftClient.getInstance();
+                    if (mc != null) {
+                        mc.keyboard.setClipboard(json);
+                        if (mc.player != null) {
+                            mc.player.sendMessage(Text.literal(
+                                "\u00a7a[PVP Tweaks] Settings copied to clipboard!"), false);
+                        }
+                    }
+                } catch (Exception ex) {
+                    com.pvptweaks.PvpTweaksMod.LOGGER.error(
+                        "[PVP Tweaks] Export failed: {}", ex.getMessage());
+                }
+            }
+        ));
+
+        share.addEntry(new ButtonEntry(
+            Text.literal("\u00a7e\u25bc Import Settings from Clipboard"),
+            () -> {
+                try {
+                    MinecraftClient mc = MinecraftClient.getInstance();
+                    if (mc != null) {
+                        String json = mc.keyboard.getClipboard();
+                        boolean ok = PvpTweaksProfiles.importJson(json);
+                        if (mc.player != null) {
+                            mc.player.sendMessage(Text.literal(
+                                ok ? "\u00a7a[PVP Tweaks] Imported successfully from clipboard!"
+                                   : "\u00a7c[PVP Tweaks] Import failed \u2014 invalid clipboard content"), false);
+                        }
+                        if (ok) {
+                            mc.setScreen(build(parent));
+                            mc.reloadResources();
+                        }
+                    }
+                } catch (Exception ex) {
+                    com.pvptweaks.PvpTweaksMod.LOGGER.error(
+                        "[PVP Tweaks] Import failed: {}", ex.getMessage());
+                }
+            }
+        ));
+
+        share.addEntry(e.startTextDescription(Text.literal(
+            "\u00a78Quickly share or load settings via system clipboard.")).build());
 
         return builder.build();
     }

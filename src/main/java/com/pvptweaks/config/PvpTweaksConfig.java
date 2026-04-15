@@ -23,12 +23,12 @@ public class PvpTweaksConfig {
 
     private static PvpTweaksConfig INSTANCE = new PvpTweaksConfig();
 
-    public int swordScalePct       = 100;
+    public int swordScalePct       = 70;
     public int axeScalePct         = 100;
-    public int shieldScalePct      = 100;
-    public int shieldOffsetX     = 0;  // x100 → actual = val/100f
-    public int shieldOffsetY     = 0;
-    public int shieldOffsetZ     = 0;
+    public int shieldScalePct      = 70;
+    public int shieldOffsetX     = -55;  // x100 → actual = val/100f
+    public int shieldOffsetY     = -1;
+    public int shieldOffsetZ     = 10;
     public int shieldRotX        = 0;  // degrees
     public int shieldRotY        = 0;
     public int shieldRotZ        = 0;
@@ -42,25 +42,25 @@ public class PvpTweaksConfig {
     public int maceScalePct        = 100;
     public int otherItemScalePct   = 100;
 
-    public int totemPopScalePct    = 100;
-    public int totemPopVolumePct   = 100;
-    public int totemPopAnimScalePct = 100;  // screen animation size
+    public int totemPopScalePct    = 50;
+    public int totemPopVolumePct   = 5;
+    public int totemPopAnimScalePct = 30;  // screen animation size
 
-    public int fireOverlayScalePct = 100;
-    public int     fireEntityScalePct  = 100;
+    public int fireOverlayScalePct = 20;
+    public int     fireEntityScalePct  = 30;
     public boolean hideFireOnGround    = false;
-    public String  firePreset           = "vanilla"; // vanilla | full | mid | low | flat | none
+    public String  firePreset           = "flat"; // vanilla | full | mid | low | flat | none
     public int endCrystalScalePct  = 100;
 
-    public int explosionVolumePct  = 100;
+    public int explosionVolumePct  = 0;
     public int hitVolumePct        = 100;
-    public int crystalPopVolumePct = 100;
+    public int crystalPopVolumePct = 0;
 
-    public int     explosionParticlePct = 100;
-    public int     crystalParticlePct         = 100;  // ambient crystal particles
-    public int     enderExplosionParticlePct  = 100;  // crystal pop
-    public int     respawnAnchorExplosionPct  = 100;
-    public int     anchorExplosionParticlePct = 100;  // anchor explosion volume  // crystal explosion particles
+    public int     explosionParticlePct = 0;
+    public int     crystalParticlePct         = 0;  // ambient crystal particles
+    public int     enderExplosionParticlePct  = 5;  // crystal pop
+    public int     respawnAnchorExplosionPct  = 0;
+    public int     anchorExplosionParticlePct = 0;  // anchor explosion volume  // crystal explosion particles
     public boolean showHitParticles     = true;
 
     public float getEndCrystalScale()      { return endCrystalScalePct  / 100.0f; }
