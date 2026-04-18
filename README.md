@@ -57,5 +57,22 @@ Fully customizable, movable HUD elements with live preview:
 ```
 Output: `build/libs/pvp-tweaks-1.4.0.jar`
 
-## License
-Distributed under the MIT License. See `LICENSE` for more information.
+## 📌 License & Code Usage
+
+I'm really sorry if this feels a bit restrictive, but this mod is released under **All Rights Reserved**.
+It's not because I don't trust anyone — I just want to keep the project organized and avoid unofficial versions floating around and confusing people.
+
+That said, I want to be completely honest:
+if you want to use my code for something, I almost always say yes.
+Really. Just send me an email explaining what you want to do, and I promise I'll read it carefully and, in most cases, approve it.
+
+You can reach me here:
+[yag.fvt@gmail.com](mailto:yag.fvt@gmail.com)
+
+I'm also very happy to receive ideas, feature suggestions, improvements, and code contributions.
+If you'd like to help out, feel free to submit a Pull Request on the GitHub page — it genuinely helps and makes me happy.
+
+There's just one thing I have to ask, and I'm sorry if it sounds strict:
+please don't reupload the mod, the code, or modified versions of it to Modrinth, CurseForge, or any other platform without my explicit permission.
+And please don't use the code in other projects without asking first.
+It just creates chaos I'm trying to avoid.
