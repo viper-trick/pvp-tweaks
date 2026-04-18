@@ -7,6 +7,7 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.text.Text;
+import org.lwjgl.glfw.GLFW;
 
 /**
  * Live shield adjuster.
@@ -166,7 +167,7 @@ public class ShieldConfigScreen extends Screen {
 
     @Override
     public boolean keyPressed(net.minecraft.client.input.KeyInput input) {
-        if (input.key() == org.lwjgl.glfw.GLFW.GLFW_KEY_H) {
+        if (input.key() == GLFW.GLFW_KEY_H) {
             PvpTweaksConfig.save();
             client.setScreen(parent);
             return true;

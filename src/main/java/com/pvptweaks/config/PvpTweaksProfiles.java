@@ -177,6 +177,13 @@ public class PvpTweaksProfiles {
         c.hideFireOnGround    = false;
         c.firePreset          = "flat";
         c.endCrystalScalePct  = 100;
+        
+        // Durability HUD
+        c.durabilityHudEnabled = true;
+
+        // Optimizers
+        c.crystalOptimizer = true;
+        c.anchorOptimizer  = true;
 
         // Sounds — Silent Explosions
         c.explosionVolumePct       = 0;

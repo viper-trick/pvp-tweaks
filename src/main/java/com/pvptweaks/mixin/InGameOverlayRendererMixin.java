@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 @Mixin(InGameOverlayRenderer.class)
-public class InGameHudMixin {
+public class InGameOverlayRendererMixin {
 
     @Inject(method = "method_70938", remap = false,
             at = @At("HEAD"), cancellable = true, require = 0)

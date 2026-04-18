@@ -5,13 +5,13 @@ import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import net.minecraft.client.MinecraftClient;
 import com.pvptweaks.config.PvpTweaksProfiles;
-import com.pvptweaks.gui.ButtonEntry;
-import com.pvptweaks.gui.SoundPickerScreen;
-import com.pvptweaks.gui.SoundPickerScreen;
+import com.pvptweaks.gui.*;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 
 public class PvpTweaksConfigScreen {
+
+    private static final String[] FIRE_PRESETS = {"vanilla", "full", "mid", "low", "flat", "none"};
 
     private static me.shedaniel.clothconfig2.gui.entries.TextListEntry lbl(
             ConfigEntryBuilder e, String color, String text) {
@@ -20,7 +20,7 @@ public class PvpTweaksConfigScreen {
     }
 
     private static void addSoundField(ConfigCategory cat, ConfigEntryBuilder e,
-            SoundProfile profile) {
+            SoundProfile profile, Screen parent) {
         cat.addEntry(e.startTextDescription(
             Text.literal("\u00a77Active: " + soundStatus(profile))).build());
         // כפתור אמיתי שפותח SoundPickerScreen
@@ -29,9 +29,12 @@ public class PvpTweaksConfigScreen {
             () -> {
                 MinecraftClient mc = MinecraftClient.getInstance();
                 if (mc != null) {
-                    net.minecraft.client.gui.screen.Screen cur = mc.currentScreen;
-                    mc.setScreen(new SoundPickerScreen(cur, profile, "Sound",
-                        () -> PvpTweaksConfig.save()));
+                    mc.setScreen(new SoundPickerScreen(mc.currentScreen, profile, "Sound",
+                        () -> {
+                            PvpTweaksConfig.save();
+                            // Refresh screen to show new status
+                            mc.setScreen(build(parent));
+                        }));
                 }
             }
         ));
@@ -118,7 +121,7 @@ public class PvpTweaksConfigScreen {
             }
         ));
 
-        // List existing profiles with Load/Delete buttons
+        // List existing profiles with combined Load/Delete entry
         java.util.List<String> profiles = PvpTweaksProfiles.list();
         if (profiles.isEmpty()) {
             main.addEntry(e.startTextDescription(Text.literal(
@@ -126,8 +129,15 @@ public class PvpTweaksConfigScreen {
         } else {
             for (String pname : profiles) {
                 final String pn = pname;
-                main.addEntry(new ButtonEntry(
-                    Text.literal("\u00a7b\u25b6 " + pn + "  \u00a77[Load]"),
+                main.addEntry(new com.pvptweaks.gui.ProfileEntry(
+                    pn,
+                    () -> {
+                        PvpTweaksProfiles.delete(pn);
+                        MinecraftClient mc = MinecraftClient.getInstance();
+                        if (mc != null) {
+                            mc.setScreen(build(parent));
+                        }
+                    },
                     () -> {
                         if (PvpTweaksProfiles.load(pn)) {
                             MinecraftClient mc = MinecraftClient.getInstance();
@@ -140,6 +150,72 @@ public class PvpTweaksConfigScreen {
                 ));
             }
         }
+
+        // ── Vanilla Settings ──────────────────────────────────────────────────
+        ConfigCategory presets = builder.getOrCreateCategory(Text.literal("\u00a7e\u2605 Vanilla Settings"));
+
+        presets.addEntry(e.startTextDescription(Text.literal("\u00a76\u25b6\u00a7r Essential Vanilla PvP Settings")).build());
+
+        // FOV
+        presets.addEntry(e.startIntSlider(Text.literal("\u00a7fFOV"), MinecraftClient.getInstance().options.getFov().getValue(), 30, 110)
+            .setDefaultValue(70)
+            .setSaveConsumer(v -> MinecraftClient.getInstance().options.getFov().setValue(v))
+            .build());
+
+        // Mouse Sensitivity
+        presets.addEntry(e.startIntSlider(Text.literal("\u00a7fMouse Sensitivity (%)"), (int)(MinecraftClient.getInstance().options.getMouseSensitivity().getValue() * 200), 0, 200)
+            .setDefaultValue(100)
+            .setSaveConsumer(v -> MinecraftClient.getInstance().options.getMouseSensitivity().setValue(v / 200.0))
+            .build());
+
+        // Brightness
+        presets.addEntry(e.startIntSlider(Text.literal("\u00a7fBrightness (%)"), (int)(MinecraftClient.getInstance().options.getGamma().getValue() * 100), 0, 100)
+            .setDefaultValue(100)
+            .setSaveConsumer(v -> MinecraftClient.getInstance().options.getGamma().setValue(v / 100.0))
+            .build());
+
+        // Auto Jump
+        presets.addEntry(e.startBooleanToggle(Text.literal("\u00a7fAuto Jump"), MinecraftClient.getInstance().options.getAutoJump().getValue())
+            .setDefaultValue(false)
+            .setSaveConsumer(v -> MinecraftClient.getInstance().options.getAutoJump().setValue(v))
+            .build());
+
+        // Attack Indicator
+        presets.addEntry(e.startSelector(Text.literal("\u00a7fAttack Indicator"),
+            net.minecraft.client.option.AttackIndicator.values(),
+            MinecraftClient.getInstance().options.getAttackIndicator().getValue())
+            .setSaveConsumer(v -> MinecraftClient.getInstance().options.getAttackIndicator().setValue(v))
+            .build());
+
+        // Particles Mode
+        presets.addEntry(e.startSelector(Text.literal("\u00a7fParticles"),
+            net.minecraft.particle.ParticlesMode.values(),
+            MinecraftClient.getInstance().options.getParticles().getValue())
+            .setSaveConsumer(v -> MinecraftClient.getInstance().options.getParticles().setValue(v))
+            .build());
+
+        // Fullscreen
+        presets.addEntry(e.startBooleanToggle(Text.literal("\u00a7fFullscreen"), MinecraftClient.getInstance().options.getFullscreen().getValue())
+            .setSaveConsumer(v -> MinecraftClient.getInstance().options.getFullscreen().setValue(v))
+            .build());
+
+        // Damage Tilt
+        presets.addEntry(e.startIntSlider(Text.literal("\u00a7fDamage Tilt (%)"), (int)(MinecraftClient.getInstance().options.getDamageTiltStrength().getValue() * 100), 0, 100)
+            .setDefaultValue(100)
+            .setSaveConsumer(v -> MinecraftClient.getInstance().options.getDamageTiltStrength().setValue(v / 100.0))
+            .build());
+
+        // View Bobbing
+        presets.addEntry(e.startBooleanToggle(Text.literal("\u00a7fView Bobbing"),
+            MinecraftClient.getInstance().options.getBobView().getValue())
+            .setSaveConsumer(v -> MinecraftClient.getInstance().options.getBobView().setValue(v))
+            .build());
+
+        // Entity Shadows
+        presets.addEntry(e.startBooleanToggle(Text.literal("\u00a7fEntity Shadows"),
+            MinecraftClient.getInstance().options.getEntityShadows().getValue())
+            .setSaveConsumer(v -> MinecraftClient.getInstance().options.getEntityShadows().setValue(v))
+            .build());
 
         // ── Item Sizes
         ConfigCategory items = builder.getOrCreateCategory(Text.literal("\u00a7b\u2694 Item Sizes"));
@@ -164,7 +240,7 @@ public class PvpTweaksConfigScreen {
         totem.addEntry(e.startIntSlider(Text.literal("\u00a7fParticle Density (%)"), cfg.totemPopScalePct, 0, 200).setDefaultValue(100).setSaveConsumer(v -> cfg.totemPopScalePct = v).build());
         totem.addEntry(e.startIntSlider(Text.literal("\u00a7fSound Volume (%)"), cfg.totemPopVolumePct, 0, 200).setDefaultValue(100).setSaveConsumer(v -> cfg.totemPopVolumePct = v).build());
         totem.addEntry(lbl(e, "\u00a7d", "Custom Sound"));
-        addSoundField(totem, e, cfg.soundTotem);
+        addSoundField(totem, e, cfg.soundTotem, parent);
 
         // End Crystal
         ConfigCategory crystal = builder.getOrCreateCategory(Text.literal("\u00a73\u25c6 End Crystal"));
@@ -173,7 +249,7 @@ public class PvpTweaksConfigScreen {
         crystal.addEntry(e.startIntSlider(Text.literal("\u00a7fExplosion Particles (%)"), cfg.enderExplosionParticlePct, 0, 200).setDefaultValue(100).setTooltip(Text.literal("Smoke/explosion particles from crystal pop")).setSaveConsumer(v -> cfg.enderExplosionParticlePct = v).build());
         crystal.addEntry(e.startIntSlider(Text.literal("\u00a7fPop Volume (%)"), cfg.crystalPopVolumePct, 0, 200).setDefaultValue(100).setSaveConsumer(v -> cfg.crystalPopVolumePct = v).build());
         crystal.addEntry(lbl(e, "\u00a73", "Custom Sound"));
-        addSoundField(crystal, e, cfg.soundCrystal);
+        addSoundField(crystal, e, cfg.soundCrystal, parent);
 
         // Respawn Anchor
         ConfigCategory anchor = builder.getOrCreateCategory(Text.literal("\u00a75\u2694 Respawn Anchor"));
@@ -181,7 +257,7 @@ public class PvpTweaksConfigScreen {
         anchor.addEntry(e.startIntSlider(Text.literal("\u00a7fExplosion Particles (%)"), cfg.anchorExplosionParticlePct, 0, 200).setDefaultValue(100).setTooltip(Text.literal("Smoke/explosion particles from anchor explosion")).setSaveConsumer(v -> cfg.anchorExplosionParticlePct = v).build());
         anchor.addEntry(e.startIntSlider(Text.literal("\u00a7fAnchor Size in Hand (%)"), cfg.anchorScalePct, 25, 300).setDefaultValue(100).setSaveConsumer(v -> cfg.anchorScalePct = v).build());
         anchor.addEntry(lbl(e, "\u00a75", "Custom Sound"));
-        addSoundField(anchor, e, cfg.soundAnchor);
+        addSoundField(anchor, e, cfg.soundAnchor, parent);
 
         // Other Explosions
         ConfigCategory exp = builder.getOrCreateCategory(Text.literal("\u00a7c\ud83d\udca5 Other Explosions"));
@@ -189,19 +265,18 @@ public class PvpTweaksConfigScreen {
         exp.addEntry(e.startIntSlider(Text.literal("\u00a7fExplosion Volume (%)"), cfg.explosionVolumePct, 0, 200).setDefaultValue(100).setSaveConsumer(v -> cfg.explosionVolumePct = v).build());
         exp.addEntry(e.startIntSlider(Text.literal("\u00a7fSmoke Particles (%)"), cfg.explosionParticlePct, 0, 200).setDefaultValue(100).setSaveConsumer(v -> cfg.explosionParticlePct = v).build());
         exp.addEntry(lbl(e, "\u00a7c", "Custom Sound"));
-        addSoundField(exp, e, cfg.soundExplosion);
+        addSoundField(exp, e, cfg.soundExplosion, parent);
 
         // Combat
         ConfigCategory combat = builder.getOrCreateCategory(Text.literal("\u00a74\u2694 Combat"));
         combat.addEntry(e.startIntSlider(Text.literal("\u00a7fHit Sound Volume (%)"), cfg.hitVolumePct, 0, 200).setDefaultValue(100).setSaveConsumer(v -> cfg.hitVolumePct = v).build());
         combat.addEntry(e.startBooleanToggle(Text.literal("\u00a7fShow Hit / Crit Particles"), cfg.showHitParticles).setDefaultValue(true).setSaveConsumer(v -> cfg.showHitParticles = v).build());
         combat.addEntry(lbl(e, "\u00a74", "Custom Hit Sound"));
-        addSoundField(combat, e, cfg.soundHit);
+        addSoundField(combat, e, cfg.soundHit, parent);
 
         // Fire
         ConfigCategory fire = builder.getOrCreateCategory(Text.literal("\u00a76\ud83d\udd25 Fire"));
-        String[] firePresets = {"vanilla", "full", "mid", "low", "flat", "none"};
-        fire.addEntry(e.startSelector(Text.literal("\u00a7fFire Height"), firePresets, cfg.firePreset)
+        fire.addEntry(e.startSelector(Text.literal("\u00a7fFire Height"), FIRE_PRESETS, cfg.firePreset)
             .setDefaultValue("vanilla")
             .setTooltip(Text.literal("vanilla=default | full=tall | mid=medium | low=short | flat=ember only | none=hidden"))
             .setSaveConsumer(v -> {
@@ -214,6 +289,13 @@ public class PvpTweaksConfigScreen {
 
         // Shield
         ConfigCategory shield = builder.getOrCreateCategory(Text.literal("\u00a7f\u2756 Shield"));
+        shield.addEntry(new ButtonEntry(
+            Text.literal("\u00a7b\u2756 Open Shield Adjuster"),
+            () -> {
+                MinecraftClient mc = MinecraftClient.getInstance();
+                if (mc != null) mc.setScreen(new ShieldConfigScreen(mc.currentScreen));
+            }
+        ));
         shield.addEntry(lbl(e, "\u00a77", "Size"));
         shield.addEntry(e.startIntSlider(Text.literal("\u00a7fSize (%)"), cfg.shieldScalePct, 25, 300).setDefaultValue(100).setTooltip(Text.literal("Shield size in hand")).setSaveConsumer(v -> { cfg.shieldScalePct = v; PvpTweaksConfig.save(); }).build());
         shield.addEntry(lbl(e, "\u00a77", "Position  \u00a78(slider, -100 to 100 = -1.0 to 1.0 blocks)"));
@@ -224,16 +306,96 @@ public class PvpTweaksConfigScreen {
         shield.addEntry(e.startIntSlider(Text.literal("\u00a7fRotation X  \u00a78Tilt Fwd / Back"), cfg.shieldRotX, -180, 180).setDefaultValue(0).setTooltip(Text.literal("< tilts Forward, > tilts Backward")).setSaveConsumer(v -> { cfg.shieldRotX = v; PvpTweaksConfig.save(); }).build());
         shield.addEntry(e.startIntSlider(Text.literal("\u00a7fRotation Y  \u00a78Turn Left / Right"), cfg.shieldRotY, -180, 180).setDefaultValue(0).setTooltip(Text.literal("< turns Left, > turns Right")).setSaveConsumer(v -> { cfg.shieldRotY = v; PvpTweaksConfig.save(); }).build());
         shield.addEntry(e.startIntSlider(Text.literal("\u00a7fRotation Z  \u00a78Roll Left / Right"), cfg.shieldRotZ, -180, 180).setDefaultValue(0).setTooltip(Text.literal("< rolls Left, > rolls Right")).setSaveConsumer(v -> { cfg.shieldRotZ = v; PvpTweaksConfig.save(); }).build());
-        shield.addEntry(new ButtonEntry(
-            Text.literal("\u00a7a\u25ba Open Live Shield Adjuster"),
+
+        shield.addEntry(lbl(e, "\u00a7f", "Break Sound"));
+        addSoundField(shield, e, cfg.soundShieldBreak, parent);
+
+        // CPS HUD
+        ConfigCategory cps = builder.getOrCreateCategory(Text.literal("\u00a76\ud83d\uddb1 CPS"));
+        cps.addEntry(new ButtonEntry(
+            Text.literal("\u00a7b\ud83d\uddb1 Open CPS Adjuster"),
             () -> {
                 MinecraftClient mc = MinecraftClient.getInstance();
-                if (mc != null)
-                    mc.setScreen(new com.pvptweaks.gui.ShieldConfigScreen(mc.currentScreen));
+                if (mc != null) mc.setScreen(new CpsAdjusterScreen(mc.currentScreen));
             }
         ));
-        shield.addEntry(lbl(e, "\u00a7f", "Break Sound"));
-        addSoundField(shield, e, cfg.soundShieldBreak);
+        cps.addEntry(e.startBooleanToggle(Text.literal("\u00a7fEnabled"), cfg.cpsEnabled).setDefaultValue(false).setSaveConsumer(v -> cfg.cpsEnabled = v).build());
+        cps.addEntry(e.startBooleanToggle(Text.literal("§fShow L/R Labels"), cfg.cpsShowLabel).setDefaultValue(true).setSaveConsumer(v -> cfg.cpsShowLabel = v).build());
+        cps.addEntry(e.startIntSlider(Text.literal("\u00a7fPosition X (%)"), (int)cfg.cpsX, 0, 100).setDefaultValue(5).setSaveConsumer(v -> cfg.cpsX = v).build());
+        cps.addEntry(e.startIntSlider(Text.literal("\u00a7fPosition Y (%)"), (int)cfg.cpsY, 0, 100).setDefaultValue(15).setSaveConsumer(v -> cfg.cpsY = v).build());
+        cps.addEntry(e.startBooleanToggle(Text.literal("\u00a7fText Shadow"), cfg.cpsShadow).setDefaultValue(true).setSaveConsumer(v -> cfg.cpsShadow = v).build());
+        cps.addEntry(e.startIntSlider(Text.literal("\u00a7fScale (%)"), (int)(cfg.cpsScale * 100), 50, 300).setDefaultValue(100).setSaveConsumer(v -> cfg.cpsScale = v / 100.0f).build());
+        
+        cps.addEntry(e.startBooleanToggle(Text.literal("\u00a7b\u2728 Rainbow Mode"), cfg.cpsRainbow)
+            .setDefaultValue(false)
+            .setSaveConsumer(v -> cfg.cpsRainbow = v)
+            .build());
+
+        cps.addEntry(e.startColorField(Text.literal("§fColor (Hex)"), cfg.cpsColor)
+            .setDefaultValue(0xFFFFFFFF)
+            .setAlphaMode(true)
+            .setSaveConsumer(v -> cfg.cpsColor = v)
+            .build());
+
+        String[] colorNames = {"Custom", "White", "Red", "Green", "Blue", "Yellow", "Cyan", "Magenta"};
+        int[] colorValues = {0, 0xFFFFFFFF, 0xFFFF0000, 0xFF00FF00, 0xFF0000FF, 0xFFFFFF00, 0xFF00FFFF, 0xFFFF00FF};
+        
+        String currentColorName = "Custom";
+        for(int i=1; i<colorValues.length; i++) {
+            if(cfg.cpsColor == colorValues[i]) {
+                currentColorName = colorNames[i];
+                break;
+            }
+        }
+
+        cps.addEntry(e.startSelector(Text.literal("§fQuick Color (Presets)"), colorNames, currentColorName)
+            .setDefaultValue("Custom")
+            .setSaveConsumer(v -> {
+                if (!"Custom".equals(v)) {
+                    for(int i=1; i<colorNames.length; i++) {
+                        if(colorNames[i].equals(v)) {
+                            cfg.cpsColor = colorValues[i];
+                            break;
+                        }
+                    }
+                }
+            })
+            .build());
+
+
+
+
+
+
+
+
+
+        
+
+        // Durability HUD
+        ConfigCategory dhud = builder.getOrCreateCategory(Text.literal("\u00a7b\u26E8 Durability HUD"));
+        dhud.addEntry(new ButtonEntry(
+            Text.literal("\u00a7b\u26E8 Open Durability HUD Adjuster"),
+            () -> {
+                MinecraftClient mc = MinecraftClient.getInstance();
+                if (mc != null) mc.setScreen(new DurabilityAdjusterScreen(mc.currentScreen));
+            }
+        ));
+        dhud.addEntry(e.startBooleanToggle(Text.literal("\u00a7fEnabled"), cfg.durabilityHudEnabled).setDefaultValue(false).setSaveConsumer(v -> cfg.durabilityHudEnabled = v).build());
+        dhud.addEntry(e.startBooleanToggle(Text.literal("\u00a7fShow Background Slots"), cfg.durabilityHudBackground).setDefaultValue(true).setSaveConsumer(v -> cfg.durabilityHudBackground = v).build());
+        dhud.addEntry(e.startBooleanToggle(Text.literal("\u00a7fShow Exact Durability"), cfg.durabilityHudShowExact).setDefaultValue(true).setSaveConsumer(v -> cfg.durabilityHudShowExact = v).build());
+        dhud.addEntry(e.startBooleanToggle(Text.literal("\u00a7fLow Durability Alert"), cfg.durabilityHudLowAlert).setDefaultValue(true).setSaveConsumer(v -> cfg.durabilityHudLowAlert = v).build());
+        dhud.addEntry(e.startIntSlider(Text.literal("\u00a7fPosition X (%)"), (int)cfg.durabilityHudX, 0, 100).setDefaultValue(5).setSaveConsumer(v -> cfg.durabilityHudX = v).build());
+        dhud.addEntry(e.startIntSlider(Text.literal("\u00a7fPosition Y (%)"), (int)cfg.durabilityHudY, 0, 100).setDefaultValue(5).setSaveConsumer(v -> cfg.durabilityHudY = v).build());
+        dhud.addEntry(e.startSelector(Text.literal("\u00a7fAlignment"), new String[]{"vertical", "horizontal"}, cfg.durabilityHudAlign).setDefaultValue("vertical").setSaveConsumer(v -> cfg.durabilityHudAlign = v).build());
+        dhud.addEntry(e.startBooleanToggle(Text.literal("\u00a7fShow Armor"), cfg.durabilityHudShowArmor).setDefaultValue(true).setSaveConsumer(v -> cfg.durabilityHudShowArmor = v).build());
+        dhud.addEntry(e.startBooleanToggle(Text.literal("\u00a7fShow Main Hand"), cfg.durabilityHudShowMainHand).setDefaultValue(true).setSaveConsumer(v -> cfg.durabilityHudShowMainHand = v).build());
+        dhud.addEntry(e.startBooleanToggle(Text.literal("\u00a7fShow Off Hand"), cfg.durabilityHudShowOffHand).setDefaultValue(true).setSaveConsumer(v -> cfg.durabilityHudShowOffHand = v).build());
+        
+        dhud.addEntry(lbl(e, "\u00a7b", "Custom Low Durability Alert Sound"));
+        addSoundField(dhud, e, cfg.soundDurabilityLow, parent);
+
+
 
         // Sound Picker
         ConfigCategory soundCat = builder.getOrCreateCategory(Text.literal("\u00a7e\ud83d\udd0a Sound Picker"));
@@ -249,6 +411,22 @@ public class PvpTweaksConfigScreen {
         soundCat.addEntry(e.startTextDescription(Text.literal("\u00a7c Explosion: " + soundStatus(cfg.soundExplosion))).build());
         soundCat.addEntry(e.startTextDescription(Text.literal("\u00a74 Hit:       " + soundStatus(cfg.soundHit))).build());
         soundCat.addEntry(e.startTextDescription(Text.literal("\u00a75 Anchor:    " + soundStatus(cfg.soundAnchor))).build());
+
+        // ── Optimizers / Client-Side ──────────────────────────────────────────
+        ConfigCategory comp = builder.getOrCreateCategory(Text.literal("§6⚔ Optimizers"));
+        comp.addEntry(e.startTextDescription(Text.literal("§7Optimizations to mitigate PING/Latency effects.")).build());
+
+        comp.addEntry(e.startBooleanToggle(Text.literal("§fCrystal Optimizer"), cfg.crystalOptimizer)
+            .setDefaultValue(false)
+            .setTooltip(Text.literal("Immediately removes crystals client-side when broken to reduce latency delay."))
+            .setSaveConsumer(v -> cfg.crystalOptimizer = v)
+            .build());
+
+        comp.addEntry(e.startBooleanToggle(Text.literal("§fAnchor Optimizer"), cfg.anchorOptimizer)
+            .setDefaultValue(false)
+            .setTooltip(Text.literal("Immediately removes respawn anchors client-side when exploded."))
+            .setSaveConsumer(v -> cfg.anchorOptimizer = v)
+            .build());
 
         // ── Share / Import-Export ────────────────────────────────────────────────
         ConfigCategory share = builder.getOrCreateCategory(Text.literal("\u00a7d\ud83d\udce4 Share / Import-Export"));

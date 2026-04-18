@@ -50,7 +50,33 @@ public class PvpTweaksConfig {
     public int     fireEntityScalePct  = 30;
     public boolean hideFireOnGround    = false;
     public String  firePreset           = "flat"; // vanilla | full | mid | low | flat | none
-    public int endCrystalScalePct  = 100;
+    public int     endCrystalScalePct  = 100;
+
+    // CPS HUD
+    public boolean cpsEnabled      = false;
+    public float   cpsX            = 5f;
+    public float   cpsY            = 15f;
+    public int     cpsColor        = 0xFFFFFFFF; // White
+    public boolean cpsRainbow      = false;
+    public boolean cpsShadow       = true;
+    public float   cpsScale        = 1.0f;
+    public boolean cpsShowLabel    = true;
+    public boolean durabilityHudEnabled   = false;
+    public boolean durabilityHudBackground = true;
+    public boolean durabilityHudShowExact = true;
+    public boolean durabilityHudLowAlert  = true;
+    public float   durabilityHudX         = 5f;
+    public float   durabilityHudY         = 5f;
+    public int     durabilityHudScalePct  = 100;
+    public String  durabilityHudAlign     = "vertical"; // vertical | horizontal
+    public boolean durabilityHudShowArmor = true;
+    public boolean durabilityHudShowMainHand = true;
+    public boolean durabilityHudShowOffHand  = true;
+    public SoundProfile soundDurabilityLow = new SoundProfile();
+
+    // Competitive / Client-Side
+    public boolean crystalOptimizer = false;
+    public boolean anchorOptimizer  = false;
 
     public int explosionVolumePct  = 0;
     public int hitVolumePct        = 100;

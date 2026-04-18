@@ -4,7 +4,7 @@
   "version": "${version}",
 
   "name": "PVP Tweaks",
-  "description": "Fine-tune End Crystal size, explosion sounds, and PVP particles via a clean GUI.",
+  "description": "Comprehensive PVP performance and visual optimizations including Crystal/Anchor lag mitigation, HUD adjusters, and custom combat visuals.",
   "authors": [ "viper-trick" ],
   "contact": {
     "homepage": "https://github.com/viper-trick/pvp-tweaks",

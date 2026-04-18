@@ -15,11 +15,12 @@
     "FireOverlayMixin",
     "FireBlockRenderMixin",
     "FireRandomTickMixin",
-    "InGameHudMixin",
+    "InGameOverlayRendererMixin",
     "GameMenuScreenMixin",
     "SoundRedirectMixin",
     "ExplosionPacketMixin",
-    "ResourcePackInjectMixin"
+    "ResourcePackInjectMixin",
+    "InteractionManagerMixin"
   ],
   "injectors": {
     "defaultRequire": 1
