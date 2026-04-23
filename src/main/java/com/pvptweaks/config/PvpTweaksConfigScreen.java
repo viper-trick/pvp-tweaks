@@ -98,6 +98,14 @@ public class PvpTweaksConfigScreen {
         // Profiles
         main.addEntry(e.startTextDescription(Text.literal("")).build());
         main.addEntry(e.startTextDescription(Text.literal(
+            "\u00a76\u25b6\u00a7r Active Profiles")).build());
+        main.addEntry(e.startTextDescription(Text.literal(
+            "\u00a77Current mod settings profile - \u00a7f" + cfg.lastSettingsProfile)).build());
+        main.addEntry(e.startTextDescription(Text.literal(
+            "\u00a77Current keybind profile - \u00a7f" + cfg.lastKeybindsProfile)).build());
+
+        main.addEntry(e.startTextDescription(Text.literal("")).build());
+        main.addEntry(e.startTextDescription(Text.literal(
             "\u00a76\u25b6\u00a7r Custom Profiles")).build());
         main.addEntry(e.startTextDescription(Text.literal(
             "\u00a78Note: Save changes first to include them in the profile.")).build());
@@ -431,59 +439,92 @@ public class PvpTweaksConfigScreen {
         // ── Share / Import-Export ────────────────────────────────────────────────
         ConfigCategory share = builder.getOrCreateCategory(Text.literal("\u00a7d\ud83d\udce4 Share / Import-Export"));
         share.addEntry(e.startTextDescription(Text.literal(
-            "\u00a77Export your current settings to share with others,")).build());
+            "\u00a77Export your settings and keybinds to share with others,")).build());
         share.addEntry(e.startTextDescription(Text.literal(
-            "\u00a77or import a settings file you received.")).build());
+            "\u00a77or import a configuration package.")).build());
         share.addEntry(e.startTextDescription(Text.literal("")).build());
 
+        // --- EXPORTS ---
         share.addEntry(new ButtonEntry(
-            Text.literal("\u00a7a\u25b2 Export Settings to Clipboard"),
-            () -> {
-                try {
-                    String json = PvpTweaksProfiles.exportJson();
-                    MinecraftClient mc = MinecraftClient.getInstance();
-                    if (mc != null) {
-                        mc.keyboard.setClipboard(json);
-                        if (mc.player != null) {
-                            mc.player.sendMessage(Text.literal(
-                                "\u00a7a[PVP Tweaks] Settings copied to clipboard!"), false);
-                        }
-                    }
-                } catch (Exception ex) {
-                    com.pvptweaks.PvpTweaksMod.LOGGER.error(
-                        "[PVP Tweaks] Export failed: {}", ex.getMessage());
-                }
-            }
+            Text.literal("\u00a7a\u25b2 Export Settings"),
+            () -> promptExport(parent, true, false)
         ));
 
         share.addEntry(new ButtonEntry(
-            Text.literal("\u00a7e\u25bc Import Settings from Clipboard"),
-            () -> {
-                try {
-                    MinecraftClient mc = MinecraftClient.getInstance();
-                    if (mc != null) {
-                        String json = mc.keyboard.getClipboard();
-                        boolean ok = PvpTweaksProfiles.importJson(json);
-                        if (mc.player != null) {
-                            mc.player.sendMessage(Text.literal(
-                                ok ? "\u00a7a[PVP Tweaks] Imported successfully from clipboard!"
-                                   : "\u00a7c[PVP Tweaks] Import failed \u2014 invalid clipboard content"), false);
-                        }
-                        if (ok) {
-                            mc.setScreen(build(parent));
-                            mc.reloadResources();
-                        }
-                    }
-                } catch (Exception ex) {
-                    com.pvptweaks.PvpTweaksMod.LOGGER.error(
-                        "[PVP Tweaks] Import failed: {}", ex.getMessage());
-                }
-            }
+            Text.literal("\u00a7a\u25b2 Export Keybinds"),
+            () -> promptExport(parent, false, true)
         ));
 
+        share.addEntry(new ButtonEntry(
+            Text.literal("\u00a7d\u25b2 Export Both (Settings + Keys)"),
+            () -> promptExport(parent, true, true)
+        ));
+
+        share.addEntry(e.startTextDescription(Text.literal("")).build());
+
+        // --- IMPORTS ---
+        share.addEntry(new ButtonEntry(
+            Text.literal("\u00a7e\u25bc Import Settings"),
+            () -> handleImport(parent, true, false)
+        ));
+
+        share.addEntry(new ButtonEntry(
+            Text.literal("\u00a7e\u25bc Import Keybinds"),
+            () -> handleImport(parent, false, true)
+        ));
+
+        share.addEntry(new ButtonEntry(
+            Text.literal("\u00a76\u25bc Import Both (Settings + Keys)"),
+            () -> handleImport(parent, true, true)
+        ));
+
+        share.addEntry(e.startTextDescription(Text.literal("")).build());
         share.addEntry(e.startTextDescription(Text.literal(
-            "\u00a78Quickly share or load settings via system clipboard.")).build());
+            "\u00a78Note: Exports will ask for a profile name before copying to clipboard.")).build());
 
         return builder.build();
+    }
+
+    private static void promptExport(Screen parent, boolean settings, boolean keys) {
+        MinecraftClient mc = MinecraftClient.getInstance();
+        if (mc == null) return;
+        mc.setScreen(new ProfileNameScreen(mc.currentScreen, null, name -> {
+            try {
+                String json = PvpTweaksProfiles.exportJson(name, settings, keys);
+                MinecraftClient.getInstance().keyboard.setClipboard(json);
+                if (MinecraftClient.getInstance().player != null) {
+                    MinecraftClient.getInstance().player.sendMessage(Text.literal(
+                        "\u00a7a[PVP Tweaks] Configuration copied to clipboard!"), false);
+                }
+            } catch (Exception ex) {
+                com.pvptweaks.PvpTweaksMod.LOGGER.error("[PVP Tweaks] Export failed: {}", ex.getMessage());
+            }
+            // Return to config screen
+            MinecraftClient.getInstance().execute(() -> {
+                MinecraftClient.getInstance().setScreen(build(parent));
+            });
+        }));
+    }
+
+    private static void handleImport(Screen parent, boolean settings, boolean keys) {
+        try {
+            MinecraftClient mc = MinecraftClient.getInstance();
+            if (mc == null) return;
+            String json = mc.keyboard.getClipboard();
+            boolean ok = PvpTweaksProfiles.importPackage(json, settings, keys);
+            
+            if (mc.player != null) {
+                mc.player.sendMessage(Text.literal(
+                    ok ? "\u00a7a[PVP Tweaks] Imported successfully! A new profile was created."
+                       : "\u00a7c[PVP Tweaks] Import failed \u2014 invalid clipboard content"), false);
+            }
+            
+            if (ok) {
+                mc.setScreen(build(parent));
+                mc.reloadResources();
+            }
+        } catch (Exception ex) {
+            com.pvptweaks.PvpTweaksMod.LOGGER.error("[PVP Tweaks] Import failed: {}", ex.getMessage());
+        }
     }
 }

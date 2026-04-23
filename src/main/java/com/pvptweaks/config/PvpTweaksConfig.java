@@ -139,6 +139,9 @@ public class PvpTweaksConfig {
     public String soundEventTarget = "entity.generic.explode";
     public String textureTarget      = "totem_of_undying";
 
+    public String lastSettingsProfile = "None";
+    public String lastKeybindsProfile = "None";
+
 
     // Sound overrides per PVP event
     public SoundProfile soundTotem      = new SoundProfile();
