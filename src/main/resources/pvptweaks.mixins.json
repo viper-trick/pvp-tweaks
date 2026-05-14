@@ -20,7 +20,15 @@
     "SoundRedirectMixin",
     "ExplosionPacketMixin",
     "ResourcePackInjectMixin",
-    "InteractionManagerMixin"
+    "InteractionManagerMixin",
+    "PumpkinBlurMixin",
+    "BlockModelRendererMixin",
+    "BlockOutlineMixin",
+    "ResourcePackManagerMixin",
+    "SoundManagerDebugMixin",
+    "SoundManagerMixin",
+    "SoundLoaderMixin",
+    "SoundManagerAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

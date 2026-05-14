@@ -21,8 +21,8 @@ public class ResourcePackInjectMixin {
     private List<ResourcePack> pvptweaks$injectFirePack(List<ResourcePack> original) {
         List<ResourcePack> mutable = new ArrayList<>(original);
         mutable.add(new PvpTweaksDynamicPack());
-        com.pvptweaks.PvpTweaksMod.LOGGER.info("[PVP Tweaks] FirePack injected as pack #{}, preset={}",
-            mutable.size(), com.pvptweaks.config.PvpTweaksConfig.get().firePreset);
+        com.pvptweaks.PvpTweaksMod.LOGGER.info("[PVP Tweaks] DynamicPack injected into ResourceManager. Pack count: {}",
+            mutable.size());
         return mutable;
     }
 }

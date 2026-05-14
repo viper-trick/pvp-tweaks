@@ -22,7 +22,7 @@ public class SoundInstanceMixin {
         float original = cir.getReturnValue();
         String path = id.getPath();
 
-        // generic.explode משמש לכולם — מזהים לפי מיקום
+        // entity.generic.explode — identify by position what kind of explosion this is
         if (path.equals("entity.generic.explode") || path.contains("explode") || path.contains("explosion")) {
             double x = self.getX(), y = self.getY(), z = self.getZ();
             if (ExplosionTracker.isNearCrystal(x, y, z)) {
@@ -30,7 +30,10 @@ public class SoundInstanceMixin {
             } else if (ExplosionTracker.isNearAnchor(x, y, z)) {
                 cir.setReturnValue(original * cfg.getRespawnAnchorMultiplier());
             } else {
-                cir.setReturnValue(original * cfg.getExplosionMultiplier());
+                // Per-type "Other Explosions" volume
+                ExplosionTracker.OtherType type = ExplosionTracker.getOtherType(x, y, z);
+                float mult = otherTypeVolumeMultiplier(cfg, type);
+                cir.setReturnValue(original * mult);
             }
             return;
         }
@@ -40,5 +43,18 @@ public class SoundInstanceMixin {
         } else if (path.contains("hurt") || path.contains("damage")) {
             cir.setReturnValue(original * cfg.getHitMultiplier());
         }
+    }
+
+    private static float otherTypeVolumeMultiplier(PvpTweaksConfig cfg,
+                                                    ExplosionTracker.OtherType type) {
+        if (type == null) return cfg.getExplosionMultiplier();
+        return switch (type) {
+            case TNT         -> cfg.getTntExplosionMultiplier();
+            case CREEPER     -> cfg.getCreeperExplosionMultiplier();
+            case BED         -> cfg.getBedExplosionMultiplier();
+            case GHAST       -> cfg.getGhastExplosionMultiplier();
+            case WIND_CHARGE -> cfg.getWindChargeMultiplier();
+            default          -> cfg.getExplosionMultiplier();
+        };
     }
 }

@@ -37,7 +37,17 @@ public class SoundRedirectMixin {
             double x = self.getX(), y = self.getY(), z = self.getZ();
             if      (ExplosionTracker.isNearCrystal(x, y, z)) profile = cfg.soundCrystal;
             else if (ExplosionTracker.isNearAnchor(x, y, z))  profile = cfg.soundAnchor;
-            else                                                profile = cfg.soundExplosion;
+            else {
+                ExplosionTracker.OtherType type = ExplosionTracker.getOtherType(x, y, z);
+                profile = switch (type) {
+                    case TNT         -> cfg.soundTnt;
+                    case CREEPER     -> cfg.soundCreeper;
+                    case BED         -> cfg.soundBed;
+                    case GHAST       -> cfg.soundGhast;
+                    case WIND_CHARGE -> cfg.soundWindCharge;
+                    default          -> cfg.soundExplosion;
+                };
+            }
         } else if (path.contains("totem"))                          profile = cfg.soundTotem;
         else if (path.contains("hurt") || path.contains("damage"))  profile = cfg.soundHit;
         else if (path.contains("shield") && path.contains("break")) profile = cfg.soundShieldBreak;
@@ -79,15 +89,7 @@ public class SoundRedirectMixin {
 
         WeightedSoundSet newSet = manager.get(newId);
         if (newSet == null) {
-            if (newId.getNamespace().equals("pvptweaks")) {
-                // File may have been added after last reload — trigger one now
-                PvpTweaksMod.LOGGER.info("[PVP Tweaks] pvptweaks sound not in registry, reloading: {}", newId);
-                net.minecraft.client.MinecraftClient mc =
-                    net.minecraft.client.MinecraftClient.getInstance();
-                if (mc != null) mc.execute(mc::reloadResources);
-            } else {
-                PvpTweaksMod.LOGGER.warn("[PVP Tweaks] sound not in SoundManager: {}", newId);
-            }
+            PvpTweaksMod.LOGGER.warn("[PVP Tweaks] sound not in SoundManager: {}", newId);
             return;
         }
 

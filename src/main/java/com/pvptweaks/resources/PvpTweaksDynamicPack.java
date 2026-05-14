@@ -22,13 +22,26 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class PvpTweaksDynamicPack implements ResourcePack {
+    public static PvpTweaksDynamicPack INSTANCE;
+
+    public PvpTweaksDynamicPack() {
+        INSTANCE = this;
+        System.out.println("[PVP Tweaks] DynamicPack instance created!");
+    }
 
     private static final ResourcePackInfo INFO = new ResourcePackInfo(
         "pvptweaks:dynamic", Text.literal("PVP Tweaks Dynamic"),
         ResourcePackSource.BUILTIN, Optional.empty()
     );
 
-    @Override public InputSupplier<InputStream> openRoot(String... segments) { return null; }
+    @Override
+    public InputSupplier<InputStream> openRoot(String... segments) {
+        if (segments.length == 1 && segments[0].equals("pack.mcmeta")) {
+            String mcmeta = "{\"pack\":{\"pack_format\":34,\"description\":\"PVP Tweaks Dynamic Sounds\"}}";
+            return () -> new ByteArrayInputStream(mcmeta.getBytes(StandardCharsets.UTF_8));
+        }
+        return null;
+    }
 
     @Override
     public InputSupplier<InputStream> open(ResourceType type, Identifier id) {
@@ -38,12 +51,38 @@ public class PvpTweaksDynamicPack implements ResourcePack {
         String path = id.getPath();
 
         if (ns.equals("pvptweaks")) {
-            if (path.equals("sounds.json")) return buildSoundsJson();
-            if (path.startsWith("sounds/custom/")) {
-                String fileName = path.substring("sounds/custom/".length());
-                Path file = PvpTweaksConfig.SOUNDS_DIR.resolve(fileName);
-                if (Files.exists(file)) return () -> Files.newInputStream(file);
-                PvpTweaksMod.LOGGER.warn("[PVP Tweaks] ogg not found on disk: {}", file);
+            PvpTweaksMod.LOGGER.info("[PVP Tweaks] Resource requested: {}", id);
+            if (path.equals("sounds.json")) {
+                PvpTweaksMod.LOGGER.info("[PVP Tweaks] Serving dynamic sounds.json");
+                return buildSoundsJson();
+            }
+            if (path.startsWith("sounds/custom/") && path.endsWith(".ogg")) {
+                String requestedFn = path.substring("sounds/custom/".length()); // e.g. "my_sound.ogg"
+                PvpTweaksMod.LOGGER.info("[PVP Tweaks] Sound resource requested: {}, file part: {}", id, requestedFn);
+                Path dir = PvpTweaksConfig.SOUNDS_DIR;
+                if (Files.exists(dir)) {
+                    try {
+                        List<Path> allOggs = Files.list(dir).filter(p -> p.getFileName().toString().toLowerCase().endsWith(".ogg")).toList();
+                        PvpTweaksMod.LOGGER.info("[PVP Tweaks] Found {} .ogg files in sounds dir", allOggs.size());
+                        
+                        Optional<Path> found = allOggs.stream()
+                            .filter(p -> {
+                                String fn = p.getFileName().toString().toLowerCase();
+                                String base = fn.substring(0, fn.length() - 4);
+                                String safe = base.replaceAll("[^a-z0-9_]", "_") + ".ogg";
+                                return safe.equals(requestedFn);
+                            })
+                            .findFirst();
+                        if (found.isPresent()) {
+                            PvpTweaksMod.LOGGER.info("[PVP Tweaks] Serving custom sound file: {} -> {}", path, found.get().getFileName());
+                            return () -> Files.newInputStream(found.get());
+                        } else {
+                            PvpTweaksMod.LOGGER.warn("[PVP Tweaks] No match found for safe name: {}", requestedFn);
+                        }
+                    } catch (IOException e) {
+                        PvpTweaksMod.LOGGER.error("[PVP Tweaks] Error reading sounds dir: {}", e.getMessage());
+                    }
+                }
                 return null;
             }
             return null;
@@ -76,25 +115,28 @@ public class PvpTweaksDynamicPack implements ResourcePack {
         if (type != ResourceType.CLIENT_RESOURCES) return;
 
         if (namespace.equals("pvptweaks")) {
-            // CRITICAL: SoundManager.prepare() calls findResources("pvptweaks", "sounds.json", ...)
-            // to discover sound registries. Without this branch pvptweaks sounds are never loaded.
+            PvpTweaksMod.LOGGER.info("[PVP Tweaks] findResources called: namespace={}, prefix={}", namespace, prefix);
+            
+            // Serve sounds.json if it matches prefix
             if ("sounds.json".startsWith(prefix)) {
-                Identifier sid = Identifier.of("pvptweaks", "sounds.json");
-                InputSupplier<InputStream> sup = buildSoundsJson();
-                if (sup != null) {
-                    PvpTweaksMod.LOGGER.info("[PVP Tweaks] findResources: exposing pvptweaks:sounds.json");
-                    consumer.accept(sid, sup);
-                }
+                PvpTweaksMod.LOGGER.info("[PVP Tweaks] Providing sounds.json via findResources");
+                consumer.accept(Identifier.of("pvptweaks", "sounds.json"), buildSoundsJson());
             }
+            
+            // Discover custom sounds
             Path dir = PvpTweaksConfig.SOUNDS_DIR;
             if (Files.exists(dir)) {
                 try {
                     Files.list(dir)
-                        .filter(p -> p.getFileName().toString().endsWith(".ogg"))
+                        .filter(p -> p.getFileName().toString().toLowerCase().endsWith(".ogg"))
                         .forEach(p -> {
-                            String soundPath = "sounds/custom/" + p.getFileName().toString();
-                            if (soundPath.startsWith(prefix)) {
-                                Identifier id = Identifier.of("pvptweaks", soundPath);
+                            String fn = p.getFileName().toString().toLowerCase();
+                            String base = fn.substring(0, fn.length() - 4);
+                            String safe = base.replaceAll("[^a-z0-9_]", "_") + ".ogg";
+                            String relPath = "sounds/custom/" + safe;
+                            if (relPath.startsWith(prefix)) {
+                                Identifier id = Identifier.of("pvptweaks", relPath);
+                                PvpTweaksMod.LOGGER.info("[PVP Tweaks] Providing sound resource via findResources: {}", id);
                                 consumer.accept(id, () -> Files.newInputStream(p));
                             }
                         });
@@ -134,27 +176,34 @@ public class PvpTweaksDynamicPack implements ResourcePack {
 
     private InputSupplier<InputStream> buildSoundsJson() {
         Path dir = PvpTweaksConfig.SOUNDS_DIR;
-        StringBuilder sb = new StringBuilder("{");
+        com.google.gson.JsonObject root = new com.google.gson.JsonObject();
         try {
             if (Files.exists(dir)) {
                 List<Path> files = Files.list(dir)
-                    .filter(p -> p.getFileName().toString().endsWith(".ogg"))
+                    .filter(p -> p.getFileName().toString().toLowerCase().endsWith(".ogg"))
                     .sorted().collect(Collectors.toList());
-                for (int i = 0; i < files.size(); i++) {
-                    String name = files.get(i).getFileName().toString();
-                    String key  = name.substring(0, name.length() - 4);
-                    sb.append("\"custom/").append(key).append("\":")
-                      .append("{\"sounds\":[{\"name\":\"pvptweaks:custom/")
-                      .append(key).append("\",\"stream\":false}]}");
-                    if (i < files.size() - 1) sb.append(",");
+                for (Path p : files) {
+                    String name = p.getFileName().toString().toLowerCase();
+                    String base = name.substring(0, name.length() - 4);
+                    String safeId = base.replaceAll("[^a-z0-9_]", "_");
+                    
+                    com.google.gson.JsonObject entry = new com.google.gson.JsonObject();
+                    com.google.gson.JsonArray sounds = new com.google.gson.JsonArray();
+                    com.google.gson.JsonObject soundObj = new com.google.gson.JsonObject();
+                    // name is relative to assets/pvptweaks/sounds/
+                    soundObj.addProperty("name", "pvptweaks:custom/" + safeId);
+                    soundObj.addProperty("stream", false);
+                    sounds.add(soundObj);
+                    entry.add("sounds", sounds);
+                    
+                    root.add("custom/" + safeId, entry);
                 }
             }
         } catch (Exception e) {
-            PvpTweaksMod.LOGGER.error("[PVP Tweaks] buildSoundsJson: {}", e.getMessage());
+            PvpTweaksMod.LOGGER.error("[PVP Tweaks] buildSoundsJson error: {}", e.getMessage());
         }
-        sb.append("}");
-        String json = sb.toString();
-        PvpTweaksMod.LOGGER.info("[PVP Tweaks] sounds.json: {}", json);
+        String json = new com.google.gson.GsonBuilder().setPrettyPrinting().create().toJson(root);
+        PvpTweaksMod.LOGGER.info("[PVP Tweaks] Generated dynamic sounds.json for pvptweaks:\n{}", json);
         byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
         return () -> new ByteArrayInputStream(bytes);
     }

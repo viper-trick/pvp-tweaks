@@ -36,9 +36,7 @@ public class ParticleManagerMixin {
 
         if (seen.add(p)) PvpTweaksMod.LOGGER.info("[PVP Tweaks] Particle seen: {}", p);
 
-        // Other Explosions: TNT/Creeper/Bed ONLY
-        // explosion+poof are shared with crystal/anchor but we filter here
-        // crystal and anchor use their OWN sliders below
+        // Explosion particles — crystal and anchor use own sliders; "other" uses per-type
         if (p.equals("explosion") || p.equals("explosion_emitter")
                 || p.equals("poof") || p.equals("large_smoke") || p.equals("smoke")) {
             float r;
@@ -47,7 +45,9 @@ public class ParticleManagerMixin {
             } else if (ExplosionTracker.isNearCrystal(x, y, z)) {
                 r = cfg.getEnderExplosionRatio();
             } else {
-                r = cfg.getExplosionRatio();
+                // Per-type "Other Explosions" particle ratio
+                ExplosionTracker.OtherType type = ExplosionTracker.getOtherType(x, y, z);
+                r = otherTypeParticleRatio(cfg, type);
             }
             if (r <= 0f || (r < 1f && Math.random() > r)) cir.setReturnValue(null);
             return;
@@ -86,5 +86,18 @@ public class ParticleManagerMixin {
         if (p.equals("crit") || p.equals("enchanted_hit") || p.equals("damage_indicator")) {
             if (!cfg.showHitParticles) cir.setReturnValue(null);
         }
+    }
+
+    private static float otherTypeParticleRatio(PvpTweaksConfig cfg,
+                                                  ExplosionTracker.OtherType type) {
+        if (type == null) return cfg.getExplosionRatio();
+        return switch (type) {
+            case TNT         -> cfg.getTntExplosionParticleRatio();
+            case CREEPER     -> cfg.getCreeperExplosionParticleRatio();
+            case BED         -> cfg.getBedExplosionParticleRatio();
+            case GHAST       -> cfg.getGhastExplosionParticleRatio();
+            case WIND_CHARGE -> cfg.getWindChargeParticleRatio();
+            default          -> cfg.getExplosionRatio();
+        };
     }
 }

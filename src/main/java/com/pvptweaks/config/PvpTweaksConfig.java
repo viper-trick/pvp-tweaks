@@ -40,6 +40,7 @@ public class PvpTweaksConfig {
     public int crossbowScalePct    = 100;
     public int tridentScalePct     = 100;
     public int maceScalePct        = 100;
+    public int armorScalePct       = 100;
     public int otherItemScalePct   = 100;
 
     public int totemPopScalePct    = 50;
@@ -89,6 +90,33 @@ public class PvpTweaksConfig {
     public int     anchorExplosionParticlePct = 0;  // anchor explosion volume  // crystal explosion particles
     public boolean showHitParticles     = true;
 
+    // Other Explosions — per-type volume + particles
+    public int tntExplosionVolumePct       = 100;
+    public int tntExplosionParticlePct     = 100;
+    public int creeperExplosionVolumePct   = 100;
+    public int creeperExplosionParticlePct = 100;
+    public int bedExplosionVolumePct       = 100;
+    public int bedExplosionParticlePct     = 100;
+    public int ghastExplosionVolumePct     = 100;
+    public int ghastExplosionParticlePct   = 100;
+    public int windChargeVolumePct         = 100;
+    public int windChargeParticlePct       = 100;
+
+    // Vision
+    public boolean disablePumpkinBlur  = false;
+    public boolean fullbright          = false;
+    public float   fullbrightGamma     = 5.0f;  // 1.0–5.0; 5.0 = maximum visible
+
+    // Plants Control (ported from GRM — client-side only)
+    public boolean plantsControlEnabled = false;
+    public java.util.Set<String> hiddenPlants  = new java.util.HashSet<>();
+    public java.util.Set<String> outlinePlants = new java.util.HashSet<>();
+
+    // Optimizers
+
+    // Durability alert
+    public boolean durabilityAlertSoundOnce = false;
+
     public float getEndCrystalScale()      { return endCrystalScalePct  / 100.0f; }
     public float getFireOverlayScale()     { return fireOverlayScalePct  / 100.0f; }
     public float getFireEntityScale()      { return (hideFireOnGround || "none".equals(firePreset)) ? 0.0f : fireEntityScalePct / 100.0f; }
@@ -103,6 +131,21 @@ public class PvpTweaksConfig {
     public float getTotemPopMultiplier()   { return totemPopVolumePct    / 100.0f; }
     public float getTotemPopScale()        { return totemPopScalePct     / 100.0f; }
     public float getTotemPopAnimScale()    { return totemPopAnimScalePct / 100.0f; }
+    public float getArmorScale()           { return armorScalePct / 100.0f; }
+
+    // Per-type explosion multipliers — volume
+    public float getTntExplosionMultiplier()     { return tntExplosionVolumePct     / 100.0f; }
+    public float getCreeperExplosionMultiplier() { return creeperExplosionVolumePct / 100.0f; }
+    public float getBedExplosionMultiplier()     { return bedExplosionVolumePct     / 100.0f; }
+    public float getGhastExplosionMultiplier()   { return ghastExplosionVolumePct   / 100.0f; }
+    public float getWindChargeMultiplier()       { return windChargeVolumePct       / 100.0f; }
+
+    // Per-type explosion multipliers — particles
+    public float getTntExplosionParticleRatio()     { return tntExplosionParticlePct     / 100.0f; }
+    public float getCreeperExplosionParticleRatio() { return creeperExplosionParticlePct / 100.0f; }
+    public float getBedExplosionParticleRatio()     { return bedExplosionParticlePct     / 100.0f; }
+    public float getGhastExplosionParticleRatio()   { return ghastExplosionParticlePct   / 100.0f; }
+    public float getWindChargeParticleRatio()       { return windChargeParticlePct       / 100.0f; }
 
     public float getItemScale(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return otherItemScalePct / 100.0f;
@@ -133,6 +176,15 @@ public class PvpTweaksConfig {
         if (item == Items.TRIDENT)            return tridentScalePct     / 100.0f;
         // Mace
         if (item == Items.MACE)               return maceScalePct        / 100.0f;
+        // Armor — ArmorItem class removed in MC 1.21.4+; check by item registry ID suffix
+        {
+            String itemPath = net.minecraft.registry.Registries.ITEM.getId(item).getPath();
+            if (itemPath.endsWith("_helmet") || itemPath.endsWith("_chestplate")
+             || itemPath.endsWith("_leggings") || itemPath.endsWith("_boots")
+             || item == Items.ELYTRA || itemPath.equals("turtle_helmet")) {
+                return armorScalePct / 100.0f;
+            }
+        }
         return otherItemScalePct / 100.0f;
     }
 
@@ -149,6 +201,13 @@ public class PvpTweaksConfig {
     public SoundProfile soundExplosion  = new SoundProfile();
     public SoundProfile soundHit        = new SoundProfile();
     public SoundProfile soundAnchor     = new SoundProfile();
+
+    // Per-type Other Explosion sound overrides
+    public SoundProfile soundTnt        = new SoundProfile();
+    public SoundProfile soundCreeper    = new SoundProfile();
+    public SoundProfile soundBed        = new SoundProfile();
+    public SoundProfile soundGhast      = new SoundProfile();
+    public SoundProfile soundWindCharge = new SoundProfile();
 
     // Texture overrides (item name -> absolute file path)
     public java.util.Map<String, String> textureOverrides =

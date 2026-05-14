@@ -32,6 +32,7 @@ public class PvpTweaksConfigScreen {
                     mc.setScreen(new SoundPickerScreen(mc.currentScreen, profile, "Sound",
                         () -> {
                             PvpTweaksConfig.save();
+                            mc.reloadResources();
                             // Refresh screen to show new status
                             mc.setScreen(build(parent));
                         }));
@@ -237,6 +238,7 @@ public class PvpTweaksConfigScreen {
         items.addEntry(e.startIntSlider(Text.literal("\u00a7fCrossbow"), cfg.crossbowScalePct, 25, 300).setDefaultValue(100).setSaveConsumer(v -> cfg.crossbowScalePct = v).build());
         items.addEntry(lbl(e, "\u00a7e", "Utility / PVP"));
         items.addEntry(e.startIntSlider(Text.literal("\u00a7fShield"), cfg.shieldScalePct, 25, 300).setDefaultValue(100).setSaveConsumer(v -> { cfg.shieldScalePct = v; PvpTweaksConfig.save(); }).build());
+        items.addEntry(e.startIntSlider(Text.literal("\u00a7fArmor (in hand)"), cfg.armorScalePct, 25, 300).setDefaultValue(100).setSaveConsumer(v -> cfg.armorScalePct = v).build());
         items.addEntry(e.startIntSlider(Text.literal("\u00a7fTotem of Undying"), cfg.totemScalePct, 25, 300).setDefaultValue(100).setSaveConsumer(v -> cfg.totemScalePct = v).build());
         items.addEntry(e.startIntSlider(Text.literal("\u00a7fGolden Apple"), cfg.goldenAppleScalePct, 25, 300).setDefaultValue(100).setSaveConsumer(v -> cfg.goldenAppleScalePct = v).build());
         items.addEntry(e.startIntSlider(Text.literal("\u00a7fRespawn Anchor"), cfg.anchorScalePct, 25, 300).setDefaultValue(100).setSaveConsumer(v -> cfg.anchorScalePct = v).build());
@@ -267,11 +269,45 @@ public class PvpTweaksConfigScreen {
         anchor.addEntry(lbl(e, "\u00a75", "Custom Sound"));
         addSoundField(anchor, e, cfg.soundAnchor, parent);
 
-        // Other Explosions
+        // Other Explosions — per-type subcategories
         ConfigCategory exp = builder.getOrCreateCategory(Text.literal("\u00a7c\ud83d\udca5 Other Explosions"));
-        exp.addEntry(e.startTextDescription(Text.literal("\u00a77TNT, Creeper, Bed explosions\n\u00a78Does NOT affect End Crystal or Respawn Anchor")).build());
-        exp.addEntry(e.startIntSlider(Text.literal("\u00a7fExplosion Volume (%)"), cfg.explosionVolumePct, 0, 200).setDefaultValue(100).setSaveConsumer(v -> cfg.explosionVolumePct = v).build());
-        exp.addEntry(e.startIntSlider(Text.literal("\u00a7fSmoke Particles (%)"), cfg.explosionParticlePct, 0, 200).setDefaultValue(100).setSaveConsumer(v -> cfg.explosionParticlePct = v).build());
+        exp.addEntry(e.startTextDescription(Text.literal(
+            "\u00a77Per-type volume and particle controls.\n\u00a78Does NOT affect End Crystal or Respawn Anchor")).build());
+
+        exp.addEntry(lbl(e, "\u00a7e", "\ud83d\udce6 TNT"));
+        exp.addEntry(e.startIntSlider(Text.literal("\u00a7fTNT Volume (%)"), cfg.tntExplosionVolumePct, 0, 200).setDefaultValue(100).setSaveConsumer(v -> cfg.tntExplosionVolumePct = v).build());
+        exp.addEntry(e.startIntSlider(Text.literal("\u00a7fTNT Particles (%)"), cfg.tntExplosionParticlePct, 0, 200).setDefaultValue(100).setSaveConsumer(v -> cfg.tntExplosionParticlePct = v).build());
+        exp.addEntry(lbl(e, "\u00a7e", "TNT Custom Sound"));
+        addSoundField(exp, e, cfg.soundTnt, parent);
+
+        exp.addEntry(lbl(e, "\u00a7a", "\ud83d\udc22 Creeper"));
+        exp.addEntry(e.startIntSlider(Text.literal("\u00a7fCreeper Volume (%)"), cfg.creeperExplosionVolumePct, 0, 200).setDefaultValue(100).setSaveConsumer(v -> cfg.creeperExplosionVolumePct = v).build());
+        exp.addEntry(e.startIntSlider(Text.literal("\u00a7fCreeper Particles (%)"), cfg.creeperExplosionParticlePct, 0, 200).setDefaultValue(100).setSaveConsumer(v -> cfg.creeperExplosionParticlePct = v).build());
+        exp.addEntry(lbl(e, "\u00a7a", "Creeper Custom Sound"));
+        addSoundField(exp, e, cfg.soundCreeper, parent);
+
+        exp.addEntry(lbl(e, "\u00a7d", "\ud83d\udecc Bed (Nether/End)"));
+        exp.addEntry(e.startIntSlider(Text.literal("\u00a7fBed Volume (%)"), cfg.bedExplosionVolumePct, 0, 200).setDefaultValue(100).setSaveConsumer(v -> cfg.bedExplosionVolumePct = v).build());
+        exp.addEntry(e.startIntSlider(Text.literal("\u00a7fBed Particles (%)"), cfg.bedExplosionParticlePct, 0, 200).setDefaultValue(100).setSaveConsumer(v -> cfg.bedExplosionParticlePct = v).build());
+        exp.addEntry(lbl(e, "\u00a7d", "Bed Custom Sound"));
+        addSoundField(exp, e, cfg.soundBed, parent);
+
+        exp.addEntry(lbl(e, "\u00a76", "\ud83d\udd25 Ghast Fireball"));
+        exp.addEntry(e.startIntSlider(Text.literal("\u00a7fGhast Volume (%)"), cfg.ghastExplosionVolumePct, 0, 200).setDefaultValue(100).setSaveConsumer(v -> cfg.ghastExplosionVolumePct = v).build());
+        exp.addEntry(e.startIntSlider(Text.literal("\u00a7fGhast Particles (%)"), cfg.ghastExplosionParticlePct, 0, 200).setDefaultValue(100).setSaveConsumer(v -> cfg.ghastExplosionParticlePct = v).build());
+        exp.addEntry(lbl(e, "\u00a76", "Ghast Custom Sound"));
+        addSoundField(exp, e, cfg.soundGhast, parent);
+
+        exp.addEntry(lbl(e, "\u00a7b", "\ud83d\udca8 Wind Charge"));
+        exp.addEntry(e.startIntSlider(Text.literal("\u00a7fWind Charge Volume (%)"), cfg.windChargeVolumePct, 0, 200).setDefaultValue(100).setSaveConsumer(v -> cfg.windChargeVolumePct = v).build());
+        exp.addEntry(e.startIntSlider(Text.literal("\u00a7fWind Charge Particles (%)"), cfg.windChargeParticlePct, 0, 200).setDefaultValue(100).setSaveConsumer(v -> cfg.windChargeParticlePct = v).build());
+        exp.addEntry(lbl(e, "\u00a7b", "Wind Charge Custom Sound"));
+        addSoundField(exp, e, cfg.soundWindCharge, parent);
+
+        exp.addEntry(lbl(e, "\u00a78", "\ud83d\udd01 All Others (Fallback)"));
+        exp.addEntry(e.startTextDescription(Text.literal("\u00a78Used when the explosion type cannot be identified")).build());
+        exp.addEntry(e.startIntSlider(Text.literal("\u00a7fFallback Volume (%)"), cfg.explosionVolumePct, 0, 200).setDefaultValue(100).setSaveConsumer(v -> cfg.explosionVolumePct = v).build());
+        exp.addEntry(e.startIntSlider(Text.literal("\u00a7fFallback Particles (%)"), cfg.explosionParticlePct, 0, 200).setDefaultValue(100).setSaveConsumer(v -> cfg.explosionParticlePct = v).build());
         exp.addEntry(lbl(e, "\u00a7c", "Custom Sound"));
         addSoundField(exp, e, cfg.soundExplosion, parent);
 
@@ -400,8 +436,52 @@ public class PvpTweaksConfigScreen {
         dhud.addEntry(e.startBooleanToggle(Text.literal("\u00a7fShow Main Hand"), cfg.durabilityHudShowMainHand).setDefaultValue(true).setSaveConsumer(v -> cfg.durabilityHudShowMainHand = v).build());
         dhud.addEntry(e.startBooleanToggle(Text.literal("\u00a7fShow Off Hand"), cfg.durabilityHudShowOffHand).setDefaultValue(true).setSaveConsumer(v -> cfg.durabilityHudShowOffHand = v).build());
         
+        dhud.addEntry(e.startBooleanToggle(Text.literal("\u00a7fAlert Sound: Play Once Only"), cfg.durabilityAlertSoundOnce)
+            .setDefaultValue(false)
+            .setTooltip(Text.literal("When enabled, the low-durability warning sound plays once and stops repeating until all items recover."))
+            .setSaveConsumer(v -> cfg.durabilityAlertSoundOnce = v)
+            .build());
         dhud.addEntry(lbl(e, "\u00a7b", "Custom Low Durability Alert Sound"));
         addSoundField(dhud, e, cfg.soundDurabilityLow, parent);
+
+
+
+        // ── Vision ────────────────────────────────────────────────────────────
+        ConfigCategory vision = builder.getOrCreateCategory(Text.literal("\u00a7b\ud83d\udc41 Vision"));
+
+        vision.addEntry(e.startBooleanToggle(Text.literal("\u00a7fDisable Pumpkin Blur"), cfg.disablePumpkinBlur)
+            .setDefaultValue(false)
+            .setTooltip(Text.literal("Removes the carved-pumpkin overlay when wearing a pumpkin. (\u26a0 May be prohibited on some servers)"))
+            .setSaveConsumer(v -> cfg.disablePumpkinBlur = v)
+            .build());
+
+        vision.addEntry(e.startBooleanToggle(Text.literal("\u00a7fFullbright"), cfg.fullbright)
+            .setDefaultValue(false)
+            .setTooltip(Text.literal("Overrides gamma to make everything visible in the dark. (\u26a0 May be prohibited on some servers)"))
+            .setSaveConsumer(v -> cfg.fullbright = v)
+            .build());
+        vision.addEntry(e.startIntSlider(
+                Text.literal("\u00a7fFullbright Gamma (%)"),
+                Math.round(cfg.fullbrightGamma * 100), 100, 500)
+            .setDefaultValue(500)
+            .setTooltip(Text.literal("100% = normal screen, 500% = maximum brightness. Only active when Fullbright is ON."))
+            .setSaveConsumer(v -> cfg.fullbrightGamma = v / 100.0f)
+            .build());
+
+
+
+
+
+        vision.addEntry(lbl(e, "\u00a72", "\u2500 Plants Control \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+        vision.addEntry(e.startTextDescription(Text.literal(
+            "\u00a77Hide plant rendering and/or outlines. Choose exactly which plants to hide.")).build());
+        vision.addEntry(new ButtonEntry(
+            Text.literal("\u00a7a\ud83c\udf3f Open Plants Control"),
+            () -> {
+                MinecraftClient mc = MinecraftClient.getInstance();
+                if (mc != null) mc.setScreen(new com.pvptweaks.gui.PlantsControlScreen(mc.currentScreen));
+            }
+        ));
 
 
 
@@ -410,7 +490,7 @@ public class PvpTweaksConfigScreen {
         soundCat.addEntry(e.startTextDescription(Text.literal("\u00a7fHow to use custom sounds:")).build());
         soundCat.addEntry(e.startTextDescription(Text.literal("\u00a7e1. \u00a7fGo to each tab (Totem, Crystal, etc.)")).build());
         soundCat.addEntry(e.startTextDescription(Text.literal("\u00a7e2. \u00a7fClick Save and Quit")).build());
-        soundCat.addEntry(e.startTextDescription(Text.literal("\u00a7e3. \u00a7fIn-game press ESC → Mods → PVP Tweaks → \u00a7bOpen Sound Picker")).build());
+        soundCat.addEntry(e.startTextDescription(Text.literal("\u00a7e3. \u00a7fIn-game press ESC \u2192 Mods \u2192 PVP Tweaks \u2192 \u00a7bOpen Sound Picker")).build());
         soundCat.addEntry(e.startTextDescription(Text.literal("\u00a77In the Sound Picker: search MC sounds, browse your folder, or open the folder to add .ogg files")).build());
         soundCat.addEntry(e.startTextDescription(Text.literal("")).build());
         soundCat.addEntry(e.startTextDescription(Text.literal("\u00a77Current sounds:")).build());
@@ -435,6 +515,8 @@ public class PvpTweaksConfigScreen {
             .setTooltip(Text.literal("Immediately removes respawn anchors client-side when exploded."))
             .setSaveConsumer(v -> cfg.anchorOptimizer = v)
             .build());
+
+
 
         // ── Share / Import-Export ────────────────────────────────────────────────
         ConfigCategory share = builder.getOrCreateCategory(Text.literal("\u00a7d\ud83d\udce4 Share / Import-Export"));

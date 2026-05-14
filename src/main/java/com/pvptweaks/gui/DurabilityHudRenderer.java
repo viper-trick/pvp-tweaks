@@ -14,10 +14,17 @@ import net.minecraft.util.Identifier;
 import net.minecraft.client.sound.PositionedSoundInstance;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class DurabilityHudRenderer {
     private static long lastAlertTime = 0;
+
+    /** Tracks which items were already "low" so we can detect new low events. */
+    private static final Set<String> previouslyLow = new HashSet<>();
+    /** True once we've played the sound; reset when ALL previously-low items recover. */
+    private static boolean alertPlayed = false;
 
     public static void render(DrawContext context, RenderTickCounter tickCounter) {
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
@@ -45,9 +52,30 @@ public class DurabilityHudRenderer {
 
         if (items.isEmpty()) return;
 
+        // ── Durability alert sound-once logic ────────────────────────────────
+        Set<String> currentlyLow = new HashSet<>();
+        for (ItemStack stack : items) {
+            boolean low = stack.isDamageable() && stack.getDamage() > (stack.getMaxDamage() * 0.9);
+            if (low) currentlyLow.add(stack.getItem().toString());
+        }
+
+        // Detect any item that newly entered "low" state
+        boolean anyNewLow = false;
+        for (String key : currentlyLow) {
+            if (!previouslyLow.contains(key)) { anyNewLow = true; break; }
+        }
+        if (anyNewLow) alertPlayed = false;  // reset on new low item
+
+        // If ALL items recovered from low, also reset
+        if (currentlyLow.isEmpty() && !previouslyLow.isEmpty()) alertPlayed = false;
+
+        previouslyLow.clear();
+        previouslyLow.addAll(currentlyLow);
+        // ─────────────────────────────────────────────────────────────────────
+
         int width = client.getWindow().getScaledWidth();
         int height = client.getWindow().getScaledHeight();
-        
+
         int x = (int) (width * (cfg.durabilityHudX / 100.0f));
         int y = (int) (height * (cfg.durabilityHudY / 100.0f));
 
@@ -61,7 +89,6 @@ public class DurabilityHudRenderer {
             // Background slot
             if (cfg.durabilityHudBackground) {
                 context.fill(ix, iy, ix + 16, iy + 16, 0x55000000);
-                // Simple frame
                 context.fill(ix, iy, ix + 16, iy + 1, 0x88FFFFFF);
                 context.fill(ix, iy + 15, ix + 16, iy + 16, 0x88000000);
                 context.fill(ix, iy, ix + 1, iy + 16, 0x88FFFFFF);
@@ -74,10 +101,21 @@ public class DurabilityHudRenderer {
 
             if (blink) {
                 context.fill(ix, iy, ix + 16, iy + 16, 0x66FF0000);
-                // Trigger sound once every 5 seconds if low
-                if (System.currentTimeMillis() - lastAlertTime >= 5000) {
+
+                // Trigger alert sound
+                boolean shouldPlay;
+                if (cfg.durabilityAlertSoundOnce) {
+                    // Play once only — stop repeating after first play
+                    shouldPlay = !alertPlayed;
+                } else {
+                    // Original behaviour: repeat every 5 seconds
+                    shouldPlay = System.currentTimeMillis() - lastAlertTime >= 5000;
+                }
+
+                if (shouldPlay) {
                     playSound(cfg.soundDurabilityLow);
                     lastAlertTime = System.currentTimeMillis();
+                    alertPlayed = true;
                 }
             }
 
@@ -89,7 +127,6 @@ public class DurabilityHudRenderer {
                 String text = String.valueOf(dur);
                 int col = low ? 0xFFFF5555 : 0xFFFFFFFF;
                 int textWidth = client.textRenderer.getWidth(text);
-                // Center text above the 16x16 item slot
                 context.drawTextWithShadow(client.textRenderer, text, ix + 8 - textWidth / 2, iy - 10, col);
             }
 
@@ -100,7 +137,7 @@ public class DurabilityHudRenderer {
     private static void playSound(SoundProfile p) {
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.player == null) return;
-        
+
         SoundEvent ev = null;
         if (p.isDefault()) {
             ev = net.minecraft.sound.SoundEvents.UI_BUTTON_CLICK.value();

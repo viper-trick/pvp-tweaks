@@ -11,6 +11,7 @@ base {
 }
 
 repositories {
+    mavenCentral()
     maven { url = "https://maven.shedaniel.me/" }
     maven { url = "https://maven.terraformersmc.com/releases/" }
 }
@@ -31,6 +32,10 @@ dependencies {
         exclude(group: "net.fabricmc.fabric-api")
     }
     modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
+
+    // Bundled audio conversion libs - jlayer for MP3 decoding
+    implementation 'javazoom:jlayer:1.0.1'
+    include 'javazoom:jlayer:1.0.1'
 }
 
 processResources {
