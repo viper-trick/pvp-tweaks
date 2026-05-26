@@ -2,6 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "com.pvptweaks.mixin",
+  "plugin": "com.pvptweaks.mixin.PvpTweaksMixinPlugin",
   "compatibilityLevel": "JAVA_21",
   "refmap": "pvptweaks-refmap.json",
   "mixins": [],
@@ -28,7 +29,11 @@
     "SoundManagerDebugMixin",
     "SoundManagerMixin",
     "SoundLoaderMixin",
-    "SoundManagerAccessor"
+    "SoundManagerAccessor",
+    "GameRendererMixin",
+    "MouseMixin",
+    "DrawContextMixin",
+    "ZoomifyMixin"
   ],
   "injectors": {
     "defaultRequire": 1

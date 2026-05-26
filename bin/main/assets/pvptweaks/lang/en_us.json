@@ -1,0 +1,25 @@
+{
+  "pvptweaks.config.title": "PVP Tweaks – Settings",
+
+  "pvptweaks.config.textures":                        "Texture & Size",
+  "pvptweaks.config.textures.endCrystalScalePct":     "End Crystal Size (%)",
+  "pvptweaks.config.textures.endCrystalScalePct.tooltip": "Scales the End Crystal entity render. 100 = default size.",
+  "pvptweaks.config.textures.totemScalePct":          "Totem of Undying Size (%)",
+  "pvptweaks.config.textures.totemScalePct.tooltip":  "Scales the Totem item in first-person and hotbar. 100 = default.",
+
+  "pvptweaks.config.sounds":                          "Sound Volumes",
+  "pvptweaks.config.sounds.explosionVolumePct":       "Explosion Volume (%)",
+  "pvptweaks.config.sounds.explosionVolumePct.tooltip": "Multiplies volume for explosion sounds. 0 = silent, 100 = normal, 200 = double.",
+  "pvptweaks.config.sounds.hitVolumePct":             "Hit Sound Volume (%)",
+  "pvptweaks.config.sounds.hitVolumePct.tooltip":     "Multiplies volume for player/entity hurt sounds.",
+  "pvptweaks.config.sounds.crystalPopVolumePct":      "Crystal Pop Volume (%)",
+  "pvptweaks.config.sounds.crystalPopVolumePct.tooltip": "Multiplies volume for End Crystal death / explosion sounds.",
+
+  "pvptweaks.config.particles":                       "Particles",
+  "pvptweaks.config.particles.explosionParticlePct":  "Explosion Particles (%)",
+  "pvptweaks.config.particles.explosionParticlePct.tooltip": "Percentage of explosion particles to render. 0 = none, 100 = all.",
+  "pvptweaks.config.particles.crystalParticlePct":    "Crystal Particles (%)",
+  "pvptweaks.config.particles.crystalParticlePct.tooltip": "Percentage of End Crystal ambient/death particles to render.",
+  "pvptweaks.config.particles.showHitParticles":      "Show Hit / Crit Particles",
+  "pvptweaks.config.particles.showHitParticles.tooltip": "Toggle the damage / critical hit particle effects."
+}

@@ -2,15 +2,13 @@ package com.pvptweaks.gui;
 
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
+import net.minecraft.client.input.KeyInput;
 import org.lwjgl.glfw.GLFW;
 import java.util.function.Consumer;
 
-/** Minimal screen for entering a profile name before saving. */
 public class ProfileNameScreen extends Screen {
-
     private final Screen parent;
     private final String prefill;
     private final Consumer<String> onConfirm;
@@ -18,8 +16,8 @@ public class ProfileNameScreen extends Screen {
 
     public ProfileNameScreen(Screen parent, String prefill, Consumer<String> onConfirm) {
         super(Text.literal("Save Profile"));
-        this.parent    = parent;
-        this.prefill   = prefill;
+        this.parent = parent;
+        this.prefill = prefill;
         this.onConfirm = onConfirm;
     }
 
@@ -33,31 +31,28 @@ public class ProfileNameScreen extends Screen {
         addDrawableChild(nameField);
         setInitialFocus(nameField);
 
-        addDrawableChild(ButtonWidget.builder(Text.literal("Save"),
-            b -> confirm()).dimensions(midX - 52, this.height / 2 + 16, 50, 20).build());
-        addDrawableChild(ButtonWidget.builder(Text.literal("Cancel"),
-            b -> client.setScreen(parent)).dimensions(midX + 2, this.height / 2 + 16, 50, 20).build());
+        addDrawableChild(new ModernButtonWidget(midX - 102, this.height / 2 + 16, 100, 20, (Text)Text.literal("Save"), () -> confirm()));
+        addDrawableChild(new ModernButtonWidget(midX + 2, this.height / 2 + 16, 100, 20, (Text)Text.literal("Cancel"), () -> client.setScreen(parent)));
     }
 
     private void confirm() {
         String name = nameField.getText().trim();
-        if (!name.isBlank()) {
-            onConfirm.accept(name);
-        }
+        if (!name.isBlank()) onConfirm.accept(name);
         client.setScreen(parent);
     }
 
     @Override
-    public boolean keyPressed(net.minecraft.client.input.KeyInput input) {
-        if (input.key() == org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER) { confirm(); return true; }
-        if (input.key() == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) { client.setScreen(parent); return true; }
+    public boolean keyPressed(KeyInput input) {
+        if (input.key() == GLFW.GLFW_KEY_ENTER) { confirm(); return true; }
+        if (input.key() == GLFW.GLFW_KEY_ESCAPE) { client.setScreen(parent); return true; }
         return super.keyPressed(input);
     }
 
     @Override
     public void render(DrawContext ctx, int mx, int my, float delta) {
+        RenderUtils.drawGradientRect(ctx, 0, 0, width, height, 0xAA101010, 0xCC101010);
+        RenderUtils.drawOutline(ctx, width / 2 - 120, height / 2 - 50, 240, 100, 1, UiPalette.BORDER);
+        ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("\u00a7lSAVE PROFILE"), this.width / 2, this.height / 2 - 40, UiPalette.ACCENT_BLUE);
         super.render(ctx, mx, my, delta);
-        ctx.drawCenteredTextWithShadow(textRenderer,
-            Text.literal("\u00a76Enter profile name:"), this.width / 2, this.height / 2 - 28, 0xFFFFFFFF);
     }
 }

@@ -17,7 +17,13 @@ public class ModMenuIntegration implements ModMenuApi {
 
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
-        return parent -> PvpTweaksConfigScreen.build(parent);
+        return parent -> {
+            if (PvpTweaksConfig.get().useLegacyMenu) {
+                return PvpTweaksConfigScreen.build(parent);
+            } else {
+                return new com.pvptweaks.gui.PvpTweaksHubScreen(parent);
+            }
+        };
     }
 
     @Override
@@ -26,17 +32,17 @@ public class ModMenuIntegration implements ModMenuApi {
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         // Sound Pickers — אחד לכל קטגוריה
         map.put("pvptweaks:sound_totem",
-            parent -> new SoundPickerScreen(parent, cfg.soundTotem,    "Totem Pop",       PvpTweaksConfig::save));
+            parent -> new SoundPickerScreen(parent, parent, cfg.soundTotem,    "Totem Pop",       PvpTweaksConfig::save));
         map.put("pvptweaks:sound_crystal",
-            parent -> new SoundPickerScreen(parent, cfg.soundCrystal,  "End Crystal",     PvpTweaksConfig::save));
+            parent -> new SoundPickerScreen(parent, parent, cfg.soundCrystal,  "End Crystal",     PvpTweaksConfig::save));
         map.put("pvptweaks:sound_anchor",
-            parent -> new SoundPickerScreen(parent, cfg.soundAnchor,   "Respawn Anchor",  PvpTweaksConfig::save));
+            parent -> new SoundPickerScreen(parent, parent, cfg.soundAnchor,   "Respawn Anchor",  PvpTweaksConfig::save));
         map.put("pvptweaks:sound_explosion",
-            parent -> new SoundPickerScreen(parent, cfg.soundExplosion,"Other Explosions", PvpTweaksConfig::save));
+            parent -> new SoundPickerScreen(parent, parent, cfg.soundExplosion,"Other Explosions", PvpTweaksConfig::save));
         map.put("pvptweaks:sound_hit",
-            parent -> new SoundPickerScreen(parent, cfg.soundHit,      "Hit Sound",       PvpTweaksConfig::save));
+            parent -> new SoundPickerScreen(parent, parent, cfg.soundHit,      "Hit Sound",       PvpTweaksConfig::save));
         map.put("pvptweaks:sound_shield",
-            parent -> new SoundPickerScreen(parent, cfg.soundShieldBreak,"Shield Break",  PvpTweaksConfig::save));
+            parent -> new SoundPickerScreen(parent, parent, cfg.soundShieldBreak,"Shield Break",  PvpTweaksConfig::save));
         return map;
     }
 }

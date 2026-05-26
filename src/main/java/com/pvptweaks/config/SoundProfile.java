@@ -10,6 +10,9 @@ public class SoundProfile {
     public String mode       = "default";
     public String presetId   = "";
     public String customPath = "";
+    
+    public int pitchPct = 100;
+    public int volumePct = 100;
 
     public boolean isDefault() { return "default".equals(mode); }
     public boolean isPreset()  { return "preset".equals(mode);  }

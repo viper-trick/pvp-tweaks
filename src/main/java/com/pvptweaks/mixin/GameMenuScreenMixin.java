@@ -21,9 +21,21 @@ public abstract class GameMenuScreenMixin extends net.minecraft.client.gui.scree
             // Place button above the "Game Menu" text (which is at y=40)
             this.addDrawableChild(ButtonWidget.builder(
                 Text.literal("\u00a7d\u2694 PVP Tweaks"),
-                b -> MinecraftClient.getInstance().setScreen(
-                    PvpTweaksConfigScreen.build(this)
-                )
+                b -> {
+                    if (com.pvptweaks.config.PvpTweaksConfig.get().useLegacyMenu) {
+                        if (!net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("cloth-config")) {
+                            MinecraftClient.getInstance().setScreen(new com.pvptweaks.gui.ClothConfigRequiredScreen(this));
+                        } else {
+                            MinecraftClient.getInstance().setScreen(
+                                com.pvptweaks.integration.ClothConfigScreenHelper.buildScreen(this)
+                            );
+                        }
+                    } else {
+                        MinecraftClient.getInstance().setScreen(
+                            new com.pvptweaks.gui.PvpTweaksHubScreen(this)
+                        );
+                    }
+                }
             ).dimensions(this.width / 2 - 102, 12, 204, 20).build());
         }
     }

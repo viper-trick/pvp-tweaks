@@ -13,33 +13,36 @@ import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(AbstractSoundInstance.class)
-public class SoundRedirectMixin {
+public abstract class SoundRedirectMixin {
 
     @Shadow @Mutable protected Sound sound;
+    @Shadow @Mutable protected float volume;
+    @Shadow @Mutable protected float pitch;
 
-    @Inject(method = "getSoundSet", at = @At("RETURN"), cancellable = true)
-    private void pvptweaks$redirectSoundSet(SoundManager manager,
-            CallbackInfoReturnable<WeightedSoundSet> cir) {
+    @Unique
+    private SoundProfile pvptweaks$matchedProfile;
 
+    @Inject(method = "getSoundSet", at = @At("HEAD"))
+    private void pvptweaks$identifyProfile(SoundManager manager, CallbackInfoReturnable<WeightedSoundSet> cir) {
         SoundInstance self = (SoundInstance)(Object) this;
         Identifier current = self.getId();
         if (current == null) return;
         String path = current.getPath();
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
 
-        SoundProfile profile = null;
         if (path.contains("explode") || path.contains("explosion")) {
             double x = self.getX(), y = self.getY(), z = self.getZ();
-            if      (ExplosionTracker.isNearCrystal(x, y, z)) profile = cfg.soundCrystal;
-            else if (ExplosionTracker.isNearAnchor(x, y, z))  profile = cfg.soundAnchor;
+            if      (ExplosionTracker.isNearCrystal(x, y, z)) pvptweaks$matchedProfile = cfg.soundCrystal;
+            else if (ExplosionTracker.isNearAnchor(x, y, z))  pvptweaks$matchedProfile = cfg.soundAnchor;
             else {
                 ExplosionTracker.OtherType type = ExplosionTracker.getOtherType(x, y, z);
-                profile = switch (type) {
+                pvptweaks$matchedProfile = switch (type) {
                     case TNT         -> cfg.soundTnt;
                     case CREEPER     -> cfg.soundCreeper;
                     case BED         -> cfg.soundBed;
@@ -48,54 +51,68 @@ public class SoundRedirectMixin {
                     default          -> cfg.soundExplosion;
                 };
             }
-        } else if (path.contains("totem"))                          profile = cfg.soundTotem;
-        else if (path.contains("hurt") || path.contains("damage"))  profile = cfg.soundHit;
-        else if (path.contains("shield") && path.contains("break")) profile = cfg.soundShieldBreak;
+        } else if (path.contains("totem"))                          pvptweaks$matchedProfile = cfg.soundTotem;
+        else if (path.contains("hurt") || path.contains("damage"))  pvptweaks$matchedProfile = cfg.soundHit;
+        else if (path.contains("shield") && path.contains("break")) pvptweaks$matchedProfile = cfg.soundShieldBreak;
+    }
 
-        if (profile == null || profile.isDefault()) return;
+    @Inject(method = "getSoundSet", at = @At("RETURN"), cancellable = true)
+    private void pvptweaks$redirectSoundSet(SoundManager manager,
+            CallbackInfoReturnable<WeightedSoundSet> cir) {
+
+        if (pvptweaks$matchedProfile == null || pvptweaks$matchedProfile.isDefault()) return;
+
+        // Apply pitch/volume overrides if they are set (not default 100)
+        if (pvptweaks$matchedProfile.pitchPct != 100) {
+            this.pitch = pvptweaks$matchedProfile.pitchPct / 100.0f;
+        }
+        if (pvptweaks$matchedProfile.volumePct != 100) {
+            this.volume = pvptweaks$matchedProfile.volumePct / 100.0f;
+        }
 
         // Custom mode: absolute file path
-        if (profile.isCustom()) {
-            if (profile.customPath == null || profile.customPath.isBlank()) return;
+        if (pvptweaks$matchedProfile.isCustom()) {
+            if (pvptweaks$matchedProfile.customPath == null || pvptweaks$matchedProfile.customPath.isBlank()) return;
             Identifier customId =
-                com.pvptweaks.sound.CustomSoundManager.registerCustomSound(profile.customPath);
+                com.pvptweaks.sound.CustomSoundManager.registerCustomSound(pvptweaks$matchedProfile.customPath);
             if (customId == null) return;
             WeightedSoundSet customSet = manager.get(customId);
-            if (customSet == null) {
-                PvpTweaksMod.LOGGER.warn("[PVP Tweaks] custom not in registry, reload scheduled: {}", customId);
-                return;
-            }
+            if (customSet == null) return;
             Sound s = customSet.getSound(net.minecraft.util.math.random.Random.create());
             if (s != null) this.sound = s;
-            PvpTweaksMod.LOGGER.info("[PVP Tweaks] custom played: {} -> {}", path, customId);
             cir.setReturnValue(customSet);
             return;
         }
 
         // Preset mode
-        if (!profile.isPreset() || profile.presetId.isBlank()) return;
+        if (!pvptweaks$matchedProfile.isPreset() || pvptweaks$matchedProfile.presetId.isBlank()) return;
 
-        // FIX: vanilla MC sounds are stored without namespace (legacy data).
-        // "entity.firework_rocket.blast" → Identifier.tryParse() = null → silent skip
-        String rawId = profile.presetId.contains(":")
-            ? profile.presetId
-            : "minecraft:" + profile.presetId;
+        String rawId = pvptweaks$matchedProfile.presetId.contains(":")
+            ? pvptweaks$matchedProfile.presetId
+            : "minecraft:" + pvptweaks$matchedProfile.presetId;
 
         Identifier newId = Identifier.tryParse(rawId);
-        if (newId == null) {
-            PvpTweaksMod.LOGGER.warn("[PVP Tweaks] bad sound id: '{}'", rawId);
-            return;
-        }
+        if (newId == null) return;
 
         WeightedSoundSet newSet = manager.get(newId);
-        if (newSet == null) {
-            PvpTweaksMod.LOGGER.warn("[PVP Tweaks] sound not in SoundManager: {}", newId);
-            return;
-        }
+        if (newSet == null) return;
 
         Sound newSound = newSet.getSound(net.minecraft.util.math.random.Random.create());
         if (newSound != null) this.sound = newSound;
-        PvpTweaksMod.LOGGER.info("[PVP Tweaks] redirected: {} -> {}", path, newId);
         cir.setReturnValue(newSet);
+    }
+
+    @Inject(method = "getVolume", at = @At("RETURN"), cancellable = true)
+    private void pvptweaks$overrideVolume(CallbackInfoReturnable<Float> cir) {
+        if (pvptweaks$matchedProfile != null && pvptweaks$matchedProfile.volumePct != 100) {
+            cir.setReturnValue(pvptweaks$matchedProfile.volumePct / 100.0f);
+        }
+    }
+
+    @Inject(method = "getPitch", at = @At("RETURN"), cancellable = true)
+    private void pvptweaks$overridePitch(CallbackInfoReturnable<Float> cir) {
+        if (pvptweaks$matchedProfile != null && pvptweaks$matchedProfile.pitchPct != 100) {
+            cir.setReturnValue(pvptweaks$matchedProfile.pitchPct / 100.0f);
+        }
     }
 }

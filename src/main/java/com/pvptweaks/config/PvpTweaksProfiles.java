@@ -120,12 +120,8 @@ public class PvpTweaksProfiles {
             PvpTweaksConfig updated = GSON.fromJson(json, PvpTweaksConfig.class);
             updated.lastSettingsProfile = name; // Update current name in the loaded config
             
-            java.nio.file.Path configPath = FabricLoader.getInstance()
-                    .getConfigDir().resolve("pvptweaks.json");
-            try (Writer w = Files.newBufferedWriter(configPath)) {
-                GSON.toJson(updated, w);
-            }
-            PvpTweaksConfig.load();
+            PvpTweaksConfig.set(updated);
+            PvpTweaksConfig.save();
 
             // Apply keybinds if present
             if (pkg.keybinds != null) {
@@ -183,12 +179,8 @@ public class PvpTweaksProfiles {
                 pkg.config.soundAnchor      = current.soundAnchor;
                 pkg.config.lastSettingsProfile = importedName;
 
-                java.nio.file.Path configPath = FabricLoader.getInstance()
-                        .getConfigDir().resolve("pvptweaks.json");
-                try (Writer w = Files.newBufferedWriter(configPath)) {
-                    GSON.toJson(pkg.config, w);
-                }
-                PvpTweaksConfig.load();
+                PvpTweaksConfig.set(pkg.config);
+                PvpTweaksConfig.save();
             }
 
             if (applyKeys && pkg.keybinds != null) {
@@ -323,6 +315,84 @@ public class PvpTweaksProfiles {
             return;
         }
         importJson(defaultJson);
+    }
+
+    /** Reset everything to vanilla Minecraft values. */
+    public static void applyVanilla() {
+        PvpTweaksConfig cfg = PvpTweaksConfig.get();
+        cfg.swordScalePct = 100;
+        cfg.axeScalePct = 100;
+        cfg.shieldScalePct = 100;
+        cfg.shieldOffsetX = 0;
+        cfg.shieldOffsetY = 0;
+        cfg.shieldOffsetZ = 0;
+        cfg.shieldRotX = 0;
+        cfg.shieldRotY = 0;
+        cfg.shieldRotZ = 0;
+        cfg.totemScalePct = 100;
+        cfg.goldenAppleScalePct = 100;
+        cfg.anchorScalePct = 100;
+        cfg.bowScalePct = 100;
+        cfg.crossbowScalePct = 100;
+        cfg.tridentScalePct = 100;
+        cfg.maceScalePct = 100;
+        cfg.armorScalePct = 100;
+        cfg.otherItemScalePct = 100;
+        cfg.customItemScales.clear();
+
+        cfg.totemPopScalePct = 100;
+        cfg.totemPopVolumePct = 100;
+        cfg.totemPopAnimScalePct = 100;
+
+        cfg.fireOverlayScalePct = 100;
+        cfg.firePreset = "vanilla";
+        cfg.hideFireOnGround = false;
+        cfg.endCrystalScalePct = 100;
+
+        cfg.cpsEnabled = false;
+        cfg.durabilityHudEnabled = false;
+        cfg.crystalOptimizer = false;
+        cfg.anchorOptimizer = false;
+
+        cfg.explosionVolumePct = 100;
+        cfg.hitVolumePct = 100;
+        cfg.crystalPopVolumePct = 100;
+
+        cfg.explosionParticlePct = 100;
+        cfg.crystalParticlePct = 100;
+        cfg.enderExplosionParticlePct = 100;
+        cfg.respawnAnchorExplosionPct = 100;
+        cfg.anchorExplosionParticlePct = 100;
+        cfg.showHitParticles = true;
+
+        cfg.tntExplosionVolumePct = 100;
+        cfg.tntExplosionParticlePct = 100;
+        cfg.creeperExplosionVolumePct = 100;
+        cfg.creeperExplosionParticlePct = 100;
+        cfg.bedExplosionVolumePct = 100;
+        cfg.bedExplosionParticlePct = 100;
+        cfg.ghastExplosionVolumePct = 100;
+        cfg.ghastExplosionParticlePct = 100;
+        cfg.windChargeVolumePct = 100;
+        cfg.windChargeParticlePct = 100;
+
+        cfg.disablePumpkinBlur = false;
+        cfg.fullbright = false;
+        cfg.fullbrightGamma = 1.0f; // vanilla default max brightness
+        
+        cfg.soundShieldBreak.mode = "default";
+        cfg.soundDurabilityLow.mode = "default";
+        cfg.soundCrystal.mode = "default";
+        cfg.soundTnt.mode = "default";
+        cfg.soundBed.mode = "default";
+        cfg.soundCreeper.mode = "default";
+        cfg.soundHit.mode = "default";
+        cfg.soundTotem.mode = "default";
+        cfg.soundAnchor.mode = "default";
+        cfg.soundGhast.mode = "default";
+        cfg.soundWindCharge.mode = "default";
+        
+        PvpTweaksConfig.save();
     }
 
     private static String safeName(String name) {

@@ -21,8 +21,10 @@ public class PvpTweaksConfig {
     public static final Path TEXTURES_DIR = FabricLoader.getInstance()
             .getConfigDir().resolve("pvptweaks/textures");
 
-    private static PvpTweaksConfig INSTANCE = new PvpTweaksConfig();
+    private static PvpTweaksConfig NEW_INSTANCE = new PvpTweaksConfig();
+    private static PvpTweaksConfig LEGACY_INSTANCE = new PvpTweaksConfig();
 
+    public static boolean useLegacyMenu = false;
     public int swordScalePct       = 70;
     public int axeScalePct         = 100;
     public int shieldScalePct      = 70;
@@ -42,6 +44,8 @@ public class PvpTweaksConfig {
     public int maceScalePct        = 100;
     public int armorScalePct       = 100;
     public int otherItemScalePct   = 100;
+
+    public java.util.Map<String, Integer> customItemScales = new java.util.HashMap<>();
 
     public int totemPopScalePct    = 50;
     public int totemPopVolumePct   = 5;
@@ -107,6 +111,20 @@ public class PvpTweaksConfig {
     public boolean fullbright          = false;
     public float   fullbrightGamma     = 5.0f;  // 1.0–5.0; 5.0 = maximum visible
 
+    // Item Backgrounds
+    public boolean totemBackgroundEnabled = true;
+    public int totemBackgroundColor = 0x80FF0000; // Semi-transparent Red
+    public boolean crystalBackgroundEnabled = true;
+    public int crystalBackgroundColor = 0x80A020F0; // Semi-transparent Purple
+    public java.util.Map<String, Integer> customItemBackgrounds = new java.util.HashMap<>();
+
+    // Zoom
+    public boolean zoomEnabled = true;
+    public double zoomLevel = 4.0;
+    public boolean zoomToggle = false;
+    public boolean zoomSmoothCamera = true;
+    public String zoomManagementMode = net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("zoomify") ? "zoomify" : "pvp-tweaks";
+
     // Plants Control (ported from GRM — client-side only)
     public boolean plantsControlEnabled = false;
     public java.util.Set<String> hiddenPlants  = new java.util.HashSet<>();
@@ -150,6 +168,13 @@ public class PvpTweaksConfig {
     public float getItemScale(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return otherItemScalePct / 100.0f;
         Item item = stack.getItem();
+        String itemPath = net.minecraft.registry.Registries.ITEM.getId(item).toString();
+
+        // Check custom item scales first
+        if (customItemScales.containsKey(itemPath)) {
+            return customItemScales.get(itemPath) / 100.0f;
+        }
+
         // Swords
         if (item == Items.WOODEN_SWORD || item == Items.STONE_SWORD
          || item == Items.IRON_SWORD   || item == Items.GOLDEN_SWORD
@@ -178,7 +203,6 @@ public class PvpTweaksConfig {
         if (item == Items.MACE)               return maceScalePct        / 100.0f;
         // Armor — ArmorItem class removed in MC 1.21.4+; check by item registry ID suffix
         {
-            String itemPath = net.minecraft.registry.Registries.ITEM.getId(item).getPath();
             if (itemPath.endsWith("_helmet") || itemPath.endsWith("_chestplate")
              || itemPath.endsWith("_leggings") || itemPath.endsWith("_boots")
              || item == Items.ELYTRA || itemPath.equals("turtle_helmet")) {
@@ -213,23 +237,168 @@ public class PvpTweaksConfig {
     public java.util.Map<String, String> textureOverrides =
         new java.util.HashMap<>();
 
-    public static PvpTweaksConfig get() { return INSTANCE; }
+    public static PvpTweaksConfig get() {
+        return useLegacyMenu ? LEGACY_INSTANCE : NEW_INSTANCE;
+    }
+
+    public static void set(PvpTweaksConfig newConfig) {
+        if (useLegacyMenu) {
+            LEGACY_INSTANCE = newConfig;
+        } else {
+            NEW_INSTANCE = newConfig;
+        }
+    }
+
+    private static class Preferences {
+        public boolean useLegacyMenu = false;
+    }
 
     public static void load() {
-        if (!Files.exists(CONFIG_PATH)) { save(); return; }
-        try (Reader r = Files.newBufferedReader(CONFIG_PATH)) {
-            PvpTweaksConfig loaded = GSON.fromJson(r, PvpTweaksConfig.class);
-            if (loaded != null) INSTANCE = loaded;
-        } catch (IOException e) { INSTANCE = new PvpTweaksConfig(); }
+        // 1. Load preferences
+        Path prefsFile = FabricLoader.getInstance().getConfigDir().resolve("pvptweaks/preferences.json");
+        if (Files.exists(prefsFile)) {
+            try (Reader r = Files.newBufferedReader(prefsFile)) {
+                Preferences prefs = GSON.fromJson(r, Preferences.class);
+                if (prefs != null) {
+                    useLegacyMenu = prefs.useLegacyMenu;
+                }
+            } catch (Exception ignored) {}
+        }
+
+        // 2. Load configs
+        Path newFile = FabricLoader.getInstance().getConfigDir().resolve("pvptweaks/new_menu_config.json");
+        Path legacyFile = FabricLoader.getInstance().getConfigDir().resolve("pvptweaks/legacy_menu_config.json");
+        Path oldSharedFile = FabricLoader.getInstance().getConfigDir().resolve("pvptweaks.json");
+
+        // Load new menu config
+        if (Files.exists(newFile)) {
+            try (Reader r = Files.newBufferedReader(newFile)) {
+                PvpTweaksConfig loaded = GSON.fromJson(r, PvpTweaksConfig.class);
+                if (loaded != null) NEW_INSTANCE = loaded;
+            } catch (Exception ignored) {}
+        } else {
+            // First time load: Initialize NEW_INSTANCE to Vanilla defaults so it doesn't affect gameplay by default!
+            NEW_INSTANCE = new PvpTweaksConfig();
+            applyVanillaToConfig(NEW_INSTANCE);
+            // Save it so we persist the clean default state
+            try {
+                Files.createDirectories(FabricLoader.getInstance().getConfigDir().resolve("pvptweaks"));
+                try (Writer w = Files.newBufferedWriter(newFile)) {
+                    GSON.toJson(NEW_INSTANCE, w);
+                }
+            } catch (Exception ignored) {}
+        }
+
+        // Load legacy menu config
+        if (Files.exists(legacyFile)) {
+            try (Reader r = Files.newBufferedReader(legacyFile)) {
+                PvpTweaksConfig loaded = GSON.fromJson(r, PvpTweaksConfig.class);
+                if (loaded != null) LEGACY_INSTANCE = loaded;
+            } catch (Exception ignored) {}
+        } else if (Files.exists(oldSharedFile)) {
+            try (Reader r = Files.newBufferedReader(oldSharedFile)) {
+                PvpTweaksConfig loaded = GSON.fromJson(r, PvpTweaksConfig.class);
+                if (loaded != null) LEGACY_INSTANCE = loaded;
+            } catch (Exception ignored) {}
+        } else {
+            // First time load: Initialize LEGACY_INSTANCE to the Mod's default competitive settings
+            LEGACY_INSTANCE = new PvpTweaksConfig();
+            try {
+                Files.createDirectories(FabricLoader.getInstance().getConfigDir().resolve("pvptweaks"));
+                try (Writer w = Files.newBufferedWriter(legacyFile)) {
+                    GSON.toJson(LEGACY_INSTANCE, w);
+                }
+            } catch (Exception ignored) {}
+        }
     }
 
     public static void save() {
         try {
             Files.createDirectories(SOUNDS_DIR);
             Files.createDirectories(TEXTURES_DIR);
-            try (Writer w = Files.newBufferedWriter(CONFIG_PATH)) {
-                GSON.toJson(INSTANCE, w);
+            Files.createDirectories(FabricLoader.getInstance().getConfigDir().resolve("pvptweaks"));
+
+            // 1. Save preferences
+            Path prefsFile = FabricLoader.getInstance().getConfigDir().resolve("pvptweaks/preferences.json");
+            Preferences prefs = new Preferences();
+            prefs.useLegacyMenu = useLegacyMenu;
+            try (Writer w = Files.newBufferedWriter(prefsFile)) {
+                GSON.toJson(prefs, w);
             }
-        } catch (IOException e) { e.printStackTrace(); }
+
+            // 2. Save configs
+            Path newFile = FabricLoader.getInstance().getConfigDir().resolve("pvptweaks/new_menu_config.json");
+            Path legacyFile = FabricLoader.getInstance().getConfigDir().resolve("pvptweaks/legacy_menu_config.json");
+
+            try (Writer w = Files.newBufferedWriter(newFile)) {
+                GSON.toJson(NEW_INSTANCE, w);
+            }
+            try (Writer w = Files.newBufferedWriter(legacyFile)) {
+                GSON.toJson(LEGACY_INSTANCE, w);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void applyVanillaToConfig(PvpTweaksConfig cfg) {
+        cfg.swordScalePct = 100;
+        cfg.axeScalePct = 100;
+        cfg.shieldScalePct = 100;
+        cfg.shieldOffsetX = 0;
+        cfg.shieldOffsetY = 0;
+        cfg.shieldOffsetZ = 0;
+        cfg.shieldRotX = 0;
+        cfg.shieldRotY = 0;
+        cfg.shieldRotZ = 0;
+        cfg.totemScalePct = 100;
+        cfg.goldenAppleScalePct = 100;
+        cfg.anchorScalePct = 100;
+        cfg.bowScalePct = 100;
+        cfg.crossbowScalePct = 100;
+        cfg.tridentScalePct = 100;
+        cfg.maceScalePct = 100;
+        cfg.armorScalePct = 100;
+        cfg.otherItemScalePct = 100;
+        cfg.customItemScales.clear();
+
+        cfg.totemPopScalePct = 100;
+        cfg.totemPopVolumePct = 100;
+        cfg.totemPopAnimScalePct = 100;
+
+        cfg.fireOverlayScalePct = 100;
+        cfg.firePreset = "vanilla";
+        cfg.hideFireOnGround = false;
+        cfg.endCrystalScalePct = 100;
+
+        cfg.cpsEnabled = false;
+        cfg.durabilityHudEnabled = false;
+        cfg.crystalOptimizer = false;
+        cfg.anchorOptimizer = false;
+
+        cfg.explosionVolumePct = 100;
+        cfg.hitVolumePct = 100;
+        cfg.crystalPopVolumePct = 100;
+
+        cfg.explosionParticlePct = 100;
+        cfg.crystalParticlePct = 100;
+        cfg.enderExplosionParticlePct = 100;
+        cfg.anchorExplosionParticlePct = 100;
+        cfg.showHitParticles = true;
+
+        cfg.tntExplosionVolumePct = 100;
+        cfg.tntExplosionParticlePct = 100;
+        cfg.creeperExplosionVolumePct = 100;
+        cfg.creeperExplosionParticlePct = 100;
+        cfg.bedExplosionVolumePct = 100;
+        cfg.bedExplosionParticlePct = 100;
+        cfg.ghastExplosionVolumePct = 100;
+        cfg.ghastExplosionParticlePct = 100;
+        cfg.windChargeVolumePct = 100;
+        cfg.windChargeParticlePct = 100;
+
+        cfg.disablePumpkinBlur = false;
+        cfg.fullbright = false;
+        cfg.fullbrightGamma = 1.0f;
     }
 }

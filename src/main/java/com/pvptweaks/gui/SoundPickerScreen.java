@@ -24,7 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SoundPickerScreen extends Screen {
-    private final Screen parent;
+    private final Screen currentConfigScreen;
+    private final Screen originalParent;
     private final SoundProfile profile;
     private final String label;
     private final Runnable onSave;
@@ -35,9 +36,10 @@ public class SoundPickerScreen extends Screen {
     private long statusTime = 0;
     private int tab = 0; // 0=Presets, 1=Registry, 2=Custom
 
-    public SoundPickerScreen(Screen parent, SoundProfile profile, String label, Runnable onSave) {
+    public SoundPickerScreen(Screen currentConfigScreen, Screen originalParent, SoundProfile profile, String label, Runnable onSave) {
         super(Text.literal("Sound Picker"));
-        this.parent = parent;
+        this.currentConfigScreen = currentConfigScreen;
+        this.originalParent = originalParent;
         this.profile = profile;
         this.label = label;
         this.onSave = onSave;
@@ -67,9 +69,9 @@ public class SoundPickerScreen extends Screen {
         addDrawableChild(ButtonWidget.builder(Text.literal("Custom"), b -> switchTab(2))
             .dimensions(tabStartX + (tabW + tabSpacing) * 2, 10, tabW, 20).build());
 
-        int btnW = 60;
+        int btnW = 55;
         int btnSpacing = 4;
-        int bStartX = (width - (btnW * 6 + btnSpacing * 5)) / 2;
+        int bStartX = (width - (btnW * 7 + btnSpacing * 6)) / 2;
         int bY = height - 35;
 
         addDrawableChild(ButtonWidget.builder(Text.literal("Default"), b -> {
@@ -78,8 +80,9 @@ public class SoundPickerScreen extends Screen {
             close();
         }).dimensions(bStartX, bY, btnW, 20).build());
 
-        addDrawableChild(ButtonWidget.builder(Text.literal("Folder"), b -> openSoundsFolder())
-            .dimensions(bStartX + btnW + btnSpacing, bY, btnW, 20).build());
+        addDrawableChild(ButtonWidget.builder(Text.literal("Add"), b -> {
+            client.setScreen(new AddSoundScreen(this));
+        }).dimensions(bStartX + btnW + btnSpacing, bY, btnW, 20).build());
 
         addDrawableChild(ButtonWidget.builder(Text.literal("Play"), b -> {
             SoundEntry selected = list.getSelectedOrNull();
@@ -90,6 +93,13 @@ public class SoundPickerScreen extends Screen {
             }
         }).dimensions(bStartX + (btnW + btnSpacing) * 2, bY, btnW, 20).build());
 
+        ButtonWidget editBtn = ButtonWidget.builder(Text.literal("§6Edit"), b -> {
+            SoundEntry selected = list.getSelectedOrNull();
+            if (selected != null && tab == 2) {
+                client.setScreen(new SoundEditorScreen(this, selected.name, selected.id));
+            }
+        }).dimensions(bStartX + (btnW + btnSpacing) * 3, bY, btnW, 20).build();
+
         addDrawableChild(ButtonWidget.builder(Text.literal("§aSave"), b -> {
             SoundEntry selected = list.getSelectedOrNull();
             if (selected != null) {
@@ -97,7 +107,7 @@ public class SoundPickerScreen extends Screen {
             } else {
                 showStatus("§cSelect a sound!", true);
             }
-        }).dimensions(bStartX + (btnW + btnSpacing) * 3, bY, btnW, 20).build());
+        }).dimensions(bStartX + (btnW + btnSpacing) * 4, bY, btnW, 20).build());
 
         ButtonWidget removeBtn = ButtonWidget.builder(Text.literal("§cRemove"), b -> {
             SoundEntry selected = list.getSelectedOrNull();
@@ -110,29 +120,54 @@ public class SoundPickerScreen extends Screen {
                     showStatus("§cFailed to remove", true);
                 }
             }
-        }).dimensions(bStartX + (btnW + btnSpacing) * 4, bY, btnW, 20).build();
+        }).dimensions(bStartX + (btnW + btnSpacing) * 5, bY, btnW, 20).build();
         
-        // Hide remove button if not in custom tab
+        // Hide remove/edit buttons if not in custom tab
+        addDrawableChild(editBtn);
         addDrawableChild(removeBtn);
 
         addDrawableChild(ButtonWidget.builder(Text.literal("Cancel"), b -> close())
-            .dimensions(bStartX + (btnW + btnSpacing) * 5, bY, btnW, 20).build());
+            .dimensions(bStartX + (btnW + btnSpacing) * 6, bY, btnW, 20).build());
     }
 
-    private void openSoundsFolder() {
-        try {
-            net.minecraft.util.Util.getOperatingSystem().open(com.pvptweaks.config.PvpTweaksConfig.SOUNDS_DIR.toFile());
-        } catch (Exception e) {
-            try {
-                if (System.getProperty("os.name").toLowerCase().contains("nix") || System.getProperty("os.name").toLowerCase().contains("nux")) {
-                    Runtime.getRuntime().exec(new String[]{"xdg-open", com.pvptweaks.config.PvpTweaksConfig.SOUNDS_DIR.toAbsolutePath().toString()});
-                } else {
-                    showStatus("§cFailed to open folder", true);
-                }
-            } catch (Exception ex) {
-                showStatus("§cFailed to open folder", true);
+    @Override
+    public void onFilesDropped(List<Path> paths) {
+        boolean added = false;
+        for (Path path : paths) {
+            String name = path.getFileName().toString().toLowerCase();
+            if (name.endsWith(".ogg") || name.endsWith(".wav") || name.endsWith(".mp3")) {
+                try {
+                    Path target = PvpTweaksConfig.SOUNDS_DIR.resolve(path.getFileName());
+                    Files.copy(path, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                    added = true;
+                } catch (IOException ignored) {}
             }
         }
+        if (added) {
+            showStatus("§aSounds Added", false);
+            if (tab == 2) list.refresh(2);
+        } else {
+            showStatus("§cNo valid sounds dropped", true);
+        }
+        super.onFilesDropped(paths);
+    }
+
+    public void refreshCustomTab() { if (tab == 2) list.refresh(2); }
+
+    public void selectAndSaveSound(String path) { importAndApply(path); }
+
+    /** Called by AddSoundScreen after file is copied to SOUNDS_DIR. */
+    public void importAndApply(String absPath) {
+        switchTab(2);
+        list.refresh(2);
+        for (SoundEntry entry : list.children()) {
+            if (entry.id.equals(absPath)) {
+                list.setSelected(entry);
+                saveEntry(entry);
+                return;
+            }
+        }
+        showStatus("\u00a7aImported! Select the file and click Save.", false);
     }
 
     private void switchTab(int t) {
@@ -216,7 +251,13 @@ public class SoundPickerScreen extends Screen {
         }
     }
 
-    @Override public void close() { client.setScreen(parent); }
+    @Override public void close() {
+        if (!net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("cloth-config")) {
+            client.setScreen(new com.pvptweaks.gui.ClothConfigRequiredScreen(originalParent));
+        } else {
+            client.setScreen(com.pvptweaks.integration.ClothConfigScreenHelper.buildScreen(originalParent));
+        }
+    }
 
     class SoundListWidget extends AlwaysSelectedEntryListWidget<SoundEntry> {
         private final List<SoundEntry> all = new ArrayList<>();

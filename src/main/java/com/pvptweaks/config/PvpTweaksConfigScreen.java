@@ -29,12 +29,10 @@ public class PvpTweaksConfigScreen {
             () -> {
                 MinecraftClient mc = MinecraftClient.getInstance();
                 if (mc != null) {
-                    mc.setScreen(new SoundPickerScreen(mc.currentScreen, profile, "Sound",
+                    mc.setScreen(new SoundPickerScreen(mc.currentScreen, parent, profile, "Sound",
                         () -> {
                             PvpTweaksConfig.save();
                             mc.reloadResources();
-                            // Refresh screen to show new status
-                            mc.setScreen(build(parent));
                         }));
                 }
             }
@@ -67,6 +65,24 @@ public class PvpTweaksConfigScreen {
 
         // ── Main ─────────────────────────────────────────────────────────────
         ConfigCategory main = builder.getOrCreateCategory(Text.literal("\u00a7a\u2605 Main"));
+
+        // Upgrade to the New Menu
+        main.addEntry(e.startTextDescription(Text.literal(
+            "\u00a7d\u2756 Upgrade to the New Menu")).build());
+        main.addEntry(new ButtonEntry(
+            Text.literal("\u00a7d\u21a7 Upgrade to the New Menu"),
+            () -> {
+                cfg.useLegacyMenu = false;
+                PvpTweaksConfig.save();
+                MinecraftClient mc = MinecraftClient.getInstance();
+                if (mc != null) {
+                    mc.setScreen(new com.pvptweaks.gui.PvpTweaksHubScreen(parent));
+                }
+            }
+        ));
+        main.addEntry(e.startTextDescription(Text.literal(
+            "\u00a78Switch to the modern, beautiful and organized UI with real-time preview.")).build());
+        main.addEntry(e.startTextDescription(Text.literal("")).build());
 
         // Competitive preset
         main.addEntry(e.startTextDescription(Text.literal(
@@ -243,6 +259,30 @@ public class PvpTweaksConfigScreen {
         items.addEntry(e.startIntSlider(Text.literal("\u00a7fGolden Apple"), cfg.goldenAppleScalePct, 25, 300).setDefaultValue(100).setSaveConsumer(v -> cfg.goldenAppleScalePct = v).build());
         items.addEntry(e.startIntSlider(Text.literal("\u00a7fRespawn Anchor"), cfg.anchorScalePct, 25, 300).setDefaultValue(100).setSaveConsumer(v -> cfg.anchorScalePct = v).build());
         items.addEntry(e.startIntSlider(Text.literal("\u00a78Other Items"), cfg.otherItemScalePct, 25, 300).setDefaultValue(100).setSaveConsumer(v -> cfg.otherItemScalePct = v).build());
+
+        items.addEntry(lbl(e, "\u00a7e", "Custom Items"));
+        items.addEntry(new com.pvptweaks.gui.ButtonEntry(
+            Text.literal("\u00a7a+ Add Custom Item"),
+            () -> {
+                MinecraftClient mc = MinecraftClient.getInstance();
+                if (mc != null) mc.setScreen(new com.pvptweaks.gui.ItemSearchScreen(mc.currentScreen, false));
+            }
+        ));
+        for (String id : new java.util.ArrayList<>(cfg.customItemScales.keySet())) {
+            items.addEntry(e.startIntSlider(Text.literal("\u00a7f" + id), cfg.customItemScales.get(id), 25, 300)
+                .setDefaultValue(100)
+                .setSaveConsumer(v -> cfg.customItemScales.put(id, v))
+                .build());
+            items.addEntry(new com.pvptweaks.gui.ButtonEntry(
+                Text.literal("\u00a7c\u2716 Remove " + id),
+                () -> {
+                    cfg.customItemScales.remove(id);
+                    PvpTweaksConfig.save();
+                    MinecraftClient mc = MinecraftClient.getInstance();
+                    if (mc != null) mc.setScreen(build(parent));
+                }
+            ));
+        }
 
                 // Totem Pop
         ConfigCategory totem = builder.getOrCreateCategory(Text.literal("\u00a7d\u2756 Totem Pop"));
@@ -462,9 +502,9 @@ public class PvpTweaksConfigScreen {
             .build());
         vision.addEntry(e.startIntSlider(
                 Text.literal("\u00a7fFullbright Gamma (%)"),
-                Math.round(cfg.fullbrightGamma * 100), 100, 500)
+                Math.round(cfg.fullbrightGamma * 100), 100, 1500)
             .setDefaultValue(500)
-            .setTooltip(Text.literal("100% = normal screen, 500% = maximum brightness. Only active when Fullbright is ON."))
+            .setTooltip(Text.literal("100% = normal screen, 1500% = maximum brightness. Only active when Fullbright is ON."))
             .setSaveConsumer(v -> cfg.fullbrightGamma = v / 100.0f)
             .build());
 
@@ -501,8 +541,9 @@ public class PvpTweaksConfigScreen {
         soundCat.addEntry(e.startTextDescription(Text.literal("\u00a75 Anchor:    " + soundStatus(cfg.soundAnchor))).build());
 
         // ── Optimizers / Client-Side ──────────────────────────────────────────
-        ConfigCategory comp = builder.getOrCreateCategory(Text.literal("§6⚔ Optimizers"));
-        comp.addEntry(e.startTextDescription(Text.literal("§7Optimizations to mitigate PING/Latency effects.")).build());
+        ConfigCategory comp = builder.getOrCreateCategory(Text.literal("§6\u2694 Optimizers"));
+        comp.addEntry(e.startTextDescription(Text.literal("§e\u26a0 Experimental Features (Off by Default)")).build());
+        comp.addEntry(e.startTextDescription(Text.literal("§8Optimizers modify entity interactions and may be disallowed by some servers.")).build());
 
         comp.addEntry(e.startBooleanToggle(Text.literal("§fCrystal Optimizer"), cfg.crystalOptimizer)
             .setDefaultValue(false)

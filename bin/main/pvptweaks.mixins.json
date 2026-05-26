@@ -1,0 +1,40 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.pvptweaks.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "refmap": "pvptweaks-refmap.json",
+  "mixins": [],
+  "client": [
+    "SoundInstanceMixin",
+    "ParticleManagerMixin",
+    "EndCrystalEntityRendererMixin",
+    "HeldItemRendererMixin",
+    "ShieldRendererMixin",
+    "TotemPopMixin",
+    "FireOverlayMixin",
+    "FireBlockRenderMixin",
+    "FireRandomTickMixin",
+    "InGameOverlayRendererMixin",
+    "GameMenuScreenMixin",
+    "SoundRedirectMixin",
+    "ExplosionPacketMixin",
+    "ResourcePackInjectMixin",
+    "InteractionManagerMixin",
+    "PumpkinBlurMixin",
+    "BlockModelRendererMixin",
+    "BlockOutlineMixin",
+    "ResourcePackManagerMixin",
+    "SoundManagerDebugMixin",
+    "SoundManagerMixin",
+    "SoundLoaderMixin",
+    "SoundManagerAccessor",
+    "GameRendererMixin",
+    "MouseMixin",
+    "HandledScreenMixin",
+    "DrawContextMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
