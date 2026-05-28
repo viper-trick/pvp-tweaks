@@ -21,7 +21,7 @@ public class FireOverlayMixin {
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         float scale = cfg.getFireOverlayScale();
 
-        if ("none".equals(cfg.firePreset) || scale <= 0.0f) {
+        if (scale <= 0.0f) {
             ci.cancel();
             return;
         }

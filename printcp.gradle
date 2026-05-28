@@ -1,8 +1,0 @@
-task printClasspath {
-    doLast {
-        println "=== Compile classpath ==="
-        sourceSets.main.compileClasspath.files.each { println it }
-        println "=== All dependencies ==="
-        configurations.compileClasspath.files.each { println it }
-    }
-}

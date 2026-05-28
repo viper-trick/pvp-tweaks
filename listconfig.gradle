@@ -1,8 +1,0 @@
-task listConfigs {
-    doLast {
-        println '=== All configurations ==='
-        configurations.each { println it.name }
-        println '=== Compile classpath ==='
-        configurations.findByName('compileClasspath')?.each { println it }
-    }
-}

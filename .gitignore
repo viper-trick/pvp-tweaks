@@ -19,6 +19,13 @@ out/
 .DS_Store
 Thumbs.db
 
+# Build output
+bin/
+final-jars/
+
 # Minecraft dev
 run/
 tmp_src/
+
+# Scratch
+untitled/
