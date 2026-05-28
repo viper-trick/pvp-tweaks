@@ -10,82 +10,80 @@ buildscript {
 }
 
 plugins {
-    id "org.jetbrains.kotlin.jvm" version "2.0.0"
-    id 'maven-publish'
+    id "org.jetbrains.kotlin.jvm" version "2.0.0" apply false
 }
 
-if (project.hasProperty('use_non_obfuscated') && project.use_non_obfuscated == "true") {
-    apply plugin: 'net.fabricmc.fabric-loom'
-} else {
+subprojects {
     apply plugin: 'fabric-loom'
-}
+    apply plugin: 'maven-publish'
 
-version = project.mod_version
-group = project.maven_group
+    version = project.mod_version
+    group = rootProject.maven_group
 
-base {
-    archivesName = project.archives_base_name
-}
-
-repositories {
-    mavenCentral()
-    maven { url = "https://maven.shedaniel.me/" }
-    maven { url = "https://maven.terraformersmc.com/releases/" }
-}
-
-loom {
-    mixin {
-        defaultRefmapName = "pvptweaks-refmap.json"
+    base {
+        archivesName = rootProject.archives_base_name
     }
-}
 
-dependencies {
-    def impl = { dep -> add(project.hasProperty('use_non_obfuscated') && project.use_non_obfuscated == "true" ? "implementation" : "modImplementation", dep) }
+    sourceSets {
+        main {
+            java.srcDirs = ["$projectDir/java"]
+            resources.srcDirs = ["$projectDir/resources"]
+        }
+    }
 
-    if (project.hasProperty('use_non_obfuscated') && project.use_non_obfuscated == "true") {
+    repositories {
+        mavenCentral()
+        maven { url = "https://maven.shedaniel.me/" }
+        maven { url = "https://maven.terraformersmc.com/releases/" }
+    }
+
+
+
+    dependencies {
+        def impl = { dep -> add("modImplementation", dep) }
+
         minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    } else {
-        minecraft "com.mojang:minecraft:${project.minecraft_version}"
+
         if (project.hasProperty('use_mojmap') && project.use_mojmap == "true") {
             mappings loom.officialMojangMappings()
         } else if (project.hasProperty('yarn_mappings') && !project.yarn_mappings.startsWith('none')) {
             mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
         }
+
+        impl "net.fabricmc:fabric-loader:${rootProject.loader_version}"
+        impl "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+        if (project.hasProperty('modmenu_version') && project.modmenu_version != '') {
+            impl "com.terraformersmc:modmenu:${project.modmenu_version}"
+        }
+        impl "net.fabricmc:fabric-language-kotlin:1.11.0+kotlin.2.0.0"
+
+        implementation 'javazoom:jlayer:1.0.1'
+        include 'javazoom:jlayer:1.0.1'
     }
 
-    impl "net.fabricmc:fabric-loader:${project.loader_version}"
-    impl "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    if (project.hasProperty('modmenu_version') && project.modmenu_version != '') {
-        impl "com.terraformersmc:modmenu:${project.modmenu_version}"
+    processResources {
+        inputs.property "version", project.version
+        inputs.property "minecraft_version_range", project.minecraft_version_range
+        filesMatching("fabric.mod.json") {
+            expand "version": project.version,
+                   "minecraft_version_range": project.minecraft_version_range
+        }
     }
-    impl "net.fabricmc:fabric-language-kotlin:1.11.0+kotlin.2.0.0"
 
-    implementation 'javazoom:jlayer:1.0.1'
-    include 'javazoom:jlayer:1.0.1'
-}
-
-processResources {
-    inputs.property "version", project.version
-    inputs.property "minecraft_version_range", project.minecraft_version_range
-    filesMatching("fabric.mod.json") {
-        expand "version": project.version,
-               "minecraft_version_range": project.minecraft_version_range
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(project.findProperty('java_version') ?: '21')
+        }
+        withSourcesJar()
     }
-}
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(project.findProperty('java_version') ?: '21')
+    tasks.withType(JavaCompile).configureEach {
+        it.options.release = Integer.parseInt(project.findProperty('java_version') ?: '21')
     }
-    withSourcesJar()
-}
 
-tasks.withType(JavaCompile).configureEach {
-    it.options.release = Integer.parseInt(project.findProperty('java_version') ?: '21')
-}
-
-jar {
-    from("LICENSE") {
-        rename { "${it}_${project.base.archivesName.get()}" }
+    jar {
+        from("${rootProject.projectDir}/LICENSE") {
+            rename { "${it}_${project.base.archivesName.get()}" }
+        }
     }
 }

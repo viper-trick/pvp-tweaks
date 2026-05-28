@@ -260,6 +260,8 @@ public class SoundPickerScreen extends Screen {
             super(mc, width, height, top, entryH);
         }
 
+        @Override protected void drawScrollbar(DrawContext context, int mouseX, int mouseY) {}
+
         public void refresh(int tab) {
             clearEntries();
             all.clear();
