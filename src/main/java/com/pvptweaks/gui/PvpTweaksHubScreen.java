@@ -147,7 +147,6 @@ public class PvpTweaksHubScreen extends Screen {
                 })); y += spacing;
             }
             addSlider(x1, y, "Fire Overlay", cfg.fireOverlayScalePct, 0, 200, 100, v -> { cfg.fireOverlayScalePct = v.intValue(); fireChanged = true; }); y += spacing;
-            addDrawableChild(new ModernButtonWidget(x1, y, 180, 20, Text.literal("Fire on Ground: " + (cfg.hideFireOnGround ? "HIDDEN" : "SHOWN")), () -> { cfg.hideFireOnGround = !cfg.hideFireOnGround; fireChanged = true; refreshCategoryWidgets(); })); y += spacing;
             addDrawableChild(new ModernButtonWidget(x1, y, 180, 20, Text.literal("Fullbright: " + (cfg.fullbright ? "ON" : "OFF")), () -> { cfg.fullbright = !cfg.fullbright; refreshCategoryWidgets(); })); y += spacing;
             addSlider(x1, y, "Gamma", (int)(cfg.fullbrightGamma * 100), 100, 1500, 100, v -> cfg.fullbrightGamma = v.floatValue() / 100f); y += spacing;
             addDrawableChild(new ModernButtonWidget(x1, y, 180, 20, Text.literal("Pumpkin Blur: " + (cfg.disablePumpkinBlur ? "HIDDEN" : "SHOWN")), () -> { cfg.disablePumpkinBlur = !cfg.disablePumpkinBlur; refreshCategoryWidgets(); })); y += spacing;
