@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "pvptweaks",
-  "version": "1.8.8-mc1.21.11",
+  "version": "${version}",
 
   "name": "PVP Tweaks",
   "description": "Comprehensive PVP performance and visual optimizations including Crystal/Anchor lag mitigation, HUD adjusters, and custom combat visuals.",
@@ -28,7 +28,7 @@
   "depends": {
     "fabricloader": ">=0.18.4",
     "fabric-api":   "*",
-    "minecraft":    "~1.21.11"
+    "minecraft":    "${minecraft_version_range}"
   },
   "suggests": {
     "cloth-config": "*",

@@ -1,10 +1,27 @@
+buildscript {
+    repositories {
+        maven { url = "https://maven.fabricmc.net/" }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath "net.fabricmc:fabric-loom:${loom_version}"
+    }
+}
+
 plugins {
-    id 'fabric-loom' version "${loom_version}"
+    id "org.jetbrains.kotlin.jvm" version "2.0.0"
     id 'maven-publish'
 }
 
+if (project.hasProperty('use_non_obfuscated') && project.use_non_obfuscated == "true") {
+    apply plugin: 'net.fabricmc.fabric-loom'
+} else {
+    apply plugin: 'fabric-loom'
+}
+
 version = project.mod_version
-group   = project.maven_group
+group = project.maven_group
 
 base {
     archivesName = project.archives_base_name
@@ -23,36 +40,48 @@ loom {
 }
 
 dependencies {
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings  "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    def impl = { dep -> add(project.hasProperty('use_non_obfuscated') && project.use_non_obfuscated == "true" ? "implementation" : "modImplementation", dep) }
 
-    modApi("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_version}") {
-        exclude(group: "net.fabricmc.fabric-api")
+    if (project.hasProperty('use_non_obfuscated') && project.use_non_obfuscated == "true") {
+        minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    } else {
+        minecraft "com.mojang:minecraft:${project.minecraft_version}"
+        if (project.hasProperty('use_mojmap') && project.use_mojmap == "true") {
+            mappings loom.officialMojangMappings()
+        } else if (project.hasProperty('yarn_mappings') && !project.yarn_mappings.startsWith('none')) {
+            mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+        }
     }
-    modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
 
-    // Bundled audio conversion libs - jlayer for MP3 decoding
+    impl "net.fabricmc:fabric-loader:${project.loader_version}"
+    impl "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    if (project.hasProperty('modmenu_version') && project.modmenu_version != '') {
+        impl "com.terraformersmc:modmenu:${project.modmenu_version}"
+    }
+    impl "net.fabricmc:fabric-language-kotlin:1.11.0+kotlin.2.0.0"
+
     implementation 'javazoom:jlayer:1.0.1'
     include 'javazoom:jlayer:1.0.1'
 }
 
 processResources {
     inputs.property "version", project.version
+    inputs.property "minecraft_version_range", project.minecraft_version_range
     filesMatching("fabric.mod.json") {
-        expand "version": project.version
+        expand "version": project.version,
+               "minecraft_version_range": project.minecraft_version_range
     }
 }
 
-tasks.withType(JavaCompile).configureEach {
-    it.options.release = 21
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(project.findProperty('java_version') ?: '21')
+    }
+    withSourcesJar()
 }
 
-java {
-    withSourcesJar()
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = Integer.parseInt(project.findProperty('java_version') ?: '21')
 }
 
 jar {
