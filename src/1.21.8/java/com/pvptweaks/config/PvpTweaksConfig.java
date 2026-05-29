@@ -44,6 +44,9 @@ public class PvpTweaksConfig {
     public int maceScalePct        = 100;
     public int armorScalePct       = 100;
     public int otherItemScalePct   = 100;
+    public int itemScaleGlobalPct  = 100;
+    public String itemScaleGlobalMode = "off";
+    public java.util.Set<String> itemScaleGlobalLinked = new java.util.HashSet<>();
 
     public java.util.Map<String, Integer> customItemScales = new java.util.HashMap<>();
 
@@ -116,6 +119,7 @@ public class PvpTweaksConfig {
     public int totemBackgroundColor = 0x80FF0000; // Semi-transparent Red
     public boolean crystalBackgroundEnabled = true;
     public int crystalBackgroundColor = 0x80A020F0; // Semi-transparent Purple
+    public String itemBackgroundMode = "both"; // inventory | outside | both | off
     public java.util.Map<String, Integer> customItemBackgrounds = new java.util.HashMap<>();
 
     // Zoom
@@ -170,46 +174,63 @@ public class PvpTweaksConfig {
         Item item = stack.getItem();
         String itemPath = net.minecraft.registry.Registries.ITEM.getId(item).toString();
 
-        // Check custom item scales first
         if (customItemScales.containsKey(itemPath)) {
             return customItemScales.get(itemPath) / 100.0f;
         }
+
+        float global = itemScaleGlobalPct / 100.0f;
 
         // Swords
         if (item == Items.WOODEN_SWORD || item == Items.STONE_SWORD
          || item == Items.IRON_SWORD   || item == Items.GOLDEN_SWORD
          || item == Items.DIAMOND_SWORD || item == Items.NETHERITE_SWORD)
-            return swordScalePct / 100.0f;
+            return resolveGlobal("sword", swordScalePct / 100.0f, global);
         // Axes
         if (item == Items.WOODEN_AXE  || item == Items.STONE_AXE
          || item == Items.IRON_AXE    || item == Items.GOLDEN_AXE
          || item == Items.DIAMOND_AXE || item == Items.NETHERITE_AXE)
-            return axeScalePct / 100.0f;
+            return resolveGlobal("axe", axeScalePct / 100.0f, global);
         // Shield
-        if (item == Items.SHIELD)             return shieldScalePct      / 100.0f;
+        if (item == Items.SHIELD)
+            return resolveGlobal("shield", shieldScalePct / 100.0f, global);
         // Totem
-        if (item == Items.TOTEM_OF_UNDYING)   return totemScalePct       / 100.0f;
+        if (item == Items.TOTEM_OF_UNDYING)
+            return resolveGlobal("totem", totemScalePct / 100.0f, global);
         // Golden apples
         if (item == Items.GOLDEN_APPLE
-         || item == Items.ENCHANTED_GOLDEN_APPLE) return goldenAppleScalePct / 100.0f;
+         || item == Items.ENCHANTED_GOLDEN_APPLE)
+            return resolveGlobal("goldenApple", goldenAppleScalePct / 100.0f, global);
         // Anchor
-        if (item == Items.RESPAWN_ANCHOR)     return anchorScalePct      / 100.0f;
+        if (item == Items.RESPAWN_ANCHOR)
+            return resolveGlobal("anchor", anchorScalePct / 100.0f, global);
         // Bow / Crossbow
-        if (item == Items.BOW)                return bowScalePct         / 100.0f;
-        if (item == Items.CROSSBOW)           return crossbowScalePct    / 100.0f;
+        if (item == Items.BOW)
+            return resolveGlobal("bow", bowScalePct / 100.0f, global);
+        if (item == Items.CROSSBOW)
+            return resolveGlobal("crossbow", crossbowScalePct / 100.0f, global);
         // Trident
-        if (item == Items.TRIDENT)            return tridentScalePct     / 100.0f;
+        if (item == Items.TRIDENT)
+            return resolveGlobal("trident", tridentScalePct / 100.0f, global);
         // Mace
-        if (item == Items.MACE)               return maceScalePct        / 100.0f;
-        // Armor — ArmorItem class removed in MC 1.21.4+; check by item registry ID suffix
+        if (item == Items.MACE)
+            return resolveGlobal("mace", maceScalePct / 100.0f, global);
+        // Armor
         {
             if (itemPath.endsWith("_helmet") || itemPath.endsWith("_chestplate")
              || itemPath.endsWith("_leggings") || itemPath.endsWith("_boots")
              || item == Items.ELYTRA || itemPath.equals("turtle_helmet")) {
-                return armorScalePct / 100.0f;
+                return resolveGlobal("armor", armorScalePct / 100.0f, global);
             }
         }
-        return otherItemScalePct / 100.0f;
+        return resolveGlobal("otherItems", otherItemScalePct / 100.0f, global);
+    }
+
+    private float resolveGlobal(String key, float categoryVal, float global) {
+        if ("off".equals(itemScaleGlobalMode)) return categoryVal;
+        if ("listed".equals(itemScaleGlobalMode)) return global;
+        if ("unlisted".equals(itemScaleGlobalMode)) return "otherItems".equals(key) ? global : categoryVal;
+        if ("custom".equals(itemScaleGlobalMode) && itemScaleGlobalLinked.contains(key)) return global;
+        return categoryVal;
     }
 
     public String soundEventTarget = "entity.generic.explode";
@@ -360,6 +381,9 @@ public class PvpTweaksConfig {
         cfg.maceScalePct = 100;
         cfg.armorScalePct = 100;
         cfg.otherItemScalePct = 100;
+        cfg.itemScaleGlobalPct = 100;
+        cfg.itemScaleGlobalMode = "off";
+        cfg.itemScaleGlobalLinked.clear();
         cfg.customItemScales.clear();
 
         cfg.totemPopScalePct = 100;

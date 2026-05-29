@@ -34,7 +34,7 @@ public class AddSoundScreen extends Screen {
 
         // Path / URL input
         pathField = new TextFieldWidget(textRenderer, cx - 155, panelY + 30, 310, 20,
-                Text.literal("File path or URL"));
+                Text.literal("Drag & drop file, or paste path / URL"));
         pathField.setMaxLength(1024);
         addSelectableChild(pathField);
 
@@ -255,11 +255,12 @@ public class AddSoundScreen extends Screen {
 
         ctx.drawCenteredTextWithShadow(textRenderer,
                 Text.literal("\u00a7b\u00a7lImport Custom Sound"), cx, panelY + 10, 0xFFFFFF);
-        ctx.drawCenteredTextWithShadow(textRenderer,
-                Text.literal("\u00a78Drag & drop a file here, or use the buttons below"),
-                cx, panelY + 22, 0xAAAAAA);
         ctx.drawTextWithShadow(textRenderer,
                 Text.literal("\u00a77Path / URL:"), cx - 155, panelY + 15, 0xAAAAAA);
+
+        ctx.drawText(textRenderer,
+                Text.literal("\u00a7e\u25bc Drag & drop a file here, or use the buttons below"),
+                cx - 155, panelY + 22, 0xFFFF00, true);
 
         pathField.render(ctx, mx, my, delta);
         super.render(ctx, mx, my, delta);

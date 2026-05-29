@@ -23,9 +23,8 @@ public class PvpTweaksMixinPlugin implements IMixinConfigPlugin {
         if (simple.equals("ZoomifyMixin") || targetClassName.contains("zoomify")) {
             return FabricLoader.getInstance().isModLoaded("zoomify");
         }
-        // These mixins target 1.21.11+ rendering APIs not present in 1.21.4
+        // These mixins target 1.21.9+ APIs not present in 1.21.4
         if (simple.equals("EndCrystalEntityRendererMixin") ||
-            simple.equals("HeldItemRendererMixin") ||
             simple.equals("FireEntityMixin") ||
             simple.equals("FireBlockRenderMixin") ||
             simple.equals("ExplosionPacketMixin")) {

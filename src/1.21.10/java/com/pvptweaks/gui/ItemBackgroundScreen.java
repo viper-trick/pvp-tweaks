@@ -57,6 +57,19 @@ public class ItemBackgroundScreen extends Screen {
                 client.execute(() -> client.setScreen(new ItemBackgroundScreen(parent)));
             }));
         }));
+        y += spacing;
+
+        String[] modes = {"inventory", "outside", "both", "off"};
+        String[] modeLabels = {"\u00a7eInventory", "\u00a7eOutside", "\u00a7aBoth", "\u00a77Off"};
+        int mIdx = java.util.Arrays.asList(modes).indexOf(cfg.itemBackgroundMode);
+        if (mIdx < 0) mIdx = 2;
+        final int fMIdx = mIdx;
+        addDrawableChild(new ModernButtonWidget(cx - 75, y, 150, 20,
+            Text.literal("Show: " + modeLabels[fMIdx]), () -> {
+            int next = (fMIdx + 1) % 4;
+            cfg.itemBackgroundMode = modes[next];
+            refreshWidgets();
+        }));
         y += spacing * 1.5;
 
         addDrawableChild(new ModernButtonWidget(cx - 75, y, 150, 20, Text.literal("\u00a7a+ Add Custom Item"), () -> {

@@ -13,6 +13,7 @@ public class CustomSliderWidget extends SliderWidget {
     private final double max;
     private final Consumer<Double> setter;
     private final boolean isInt;
+    public boolean forced = false;
 
     public CustomSliderWidget(int x, int y, int width, int height, String prefix, double value, double min, double max, boolean isInt, Consumer<Double> setter) {
         // We set height to a fixed value for the bar, but the overall clickable area is larger
@@ -27,6 +28,12 @@ public class CustomSliderWidget extends SliderWidget {
 
     @Override
     protected void updateMessage() {
+        if (forced) {
+            double val = min + (value * (max - min));
+            String valStr = isInt ? String.valueOf((int) val) : String.format("%.1f", val);
+            this.setMessage(Text.literal("\u00a77" + prefix + ": " + valStr + "% (Forced by Global)"));
+            return;
+        }
         double val = min + (value * (max - min));
         String valStr = formatValueWithColor(val);
         this.setMessage(Text.literal(prefix + ": " + valStr));
@@ -89,6 +96,17 @@ public class CustomSliderWidget extends SliderWidget {
 
     @Override
     public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
+        if (forced) {
+            context.drawTextWithShadow(net.minecraft.client.MinecraftClient.getInstance().textRenderer, this.getMessage(),
+                    this.getX(), this.getY() - 10, 0xFF808080);
+            int barY = this.getY() + this.height / 2;
+            RenderUtils.drawRoundedRect(context, this.getX(), barY - 2, this.width, 4, 2, 0x30FFFFFF);
+            int fillWidth = (int) (this.value * this.width);
+            RenderUtils.drawRoundedRect(context, this.getX(), barY - 2, fillWidth, 4, 2, 0x60606060);
+            int knobX = this.getX() + fillWidth - 4;
+            RenderUtils.drawRoundedRect(context, knobX, barY - 6, 8, 12, 4, 0x80909090);
+            return;
+        }
         // Draw label ABOVE the slider
         context.drawTextWithShadow(net.minecraft.client.MinecraftClient.getInstance().textRenderer, this.getMessage(), 
                 this.getX(), this.getY() - 10, UiPalette.TEXT_SECONDARY);
