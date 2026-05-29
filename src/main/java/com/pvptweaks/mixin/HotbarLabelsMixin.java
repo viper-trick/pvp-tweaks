@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(InGameHud.class)
 public class HotbarLabelsMixin {
 
-    @Inject(method = "renderHotbar", at = @At("TAIL"))
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;renderMainHud(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/client/render/RenderTickCounter;)V", shift = At.Shift.AFTER), require = 0)
     private void pvptweaks$hotbarLabels(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         MinecraftClient client = MinecraftClient.getInstance();
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
@@ -23,7 +23,7 @@ public class HotbarLabelsMixin {
         if ("off".equals(mode)) return;
 
         int centerX = context.getScaledWindowWidth() / 2;
-        int slotY = context.getScaledWindowHeight() - 16 - 3 - 12;
+        int slotY = context.getScaledWindowHeight() - 16 - 3 - 14;
         TextRenderer textRenderer = client.textRenderer;
 
         for (int slot = 0; slot < 9; slot++) {
