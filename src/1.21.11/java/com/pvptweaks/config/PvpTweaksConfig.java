@@ -122,7 +122,7 @@ public class PvpTweaksConfig {
     public String itemBackgroundMode = "both"; // inventory | outside | both | off
     public java.util.Map<String, Integer> customItemBackgrounds = new java.util.HashMap<>();
 
-    public String hotbarSlotLabelMode = "off"; // keybinds | numbers | both | off
+    public String hotbarSlotLabelMode = "off"; // keybinds | numbers | off
 
     // Zoom
     public boolean zoomEnabled = true;
