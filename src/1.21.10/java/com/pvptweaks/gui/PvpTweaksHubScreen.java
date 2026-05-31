@@ -25,6 +25,7 @@ public class PvpTweaksHubScreen extends Screen {
     private double contentScroll = 0;
     private static boolean fireChanged = false;
     private static String lastCategoryName = "Home";
+    private int contentHeight = 300;
 
     public PvpTweaksHubScreen(Screen parent) {
         this(parent, lastCategoryName);
@@ -91,6 +92,7 @@ public class PvpTweaksHubScreen extends Screen {
             
             addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("\u21ba Reset to Vanilla"), () -> { PvpTweaksProfiles.applyVanilla(); refreshCategoryWidgets(); }));
             y += spacing;
+            this.contentHeight = y + (int)contentScroll;
             addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("\u26ef Reset to Profile Defaults"), () -> { PvpTweaksProfiles.applyDefault(); refreshCategoryWidgets(); }));
         } else if (activeCategory.name.equals("Item Sizes")) {
             int x1 = x;
@@ -128,6 +130,7 @@ public class PvpTweaksHubScreen extends Screen {
             addItemScaleSlider(x1, y, "Trident", "trident", cfg, v -> cfg.tridentScalePct = v.intValue(), cfg.tridentScalePct); y += spacing;
             addItemScaleSlider(x1, y, "Shield", "shield", cfg, v -> cfg.shieldScalePct = v.intValue(), cfg.shieldScalePct); y += spacing;
             addItemScaleSlider(x1, y, "Armor", "armor", cfg, v -> cfg.armorScalePct = v.intValue(), cfg.armorScalePct); y += spacing;
+            int leftColEndItems = y;
             addDrawableChild(new ModernButtonWidget(x1, y, 180, 20, Text.literal("\ud83d\udd0d Search Items..."), () -> {
                 PvpTweaksConfig.save();
                 client.setScreen(new com.pvptweaks.gui.ItemSearchScreen(this, false));
@@ -149,6 +152,7 @@ public class PvpTweaksHubScreen extends Screen {
                 addDrawableChild(new ModernButtonWidget(x2 + 185, y - 10, 20, 20, Text.literal("\u2716"), () -> { cfg.customItemScales.remove(id); refreshCategoryWidgets(); }));
                 y += spacing;
             }
+            this.contentHeight = Math.max(leftColEndItems, y) + (int)contentScroll;
         } else if (activeCategory.name.equals("Visuals")) {
             int x1 = x;
             int x2 = x + colWidth;
@@ -178,6 +182,7 @@ public class PvpTweaksHubScreen extends Screen {
             addDrawableChild(new ModernButtonWidget(x1, y, 180, 20, Text.literal("Crit Particles: " + (cfg.showHitParticles ? "ON" : "OFF")), () -> { cfg.showHitParticles = !cfg.showHitParticles; refreshCategoryWidgets(); })); y += spacing;
             addDrawableChild(new ModernButtonWidget(x1, y, 180, 20, Text.literal("\u2756 Shield Adjuster..."), () -> client.setScreen(new ShieldConfigScreen(this)))); y += spacing;
             addDrawableChild(new ModernButtonWidget(x1, y, 180, 20, Text.literal("\ud83d\udd0e Zoom Settings..."), () -> client.setScreen(new ZoomScreen(this))));
+            int leftColEndVisuals = y;
 
             y = startY + 5;
             addDrawableChild(new ModernButtonWidget(x2, y, 180, 20, Text.literal("\ud83c\udf3f Plants Control..."), () -> client.setScreen(new com.pvptweaks.gui.PlantsControlScreen(this)))); y += spacing;
@@ -187,6 +192,7 @@ public class PvpTweaksHubScreen extends Screen {
             addSlider(x2, y, "Crystal Particles", cfg.crystalParticlePct, 0, 200, 100, v -> cfg.crystalParticlePct = v.intValue()); y += spacing;
             addSlider(x2, y, "Crystal Expl Part.", cfg.enderExplosionParticlePct, 0, 200, 100, v -> cfg.enderExplosionParticlePct = v.intValue()); y += spacing;
             addSlider(x2, y, "Anchor Expl Part.", cfg.anchorExplosionParticlePct, 0, 200, 100, v -> cfg.anchorExplosionParticlePct = v.intValue());
+            this.contentHeight = Math.max(leftColEndVisuals, y) + (int)contentScroll;
         } else if (activeCategory.name.equals("HUD")) {
             y += 10;
             addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("CPS HUD: " + (cfg.cpsEnabled ? "ON" : "OFF")), () -> { cfg.cpsEnabled = !cfg.cpsEnabled; refreshCategoryWidgets(); })); y += spacing;
@@ -206,6 +212,7 @@ public class PvpTweaksHubScreen extends Screen {
                 cfg.hotbarSlotLabelMode = lbModes[next];
                 refreshCategoryWidgets();
             }));
+            this.contentHeight = y + (int)contentScroll;
         } else if (activeCategory.name.equals("Sounds")) {
             y += 10;
             addSlider(x, y, "Hit Vol", cfg.hitVolumePct, 0, 200, 100, v -> cfg.hitVolumePct = v.intValue()); y += spacing;
@@ -213,10 +220,12 @@ public class PvpTweaksHubScreen extends Screen {
             y += spacing;
             addDrawableChild(new ModernButtonWidget(x, y, 200, 20, Text.literal("\u2694 Combat..."), () -> client.setScreen(new SoundSubCategoryScreen(this, "Combat"))));
             y += spacing;
-            addDrawableChild(new ModernButtonWidget(x, y, 200, 20, Text.literal("\ud83c\udfb6 Misc..."), () -> client.setScreen(new SoundSubCategoryScreen(this, "Misc"))));
+            this.contentHeight = y + (int)contentScroll;
+            addDrawableChild(new ModernButtonWidget(x, y, 200, 20, Text.literal("\ud83c\udfb6 Misc..."),  () -> client.setScreen(new SoundSubCategoryScreen(this, "Misc"))));
         } else if (activeCategory.name.equals("Optimization")) {
             y += 10;
             addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("Crystal Opt: " + (cfg.crystalOptimizer ? "ON" : "OFF")), () -> { cfg.crystalOptimizer = !cfg.crystalOptimizer; refreshCategoryWidgets(); })); y += spacing;
+            this.contentHeight = y + (int)contentScroll;
             addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("Anchor Opt: " + (cfg.anchorOptimizer ? "ON" : "OFF")), () -> { cfg.anchorOptimizer = !cfg.anchorOptimizer; refreshCategoryWidgets(); }));
         } else if (activeCategory.name.equals("Profiles")) {
             y += 10;
@@ -231,6 +240,7 @@ public class PvpTweaksHubScreen extends Screen {
                 y += spacing;
             }
             
+            this.contentHeight = y + (int)contentScroll;
             int x2 = x + colWidth;
             int y2 = 65 + 10 - (int)contentScroll;
             addDrawableChild(new ModernButtonWidget(x2, y2, 160, 20, Text.literal("\ud83d\udce4 Export Mod Settings"), () -> promptExport(true, false))); y2 += spacing;
@@ -308,7 +318,7 @@ public class PvpTweaksHubScreen extends Screen {
             sidebarScroll = MathHelper.clamp(sidebarScroll - vy * 15, 0, Math.max(0, totalH - (height - 40)));
             return true;
         } else {
-            contentScroll = MathHelper.clamp(contentScroll - vy * 15, 0, 1000);
+            contentScroll = MathHelper.clamp(contentScroll - vy * 15, 0, Math.max(0, contentHeight - height + 35));
             refreshCategoryWidgets();
             return true;
         }
