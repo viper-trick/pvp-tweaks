@@ -194,14 +194,14 @@ public class PvpTweaksHubScreen extends Screen {
             addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("\u26E8 Move Durability"), () -> client.setScreen(new DurabilityAdjusterScreen(this)))); y += spacing;
             addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("Alert Sound Once: " + (cfg.durabilityAlertSoundOnce ? "ON" : "OFF")), () -> { cfg.durabilityAlertSoundOnce = !cfg.durabilityAlertSoundOnce; refreshCategoryWidgets(); })); y += spacing;
             addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("\ud83d\udd0d Item Background..."), () -> client.setScreen(new ItemBackgroundScreen(this)))); y += spacing;
-            String[] lbModes = {"keybinds", "numbers", "both", "off"};
-            String[] lbLabels = {"\u00a7eKeybinds", "\u00a7eNumbers", "\u00a7aBoth", "\u00a77Off"};
+            String[] lbModes = {"keybinds", "numbers", "off"};
+            String[] lbLabels = {"\u00a7eKeybinds", "\u00a7eNumbers", "\u00a77Off"};
             int lbIdx = java.util.Arrays.asList(lbModes).indexOf(cfg.hotbarSlotLabelMode);
-            if (lbIdx < 0) lbIdx = 3;
+            if (lbIdx < 0) lbIdx = 2;
             final int fLbIdx = lbIdx;
             addDrawableChild(new ModernButtonWidget(x, y, 180, 20,
                 Text.literal("Slot Labels: " + lbLabels[fLbIdx]), () -> {
-                int next = (fLbIdx + 1) % 4;
+                int next = (fLbIdx + 1) % 3;
                 cfg.hotbarSlotLabelMode = lbModes[next];
                 refreshCategoryWidgets();
             }));

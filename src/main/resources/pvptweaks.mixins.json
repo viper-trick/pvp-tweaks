@@ -14,6 +14,7 @@
     "FireOverlayMixin",
     "FireRandomTickMixin",
     "InGameOverlayRendererMixin",
+    "HotbarLabelsMixin",
     "GameMenuScreenMixin",
     "SoundRedirectMixin",
     "ResourcePackInjectMixin",
