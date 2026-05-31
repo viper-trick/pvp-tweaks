@@ -12,10 +12,11 @@ public final class CrosshairRenderer {
         int color = argb(cfg.crosshairAlpha, cfg.crosshairRed, cfg.crosshairGreen, cfg.crosshairBlue);
         int outline = argb(cfg.crosshairAlpha, 0, 0, 0);
 
-        int size  = Math.max(1, Math.round(cfg.crosshairSize));
-        int gap   = Math.max(0, Math.round(cfg.crosshairGap));
-        int thick = Math.max(1, Math.round(cfg.crosshairThickness));
-        int outT  = Math.max(1, Math.round(cfg.crosshairOutlineThickness));
+        // Convert CS2 units to Minecraft GUI pixels
+        int size  = Math.max(1, Math.round(cfg.crosshairSize * 2.0f));
+        int gap   = Math.max(0, Math.round(cfg.crosshairGap + 3.0f));
+        int thick = Math.max(1, Math.round(cfg.crosshairThickness * 2.0f));
+        int outT  = Math.max(1, Math.round(cfg.crosshairOutlineThickness * 2.0f));
 
         int halfThick = thick / 2;
 

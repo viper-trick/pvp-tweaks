@@ -130,9 +130,9 @@ public class PvpTweaksConfig {
     public int     crosshairGreen           = 255;
     public int     crosshairBlue            = 0;
     public int     crosshairAlpha           = 255;
-    public float   crosshairSize            = 6.0f;
-    public float   crosshairThickness       = 1.5f;
-    public float   crosshairGap             = 3.0f;
+    public float   crosshairSize            = 3.0f;
+    public float   crosshairThickness       = 1.0f;
+    public float   crosshairGap             = -2.0f;
     public boolean crosshairDot             = false;
     public boolean crosshairOutline         = false;
     public float   crosshairOutlineThickness = 1.0f;

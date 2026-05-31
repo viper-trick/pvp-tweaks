@@ -3,7 +3,6 @@ package com.pvptweaks.gui;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
 
 import java.util.function.Consumer;
 
@@ -16,7 +15,6 @@ public class CustomSliderWidget extends SliderWidget {
     public boolean forced = false;
 
     public CustomSliderWidget(int x, int y, int width, int height, String prefix, double value, double min, double max, boolean isInt, Consumer<Double> setter) {
-        // We set height to a fixed value for the bar, but the overall clickable area is larger
         super(x, y, width, height, Text.literal(""), (value - min) / (max - min));
         this.prefix = prefix;
         this.min = min;
@@ -28,20 +26,29 @@ public class CustomSliderWidget extends SliderWidget {
 
     @Override
     protected void updateMessage() {
+        double val = min + (value * (max - min));
         if (forced) {
-            double val = min + (value * (max - min));
             String valStr = isInt ? String.valueOf((int) val) : String.format("%.1f", val);
-            this.setMessage(Text.literal("\u00a77" + prefix + ": " + valStr + "% (Forced by Global)"));
+            this.setMessage(Text.literal("§7" + prefix + ": " + valStr + "% (Forced)"));
             return;
         }
-        double val = min + (value * (max - min));
         String valStr = formatValueWithColor(val);
         this.setMessage(Text.literal(prefix + ": " + valStr));
     }
 
     private String formatValueWithColor(double val) {
-        String valStr;
+        String lowerPrefix = prefix.toLowerCase();
+        boolean isCrosshair = lowerPrefix.contains("size") || lowerPrefix.contains("gap") || 
+                              lowerPrefix.contains("thickness") || lowerPrefix.contains("outline") ||
+                              lowerPrefix.contains("red") || lowerPrefix.contains("green") ||
+                              lowerPrefix.contains("blue") || lowerPrefix.contains("alpha");
+        
+        if (isCrosshair) {
+            String valStr = isInt ? String.valueOf((int) val) : String.format("%.1f", val);
+            return "§e" + valStr;
+        }
 
+        String valStr;
         if (val <= min + 0.001) {
             if (min == 0) {
                 String pLower = prefix.toLowerCase();
@@ -66,25 +73,24 @@ public class CustomSliderWidget extends SliderWidget {
         }
 
         double checkVal = val;
-        // Map speed/scale/gamma (typically 0.1 to 5.0) to a percentage-like scale
         if (max <= 5.0) {
             checkVal = val * 100.0;
         }
 
         if (val <= min + 0.001) {
-            return "\u00a7c" + valStr + "\u00a7r"; // Red for OFF/min
+            return "§c" + valStr + "§r";
         } else if (val >= max - 0.001) {
-            return "\u00a7d" + valStr + "\u00a7r"; // Purple for MAX
+            return "§d" + valStr + "§r";
         } else if (checkVal <= 25.001) {
-            return "\u00a76" + valStr + "\u00a7r"; // Orange
+            return "§6" + valStr + "§r";
         } else if (checkVal <= 50.001) {
-            return "\u00a7e" + valStr + "\u00a7r"; // Yellow
+            return "§e" + valStr + "§r";
         } else if (checkVal <= 75.001) {
-            return "\u00a7b" + valStr + "\u00a7r"; // Light Blue/Aqua
+            return "§b" + valStr + "§r";
         } else if (checkVal <= 100.001) {
-            return "\u00a7a" + valStr + "\u00a7r"; // Green
+            return "§a" + valStr + "§r";
         } else {
-            return "\u00a7d" + valStr + "\u00a7r"; // Purple
+            return "§d" + valStr + "§r";
         }
     }
 
@@ -96,32 +102,39 @@ public class CustomSliderWidget extends SliderWidget {
 
     @Override
     public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
+        net.minecraft.client.font.TextRenderer tr = net.minecraft.client.MinecraftClient.getInstance().textRenderer;
+        
         if (forced) {
-            context.drawTextWithShadow(net.minecraft.client.MinecraftClient.getInstance().textRenderer, this.getMessage(),
-                    this.getX(), this.getY() - 10, 0xFF808080);
-            int barY = this.getY() + this.height / 2;
-            RenderUtils.drawRoundedRect(context, this.getX(), barY - 2, this.width, 4, 2, 0x30FFFFFF);
+            RenderUtils.drawRoundedRect(context, this.getX(), this.getY(), this.width, this.height, 4, 0x30000000);
+            RenderUtils.drawOutline(context, this.getX(), this.getY(), this.width, this.height, 1, 0x20FFFFFF);
             int fillWidth = (int) (this.value * this.width);
-            RenderUtils.drawRoundedRect(context, this.getX(), barY - 2, fillWidth, 4, 2, 0x60606060);
-            int knobX = this.getX() + fillWidth - 4;
-            RenderUtils.drawRoundedRect(context, knobX, barY - 6, 8, 12, 4, 0x80909090);
+            if (fillWidth > 0) {
+                RenderUtils.drawRoundedRect(context, this.getX(), this.getY(), fillWidth, this.height, 4, 0x40808080);
+            }
+            int textX = this.getX() + (this.width - tr.getWidth(this.getMessage())) / 2;
+            int textY = this.getY() + (this.height - 8) / 2;
+            context.drawTextWithShadow(tr, this.getMessage(), textX, textY, 0xFFAAAAAA);
             return;
         }
-        // Draw label ABOVE the slider
-        context.drawTextWithShadow(net.minecraft.client.MinecraftClient.getInstance().textRenderer, this.getMessage(), 
-                this.getX(), this.getY() - 10, UiPalette.TEXT_SECONDARY);
 
-        // Draw slider bar
-        int barY = this.getY() + this.height / 2;
-        RenderUtils.drawRoundedRect(context, this.getX(), barY - 2, this.width, 4, 2, 0x40FFFFFF);
-        int fillWidth = (int) (this.value * this.width);
-        RenderUtils.drawRoundedRect(context, this.getX(), barY - 2, fillWidth, 4, 2, UiPalette.ACCENT_BLUE);
+        // Background container
+        RenderUtils.drawRoundedRect(context, this.getX(), this.getY(), this.width, this.height, 4, 0x50000000);
+        RenderUtils.drawOutline(context, this.getX(), this.getY(), this.width, this.height, 1, 0x30FFFFFF);
         
-        // Draw knob
-        int knobX = this.getX() + fillWidth - 4;
-        RenderUtils.drawRoundedRect(context, knobX, barY - 6, 8, 12, 4, UiPalette.TEXT_PRIMARY);
-        if (this.isHovered()) {
-            RenderUtils.drawOutline(context, knobX - 1, barY - 7, 10, 14, 1, UiPalette.ACCENT_BLUE);
+        // Active fill
+        int fillWidth = (int) (this.value * this.width);
+        if (fillWidth > 0) {
+            RenderUtils.drawRoundedRect(context, this.getX(), this.getY(), fillWidth, this.height, 4, UiPalette.ACCENT_BLUE & 0x80FFFFFF);
         }
+        
+        // Draw outline when hovered
+        if (this.isHovered()) {
+            RenderUtils.drawOutline(context, this.getX(), this.getY(), this.width, this.height, 1, UiPalette.ACCENT_BLUE);
+        }
+        
+        // Center text message
+        int textX = this.getX() + (this.width - tr.getWidth(this.getMessage())) / 2;
+        int textY = this.getY() + (this.height - 8) / 2;
+        context.drawTextWithShadow(tr, this.getMessage(), textX, textY, 0xFFFFFFFF);
     }
 }
