@@ -32,7 +32,8 @@
     "SoundManagerAccessor",
     "GameRendererMixin",
     "DrawContextMixin",
-    "ZoomifyMixin"
+    "ZoomifyMixin",
+    "CrosshairMixin"
   ],
   "injectors": {
     "defaultRequire": 1

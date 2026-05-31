@@ -123,6 +123,20 @@ public class PvpTweaksConfig {
     public java.util.Map<String, Integer> customItemBackgrounds = new java.util.HashMap<>();
 
     public String hotbarSlotLabelMode = "off"; // keybinds | numbers | off
+    // Custom Crosshair
+    public boolean customCrosshairEnabled   = false;
+    public int     crosshairStyle           = 0;    // 0=cross, 1=dot, 2=T, 3=X
+    public int     crosshairRed             = 0;
+    public int     crosshairGreen           = 255;
+    public int     crosshairBlue            = 0;
+    public int     crosshairAlpha           = 255;
+    public float   crosshairSize            = 6.0f;
+    public float   crosshairThickness       = 1.5f;
+    public float   crosshairGap             = 3.0f;
+    public boolean crosshairDot             = false;
+    public boolean crosshairOutline         = false;
+    public float   crosshairOutlineThickness = 1.0f;
+
 
     // Zoom
     public boolean zoomEnabled = true;

@@ -26,7 +26,6 @@ public class PvpTweaksHubScreen extends Screen {
     private static boolean fireChanged = false;
     private static String lastCategoryName = "Home";
     private int contentHeight = 300;
-    private int contentHeight = 300;
 
     public PvpTweaksHubScreen(Screen parent) {
         this(parent, lastCategoryName);
@@ -201,7 +200,9 @@ public class PvpTweaksHubScreen extends Screen {
             addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("Durability HUD: " + (cfg.durabilityHudEnabled ? "ON" : "OFF")), () -> { cfg.durabilityHudEnabled = !cfg.durabilityHudEnabled; refreshCategoryWidgets(); })); y += spacing;
             addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("\u26E8 Move Durability"), () -> client.setScreen(new DurabilityAdjusterScreen(this)))); y += spacing;
             addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("Alert Sound Once: " + (cfg.durabilityAlertSoundOnce ? "ON" : "OFF")), () -> { cfg.durabilityAlertSoundOnce = !cfg.durabilityAlertSoundOnce; refreshCategoryWidgets(); })); y += spacing;
-            addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("\ud83d\udd0d Item Background..."), () -> client.setScreen(new ItemBackgroundScreen(this))));
+            addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("\ud83d\udd0d Item Background..."), () -> client.setScreen(new ItemBackgroundScreen(this)))); y += spacing;
+            addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("\u271c Crosshair..."), () -> client.setScreen(new CrosshairAdjusterScreen(this))));
+            this.contentHeight = y + (int)contentScroll;
         } else if (activeCategory.name.equals("Sounds")) {
             y += 10;
             addSlider(x, y, "Hit Vol", cfg.hitVolumePct, 0, 200, 100, v -> cfg.hitVolumePct = v.intValue()); y += spacing;
