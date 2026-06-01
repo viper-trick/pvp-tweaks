@@ -5,20 +5,8 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
+import org.lwjgl.glfw.GLFW;
 
-/**
- * Crosshair customisation screen.
- *
- * CS2 share-code decoder uses proper base-57 arithmetic (little-endian).
- * Byte layout after decode (18 bytes):
- *   [0]  gap           signed int8 (-10..+10)
- *   [1]  outline byte  bit0=drawOutline, bits1-7=outlineThickness*2
- *   [2]  R, [3] G, [4] B
- *   [5]  alpha
- *   [10] thickness     uint8 / 63.75 → 0-4
- *   [11] flags         bit0=dot, bit2=hasAlpha, bit3=tStyle, bits4-5=style, bit6=fixedGap
- *   [12] size          uint8 / 25.5 → 0-10
- */
 public class CrosshairAdjusterScreen extends Screen {
 
     private final Screen parent;
@@ -33,113 +21,74 @@ public class CrosshairAdjusterScreen extends Screen {
 
     @Override
     protected void init() {
+        String existingText = (codeField != null) ? codeField.getText() : "";
+
+        this.clearChildren();
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
 
-        // ── Layout constants ───────────────────────────────────────────────────
-        // Left column: toggles and dimension sliders
-        // Right column: colour sliders + import
-        // Preview: bottom-centre
+        int cx = this.width / 2;
+        int btnH = 20;
+        int sldH = 20;
 
-        int lx = 20;              // left column X
-        int lw = 175;             // left widget width
-        int rx = this.width / 2 + 10;  // right column X
-        int rw = 175;             // right widget width
-        int btnH  = 20;
-        int sldH  = 20;
-        int btnSp = 30;           // spacing after button (btn height + gap)
-        int sldSp = 35;           // spacing after slider (label + slider height + gap)
-
-        // Left column
-        int ly = 34;
-
-        // Enable
-        addDrawableChild(new ModernButtonWidget(lx, ly, lw, btnH,
-            Text.literal("Custom Crosshair: " + (cfg.customCrosshairEnabled ? "§aON" : "§7OFF")),
+        // ── TOP TOGGLES ROW (Y = 32) ──
+        addDrawableChild(new ModernButtonWidget(cx - 190, 32, 90, btnH,
+            Text.literal("Custom: " + (cfg.customCrosshairEnabled ? "§aON" : "§7OFF")),
             () -> { cfg.customCrosshairEnabled = !cfg.customCrosshairEnabled; init(); }));
-        ly += btnSp;
 
-        // Style
-        addDrawableChild(new ModernButtonWidget(lx, ly, lw, btnH,
+        addDrawableChild(new ModernButtonWidget(cx - 95, 32, 90, btnH,
             Text.literal("Style: §e" + STYLE_NAMES[Math.max(0, Math.min(cfg.crosshairStyle, STYLE_NAMES.length-1))]),
             () -> { cfg.crosshairStyle = (cfg.crosshairStyle + 1) % STYLE_NAMES.length; init(); }));
-        ly += btnSp;
 
-        // Center dot
-        addDrawableChild(new ModernButtonWidget(lx, ly, lw, btnH,
-            Text.literal("Center Dot: " + (cfg.crosshairDot ? "§aON" : "§7OFF")),
+        addDrawableChild(new ModernButtonWidget(cx + 5, 32, 90, btnH,
+            Text.literal("Dot: " + (cfg.crosshairDot ? "§aON" : "§7OFF")),
             () -> { cfg.crosshairDot = !cfg.crosshairDot; init(); }));
-        ly += btnSp;
 
-        // Outline toggle
-        addDrawableChild(new ModernButtonWidget(lx, ly, lw, btnH,
+        addDrawableChild(new ModernButtonWidget(cx + 100, 32, 90, btnH,
             Text.literal("Outline: " + (cfg.crosshairOutline ? "§aON" : "§7OFF")),
             () -> { cfg.crosshairOutline = !cfg.crosshairOutline; init(); }));
-        ly += btnSp + 10;  // extra gap before sliders
 
-        // Size slider  (label renders 10px above slider)
-        addSlider(lx, ly, lw - 26, "Size", cfg.crosshairSize, 1, 30, false,
+        // ── LEFT SLIDERS (Dimensions) ──
+        addSlider(cx - 190, 62, 160, "Size", cfg.crosshairSize, 0.0, 10.0, false,
             v -> cfg.crosshairSize = v.floatValue());
-        addDrawableChild(new ModernButtonWidget(lx + lw - 22, ly, 22, sldH, Text.literal("↺"),
-            () -> { cfg.crosshairSize = 6f; init(); }));
-        ly += sldSp;
+        addDrawableChild(new ModernButtonWidget(cx - 28, 62, 22, sldH, Text.literal("↺"),
+            () -> { cfg.crosshairSize = 3.0f; init(); }));
 
-        // Gap slider
-        addSlider(lx, ly, lw - 26, "Gap", cfg.crosshairGap, 0, 20, false,
+        addSlider(cx - 190, 86, 160, "Gap", cfg.crosshairGap, -10.0, 10.0, false,
             v -> cfg.crosshairGap = v.floatValue());
-        addDrawableChild(new ModernButtonWidget(lx + lw - 22, ly, 22, sldH, Text.literal("↺"),
-            () -> { cfg.crosshairGap = 3f; init(); }));
-        ly += sldSp;
+        addDrawableChild(new ModernButtonWidget(cx - 28, 86, 22, sldH, Text.literal("↺"),
+            () -> { cfg.crosshairGap = -2.0f; init(); }));
 
-        // Thickness slider
-        addSlider(lx, ly, lw - 26, "Thickness", cfg.crosshairThickness, 1, 8, false,
+        addSlider(cx - 190, 110, 160, "Thickness", cfg.crosshairThickness, 0.0, 6.0, false,
             v -> cfg.crosshairThickness = v.floatValue());
-        addDrawableChild(new ModernButtonWidget(lx + lw - 22, ly, 22, sldH, Text.literal("↺"),
-            () -> { cfg.crosshairThickness = 1.5f; init(); }));
-        ly += sldSp;
+        addDrawableChild(new ModernButtonWidget(cx - 28, 110, 22, sldH, Text.literal("↺"),
+            () -> { cfg.crosshairThickness = 1.0f; init(); }));
 
-        // Outline thickness (only if outline enabled)
         if (cfg.crosshairOutline) {
-            addSlider(lx, ly, lw - 26, "Outline px", cfg.crosshairOutlineThickness, 1, 5, false,
+            addSlider(cx - 190, 134, 160, "Outline px", cfg.crosshairOutlineThickness, 0.5, 3.5, false,
                 v -> cfg.crosshairOutlineThickness = v.floatValue());
-            addDrawableChild(new ModernButtonWidget(lx + lw - 22, ly, 22, sldH, Text.literal("↺"),
-                () -> { cfg.crosshairOutlineThickness = 1f; init(); }));
-            ly += sldSp;
+            addDrawableChild(new ModernButtonWidget(cx - 28, 134, 22, sldH, Text.literal("↺"),
+                () -> { cfg.crosshairOutlineThickness = 1.0f; init(); }));
         }
 
-        // Right column
-        int ry = 34;
-
-        // Colour label header
-        // R
-        addSlider(rx, ry, rw, "Red", cfg.crosshairRed, 0, 255, true,
+        // ── RIGHT SLIDERS (Colors) ──
+        addSlider(cx + 5, 62, 185, "Red", cfg.crosshairRed, 0, 255, true,
             v -> cfg.crosshairRed = v.intValue());
-        ry += sldSp;
-
-        // G
-        addSlider(rx, ry, rw, "Green", cfg.crosshairGreen, 0, 255, true,
+        addSlider(cx + 5, 86, 185, "Green", cfg.crosshairGreen, 0, 255, true,
             v -> cfg.crosshairGreen = v.intValue());
-        ry += sldSp;
-
-        // B
-        addSlider(rx, ry, rw, "Blue", cfg.crosshairBlue, 0, 255, true,
+        addSlider(cx + 5, 110, 185, "Blue", cfg.crosshairBlue, 0, 255, true,
             v -> cfg.crosshairBlue = v.intValue());
-        ry += sldSp;
-
-        // Alpha
-        addSlider(rx, ry, rw, "Alpha", cfg.crosshairAlpha, 0, 255, true,
+        addSlider(cx + 5, 134, 185, "Alpha", cfg.crosshairAlpha, 0, 255, true,
             v -> cfg.crosshairAlpha = v.intValue());
-        ry += sldSp + 14;
 
-        // Import text field
-        codeField = new TextFieldWidget(textRenderer, rx, ry, rw, 18, Text.literal(""));
+        // ── IMPORT / EXPORT ──
+        codeField = new TextFieldWidget(textRenderer, cx - 120, 166, 195, 18, Text.literal(""));
         codeField.setMaxLength(200);
-        codeField.setPlaceholder(Text.literal("§8Paste CS2 code or cfg commands…"));
+        codeField.setPlaceholder(Text.literal("§8Paste CS2 code or config…"));
+        codeField.setText(existingText);
         addDrawableChild(codeField);
-        ry += 24;
 
-        // Import button
-        addDrawableChild(new ModernButtonWidget(rx, ry, rw, btnH,
-            Text.literal("⬇ Import from CS2"), () -> {
+        addDrawableChild(new ModernButtonWidget(cx - 120, 188, 100, btnH,
+            Text.literal("⬇ Import"), () -> {
                 String raw = codeField.getText().trim();
                 if (raw.isEmpty()) { importStatus = "§cNothing to import"; return; }
                 boolean ok;
@@ -151,14 +100,33 @@ public class CrosshairAdjusterScreen extends Screen {
                 importStatus = ok ? "§aImported!" : "§cInvalid format";
                 init();
             }));
-        ry += btnSp;
 
-        // Bottom buttons
-        int bY = this.height - 28;
-        addDrawableChild(new ModernButtonWidget(this.width / 2 - 106, bY, 100, btnH,
+        addDrawableChild(new ModernButtonWidget(cx - 15, 188, 90, btnH,
+            Text.literal("📋 Copy Code"), () -> {
+                String code = exportCs2ShareCode(cfg);
+                if (!code.isEmpty()) {
+                    client.keyboard.setClipboard(code);
+                    importStatus = "§aCopied CS2 share code!";
+                } else {
+                    importStatus = "§cFailed to generate code";
+                }
+            }));
+
+        addDrawableChild(new ModernButtonWidget(cx + 80, 188, 110, btnH,
+            Text.literal("↺ Reset All"), () -> {
+                cfg.crosshairSize = 3.0f; cfg.crosshairGap = -2.0f; cfg.crosshairThickness = 1.0f;
+                cfg.crosshairOutlineThickness = 1.0f; cfg.crosshairRed = 0; cfg.crosshairGreen = 255;
+                cfg.crosshairBlue = 0; cfg.crosshairAlpha = 255; cfg.crosshairDot = false;
+                cfg.crosshairOutline = false; cfg.crosshairStyle = 0;
+                importStatus = "§eReset crosshair settings"; init();
+            }));
+
+        // ── BOTTOM BUTTONS ──
+        int bY = this.height - 24;
+        addDrawableChild(new ModernButtonWidget(cx - 105, bY, 100, btnH,
             Text.literal("Save & Close"),
             () -> { PvpTweaksConfig.save(); client.setScreen(parent); }));
-        addDrawableChild(new ModernButtonWidget(this.width / 2 + 6, bY, 100, btnH,
+        addDrawableChild(new ModernButtonWidget(cx + 5, bY, 100, btnH,
             Text.literal("Cancel"),
             () -> client.setScreen(parent)));
     }
@@ -168,9 +136,6 @@ public class CrosshairAdjusterScreen extends Screen {
         addDrawableChild(new CustomSliderWidget(x, y, w, 20, label, val, min, max, isInt, setter));
     }
 
-    // ══════════════════════════════════════════════════════════════════════════
-    //  CS2 share-code decoder (base-57, little-endian)
-    // ══════════════════════════════════════════════════════════════════════════
     private static final String CS2_DICT =
         "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefhijkmnopqrstuvwxyz23456789";
 
@@ -181,64 +146,53 @@ public class CrosshairAdjusterScreen extends Screen {
             for (char c : code.toCharArray()) {
                 if (CS2_DICT.indexOf(c) < 0) return false;
             }
-
-            // Decode base-57 (little-endian) → big integer → 18 bytes LE
             java.math.BigInteger val = java.math.BigInteger.ZERO;
             java.math.BigInteger base = java.math.BigInteger.valueOf(57);
-            java.math.BigInteger mult = java.math.BigInteger.ONE;
-            for (char c : code.toCharArray()) {
-                val = val.add(java.math.BigInteger.valueOf(CS2_DICT.indexOf(c)).multiply(mult));
-                mult = mult.multiply(base);
+            for (int i = code.length() - 1; i >= 0; i--) {
+                char c = code.charAt(i);
+                int idx = CS2_DICT.indexOf(c);
+                if (idx < 0) return false;
+                val = val.multiply(base).add(java.math.BigInteger.valueOf(idx));
             }
             byte[] raw = new byte[18];
-            for (int i = 0; i < 18; i++) {
-                raw[i] = val.and(java.math.BigInteger.valueOf(0xFF)).byteValue();
+            for (int i = 17; i >= 0; i--) {
+                raw[i] = (byte) (val.and(java.math.BigInteger.valueOf(0xFF)).intValue());
                 val = val.shiftRight(8);
             }
+            int sum = 0;
+            for (int i = 1; i < 18; i++) { sum += raw[i] & 0xFF; }
+            if ((raw[0] & 0xFF) != (sum % 256)) return false;
 
-            // Parse struct (verified layout)
-            int gap        = raw[0];           // signed int8: -10..+10
-            int outlineByte = raw[1] & 0xFF;
-            int r          = raw[2] & 0xFF;
-            int g          = raw[3] & 0xFF;
-            int b          = raw[4] & 0xFF;
-            int a          = raw[5] & 0xFF;
-            float thickness = (raw[10] & 0xFF) / 63.75f;  // 0-4
-            int flags       = raw[11] & 0xFF;
-            float size      = (raw[12] & 0xFF) / 25.5f;   // 0-10
+            float gap = ((byte) raw[2]) / 10.0f;
+            float outline = (raw[3] & 0xFF) / 2.0f;
+            int r = raw[4] & 0xFF; int g = raw[5] & 0xFF; int b = raw[6] & 0xFF; int a = raw[7] & 0xFF;
+            int colorIndex = raw[10] & 7;
+            boolean outlineEnabled = ((raw[10] & 0xFF) & 8) == 8;
+            float thickness = (raw[12] & 0xFF) / 10.0f;
+            int flags = raw[13] & 0xFF;
+            boolean centerDotEnabled = ((flags >> 4) & 1) == 1;
+            boolean alphaEnabled = ((flags >> 4) & 4) == 4;
+            boolean tStyleEnabled = ((flags >> 4) & 8) == 8;
+            float size = (raw[14] & 0xFF) / 10.0f;
 
-            boolean dot     = (flags & 0x01) != 0;
-            boolean hasAlpha = (flags & 0x04) != 0;
-            boolean tStyle  = (flags & 0x08) != 0;
-            boolean outline = (outlineByte & 0x01) != 0;
-            float outThick  = ((outlineByte >> 1) & 0x7F) / 2.0f;  // 0-3.5 range
-
-            // Map CS2 → Minecraft coordinate space
-            // CS2 size 0-10 → MC size 1-20 (×2)
-            cfg.crosshairSize      = Math.max(1f, size * 2f);
-            // CS2 gap -10..+10 → MC gap 0-20 (offset +4 for typical default)
-            cfg.crosshairGap       = Math.max(0f, Math.min(20f, gap + 4f));
-            // CS2 thickness 0-4 → MC thickness 1-8 (×2)
-            cfg.crosshairThickness = Math.max(1f, thickness * 2f);
-            cfg.crosshairRed       = r;
-            cfg.crosshairGreen     = g;
-            cfg.crosshairBlue      = b;
-            cfg.crosshairAlpha     = hasAlpha ? a : 255;
-            cfg.crosshairDot       = dot;
-            cfg.crosshairOutline   = outline;
-            cfg.crosshairOutlineThickness = Math.max(1f, outThick);
-            cfg.crosshairStyle     = tStyle ? 2 : 0;   // T-Shape or Cross
-            cfg.customCrosshairEnabled = true;
+            if (colorIndex != 5) {
+                switch (colorIndex) {
+                    case 0: r = 255; g = 0; b = 0; break;
+                    case 1: r = 0; g = 255; b = 0; break;
+                    case 2: r = 255; g = 255; b = 0; break;
+                    case 3: r = 0; g = 0; b = 255; break;
+                    case 4: r = 0; g = 255; b = 255; break;
+                }
+            }
+            cfg.crosshairSize = size; cfg.crosshairGap = gap; cfg.crosshairThickness = thickness;
+            cfg.crosshairRed = r; cfg.crosshairGreen = g; cfg.crosshairBlue = b;
+            cfg.crosshairAlpha = alphaEnabled ? a : 255; cfg.crosshairDot = centerDotEnabled;
+            cfg.crosshairOutline = outlineEnabled; cfg.crosshairOutlineThickness = outline;
+            cfg.crosshairStyle = tStyleEnabled ? 2 : 0; cfg.customCrosshairEnabled = true;
             return true;
-        } catch (Exception e) {
-            return false;
-        }
+        } catch (Exception e) { return false; }
     }
 
-    // ══════════════════════════════════════════════════════════════════════════
-    //  CS2 console-command string parser
-    //  e.g.  cl_crosshairsize "3"; cl_crosshairgap "-1"; cl_crosshaircolor_r "0";
-    // ══════════════════════════════════════════════════════════════════════════
     private static boolean importCs2ConsoleConfig(String text, PvpTweaksConfig cfg) {
         boolean anyHit = false;
         for (String segment : text.replace(";", "\n").split("\n")) {
@@ -250,69 +204,91 @@ public class CrosshairAdjusterScreen extends Screen {
             String valStr = parts[1].replaceAll("[\"' ]", "");
             float fv;
             try { fv = Float.parseFloat(valStr); } catch (NumberFormatException e) { continue; }
-
             switch (key) {
-                case "size":      case "_size":      cfg.crosshairSize      = Math.max(1f, fv * 2f);  anyHit = true; break;
-                case "gap":       case "_gap":       cfg.crosshairGap       = Math.max(0f, fv + 4f); anyHit = true; break;
-                case "thickness": case "_thickness": cfg.crosshairThickness = Math.max(1f, fv * 2f);  anyHit = true; break;
-                case "color_r":                      cfg.crosshairRed       = Math.max(0, Math.min(255, (int)fv)); anyHit = true; break;
-                case "color_g":                      cfg.crosshairGreen     = Math.max(0, Math.min(255, (int)fv)); anyHit = true; break;
-                case "color_b":                      cfg.crosshairBlue      = Math.max(0, Math.min(255, (int)fv)); anyHit = true; break;
-                case "alpha":                        cfg.crosshairAlpha     = Math.max(0, Math.min(255, (int)fv)); anyHit = true; break;
-                case "dot":       case "_dot":       cfg.crosshairDot       = fv > 0; anyHit = true; break;
-                case "_t":                           cfg.crosshairStyle     = fv > 0 ? 2 : 0; anyHit = true; break;
+                case "size": case "_size": cfg.crosshairSize = fv; anyHit = true; break;
+                case "gap": case "_gap": cfg.crosshairGap = fv; anyHit = true; break;
+                case "thickness": case "_thickness": cfg.crosshairThickness = fv; anyHit = true; break;
+                case "color_r": cfg.crosshairRed = Math.max(0, Math.min(255, (int)fv)); anyHit = true; break;
+                case "color_g": cfg.crosshairGreen = Math.max(0, Math.min(255, (int)fv)); anyHit = true; break;
+                case "color_b": cfg.crosshairBlue = Math.max(0, Math.min(255, (int)fv)); anyHit = true; break;
+                case "alpha": cfg.crosshairAlpha = Math.max(0, Math.min(255, (int)fv)); anyHit = true; break;
+                case "dot": case "_dot": cfg.crosshairDot = fv > 0; anyHit = true; break;
+                case "_t": cfg.crosshairStyle = fv > 0 ? 2 : 0; anyHit = true; break;
                 case "drawoutline": case "_drawoutline": cfg.crosshairOutline = fv > 0; anyHit = true; break;
-                case "outlinethickness": case "_outlinethickness":
-                    cfg.crosshairOutlineThickness = Math.max(1f, fv); anyHit = true; break;
+                case "outlinethickness": case "_outlinethickness": cfg.crosshairOutlineThickness = fv; anyHit = true; break;
             }
         }
         if (anyHit) cfg.customCrosshairEnabled = true;
         return anyHit;
     }
 
-    // ══════════════════════════════════════════════════════════════════════════
-    //  Render
-    // ══════════════════════════════════════════════════════════════════════════
+    public static String exportCs2ShareCode(PvpTweaksConfig cfg) {
+        try {
+            int gap = Math.round(cfg.crosshairGap * 10.0f);
+            int outline = Math.round(cfg.crosshairOutlineThickness * 2.0f);
+            int thickness = Math.round(cfg.crosshairThickness * 10.0f);
+            int length = Math.round(cfg.crosshairSize * 10.0f);
+            int[] bytes = new int[18];
+            bytes[1] = 1; bytes[2] = gap & 0xFF; bytes[3] = outline & 0xFF;
+            bytes[4] = cfg.crosshairRed & 0xFF; bytes[5] = cfg.crosshairGreen & 0xFF;
+            bytes[6] = cfg.crosshairBlue & 0xFF; bytes[7] = cfg.crosshairAlpha & 0xFF;
+            bytes[10] = 5 | (cfg.crosshairOutline ? 8 : 0); bytes[12] = thickness & 0xFF;
+            int flags = (4 << 1);
+            if (cfg.crosshairDot) flags |= (1 << 4);
+            flags |= (1 << 6);
+            if (cfg.crosshairStyle == 2) flags |= (1 << 7);
+            bytes[13] = flags & 0xFF; bytes[14] = length & 0xFF;
+            int sum = 0;
+            for (int i = 1; i < 18; i++) { sum += bytes[i]; }
+            bytes[0] = sum % 256;
+            java.math.BigInteger val = java.math.BigInteger.ZERO;
+            for (int i = 0; i < 18; i++) {
+                val = val.shiftLeft(8).add(java.math.BigInteger.valueOf(bytes[i]));
+            }
+            StringBuilder sb = new StringBuilder();
+            java.math.BigInteger base = java.math.BigInteger.valueOf(57);
+            for (int i = 0; i < 25; i++) {
+                java.math.BigInteger[] dr = val.divideAndRemainder(base);
+                sb.append(CS2_DICT.charAt(dr[1].intValue()));
+                val = dr[0];
+            }
+            String c = sb.toString();
+            return "CSGO-" + c.substring(0,5)+"-"+c.substring(5,10)+"-"+c.substring(10,15)+"-"+c.substring(15,20)+"-"+c.substring(20,25);
+        } catch (Exception e) { return ""; }
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            if (codeField != null && codeField.isFocused()) { codeField.setFocused(false); return true; }
+            client.setScreen(parent); return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
-        // Background
         RenderUtils.drawGradientRect(ctx, 0, 0, this.width, this.height,
             UiPalette.GRADIENT_START, UiPalette.GRADIENT_END);
-
-        // Title
         ctx.drawCenteredTextWithShadow(textRenderer,
-            Text.literal("§lCrosshair Adjuster"), this.width / 2, 12, 0xFFFFFFFF);
-
-        // Column divider
+            Text.literal("§lCrosshair Adjuster"), this.width / 2, 10, 0xFFFFFFFF);
         RenderUtils.drawOutline(ctx, this.width / 2 - 1, 30, 1, this.height - 60, 1, 0x30FFFFFF);
-
-        // Import status
         if (!importStatus.isEmpty()) {
             ctx.drawCenteredTextWithShadow(textRenderer,
                 Text.literal(importStatus), this.width / 2, this.height - 46, 0xFFFFFFFF);
         }
-
-        // Preview panel — centred at bottom
-        int prevW = 90, prevH = 90;
-        int px = this.width / 2 - prevW / 2;
-        int py = this.height - prevH - 35;
-        RenderUtils.drawRoundedRect(ctx, px, py, prevW, prevH, 6, 0xA0101020);
+        int prevW = 60, prevH = 60;
+        int px = this.width / 2 - 190;
+        int py = 164;
+        RenderUtils.drawRoundedRect(ctx, px, py, prevW, prevH, 4, 0xA0101020);
         RenderUtils.drawOutline(ctx, px, py, prevW, prevH, 1, UiPalette.BORDER);
-        ctx.drawCenteredTextWithShadow(textRenderer,
-            Text.literal("§8Preview"), this.width / 2, py - 11, 0xFFAAAAAA);
-
-        // Draw all widgets
         super.render(ctx, mouseX, mouseY, delta);
-
-        // Crosshair preview ON TOP of the panel (drawn after super so it's visible over panel)
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         CrosshairRenderer.draw(ctx, px + prevW / 2, py + prevH / 2, cfg);
-
-        // Preview colour swatch
         int swatchColor = (cfg.crosshairAlpha << 24) | (cfg.crosshairRed << 16) |
                           (cfg.crosshairGreen << 8) | cfg.crosshairBlue;
-        ctx.fill(px + prevW - 14, py + 3, px + prevW - 3, py + 14, 0xFF000000);
-        ctx.fill(px + prevW - 13, py + 4, px + prevW - 4, py + 13, swatchColor);
+        ctx.fill(px + prevW - 10, py + 2, px + prevW - 2, py + 10, 0xFF000000);
+        ctx.fill(px + prevW - 9, py + 3, px + prevW - 3, py + 9, swatchColor);
     }
 
     @Override
