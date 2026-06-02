@@ -136,7 +136,11 @@ public class PvpTweaksConfig {
     public boolean crosshairDot             = false;
     public boolean crosshairOutline         = false;
     public float   crosshairOutlineThickness = 1.0f;
-
+    public float   crosshairSplitDistance    = 0.0f;
+    public boolean crosshairFollowRecoil     = false;
+    public boolean crosshairFixedGap         = false;
+    public boolean crosshairGapUseWeapon     = false;
+    public float   crosshairSplitSizeRatio   = 0.0f;
 
     // Zoom
     public boolean zoomEnabled = true;

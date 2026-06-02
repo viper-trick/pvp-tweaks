@@ -8,13 +8,16 @@ public final class CrosshairRenderer {
 
     private CrosshairRenderer() {}
 
-    public static void draw(DrawContext ctx, int cx, int cy, PvpTweaksConfig cfg) {
+    /** Render at native framebuffer resolution (in-game HUD).
+     *  Caller must have pushed scale(1/scaleFactor) on the DrawContext's matrix stack
+     *  so that coordinates are in physical pixels. */
+    public static void drawNative(DrawContext ctx, int cx, int cy, PvpTweaksConfig cfg) {
         int color = argb(cfg.crosshairAlpha, cfg.crosshairRed, cfg.crosshairGreen, cfg.crosshairBlue);
         int outline = argb(cfg.crosshairAlpha, 0, 0, 0);
 
-        // Convert CS2 units to Minecraft GUI pixels (1:1, float for sub-pixel AA)
         float size  = Math.max(0.0f, cfg.crosshairSize);
         float gap   = cfg.crosshairGap;
+        float split = Math.max(0.0f, cfg.crosshairSplitDistance);
         float thick = Math.max(0.1f, cfg.crosshairThickness);
         float outT  = Math.max(0.1f, cfg.crosshairOutlineThickness);
 
@@ -24,13 +27,13 @@ public final class CrosshairRenderer {
             switch (cfg.crosshairStyle) {
                 case 1 -> fillRectF(ctx, cx - halfThick - outT, cy - halfThick - outT, thick + 2.0f * outT, thick + 2.0f * outT, outline);
                 case 2 -> {
-                    fillRectF(ctx, cx - gap - size - outT, cy - halfThick - outT, size + 2.0f * outT, thick + 2.0f * outT, outline);
-                    fillRectF(ctx, cx + gap - outT, cy - halfThick - outT, size + 2.0f * outT, thick + 2.0f * outT, outline);
-                    fillRectF(ctx, cx - halfThick - outT, cy + gap - outT, thick + 2.0f * outT, size + 2.0f * outT, outline);
+                    fillRectF(ctx, cx - gap - split - size - outT, cy - halfThick - outT, size + 2.0f * outT, thick + 2.0f * outT, outline);
+                    fillRectF(ctx, cx + gap + split - outT, cy - halfThick - outT, size + 2.0f * outT, thick + 2.0f * outT, outline);
+                    fillRectF(ctx, cx - halfThick - outT, cy + gap + split - outT, thick + 2.0f * outT, size + 2.0f * outT, outline);
                 }
                 case 3 -> {
-                    float start = gap;
-                    float end = gap + size;
+                    float start = gap + split;
+                    float end = gap + split + size;
                     float tOuter = thick + 2.0f * outT;
                     for (float i = start; i < end; i++) {
                         fillRectF(ctx, cx + i - outT, cy + i - outT, tOuter, tOuter, outline);
@@ -40,10 +43,10 @@ public final class CrosshairRenderer {
                     }
                 }
                 default -> {
-                    fillRectF(ctx, cx - gap - size - outT, cy - halfThick - outT, size + 2.0f * outT, thick + 2.0f * outT, outline);
-                    fillRectF(ctx, cx + gap - outT, cy - halfThick - outT, size + 2.0f * outT, thick + 2.0f * outT, outline);
-                    fillRectF(ctx, cx - halfThick - outT, cy - gap - size - outT, thick + 2.0f * outT, size + 2.0f * outT, outline);
-                    fillRectF(ctx, cx - halfThick - outT, cy + gap - outT, thick + 2.0f * outT, size + 2.0f * outT, outline);
+                    fillRectF(ctx, cx - gap - split - size - outT, cy - halfThick - outT, size + 2.0f * outT, thick + 2.0f * outT, outline);
+                    fillRectF(ctx, cx + gap + split - outT, cy - halfThick - outT, size + 2.0f * outT, thick + 2.0f * outT, outline);
+                    fillRectF(ctx, cx - halfThick - outT, cy - gap - split - size - outT, thick + 2.0f * outT, size + 2.0f * outT, outline);
+                    fillRectF(ctx, cx - halfThick - outT, cy + gap + split - outT, thick + 2.0f * outT, size + 2.0f * outT, outline);
                 }
             }
             if (cfg.crosshairDot) {
@@ -52,17 +55,16 @@ public final class CrosshairRenderer {
             }
         }
 
-        // Draw main crosshair
         switch (cfg.crosshairStyle) {
             case 1 -> fillRectF(ctx, cx - halfThick, cy - halfThick, thick, thick, color);
             case 2 -> {
-                fillRectF(ctx, cx - gap - size, cy - halfThick, size, thick, color);
-                fillRectF(ctx, cx + gap,        cy - halfThick, size, thick, color);
-                fillRectF(ctx, cx - halfThick,  cy + gap,       thick, size, color);
+                fillRectF(ctx, cx - gap - split - size, cy - halfThick, size, thick, color);
+                fillRectF(ctx, cx + gap + split,        cy - halfThick, size, thick, color);
+                fillRectF(ctx, cx - halfThick,          cy + gap + split, thick, size, color);
             }
             case 3 -> {
-                float start = gap;
-                float end = gap + size;
+                float start = gap + split;
+                float end = gap + split + size;
                 for (float i = start; i < end; i++) {
                     fillRectF(ctx, cx + i, cy + i, thick, thick, color);
                     fillRectF(ctx, cx - i, cy + i, thick, thick, color);
@@ -71,10 +73,86 @@ public final class CrosshairRenderer {
                 }
             }
             default -> {
-                fillRectF(ctx, cx - gap - size, cy - halfThick, size, thick, color);
-                fillRectF(ctx, cx + gap,        cy - halfThick, size, thick, color);
-                fillRectF(ctx, cx - halfThick,  cy - gap - size, thick, size, color);
-                fillRectF(ctx, cx - halfThick,  cy + gap,        thick, size, color);
+                fillRectF(ctx, cx - gap - split - size, cy - halfThick, size, thick, color);
+                fillRectF(ctx, cx + gap + split,        cy - halfThick, size, thick, color);
+                fillRectF(ctx, cx - halfThick,          cy - gap - split - size, thick, size, color);
+                fillRectF(ctx, cx - halfThick,     cy + gap + split,        thick, size, color);
+            }
+        }
+
+        if (cfg.crosshairDot) {
+            fillRectF(ctx, cx - halfThick, cy - halfThick, thick, thick, color);
+        }
+    }
+
+    /** Render in GUI-scaled coordinates (adjuster screen preview). */
+    public static void draw(DrawContext ctx, int cx, int cy, PvpTweaksConfig cfg) {
+        int color = argb(cfg.crosshairAlpha, cfg.crosshairRed, cfg.crosshairGreen, cfg.crosshairBlue);
+        int outline = argb(cfg.crosshairAlpha, 0, 0, 0);
+
+        float scale = (float) net.minecraft.client.MinecraftClient.getInstance().getWindow().getScaleFactor();
+        float size  = Math.max(0.0f, cfg.crosshairSize) / scale;
+        float gap   = cfg.crosshairGap / scale;
+        float split = Math.max(0.0f, cfg.crosshairSplitDistance) / scale;
+        float thick = Math.max(0.1f, cfg.crosshairThickness) / scale;
+        float outT  = Math.max(0.1f, cfg.crosshairOutlineThickness) / scale;
+
+        float halfThick = thick * 0.5f;
+
+        if (cfg.crosshairOutline) {
+            switch (cfg.crosshairStyle) {
+                case 1 -> fillRectF(ctx, cx - halfThick - outT, cy - halfThick - outT, thick + 2.0f * outT, thick + 2.0f * outT, outline);
+                case 2 -> {
+                    fillRectF(ctx, cx - gap - split - size - outT, cy - halfThick - outT, size + 2.0f * outT, thick + 2.0f * outT, outline);
+                    fillRectF(ctx, cx + gap + split - outT, cy - halfThick - outT, size + 2.0f * outT, thick + 2.0f * outT, outline);
+                    fillRectF(ctx, cx - halfThick - outT, cy + gap + split - outT, thick + 2.0f * outT, size + 2.0f * outT, outline);
+                }
+                case 3 -> {
+                    float start = gap + split;
+                    float end = gap + split + size;
+                    float tOuter = thick + 2.0f * outT;
+                    for (float i = start; i < end; i++) {
+                        fillRectF(ctx, cx + i - outT, cy + i - outT, tOuter, tOuter, outline);
+                        fillRectF(ctx, cx - i - outT, cy + i - outT, tOuter, tOuter, outline);
+                        fillRectF(ctx, cx + i - outT, cy - i - outT, tOuter, tOuter, outline);
+                        fillRectF(ctx, cx - i - outT, cy - i - outT, tOuter, tOuter, outline);
+                    }
+                }
+                default -> {
+                    fillRectF(ctx, cx - gap - split - size - outT, cy - halfThick - outT, size + 2.0f * outT, thick + 2.0f * outT, outline);
+                    fillRectF(ctx, cx + gap + split - outT, cy - halfThick - outT, size + 2.0f * outT, thick + 2.0f * outT, outline);
+                    fillRectF(ctx, cx - halfThick - outT, cy - gap - split - size - outT, thick + 2.0f * outT, size + 2.0f * outT, outline);
+                    fillRectF(ctx, cx - halfThick - outT, cy + gap + split - outT, thick + 2.0f * outT, size + 2.0f * outT, outline);
+                }
+            }
+            if (cfg.crosshairDot) {
+                float dotOuter = thick + 2.0f * outT;
+                fillRectF(ctx, cx - halfThick - outT, cy - halfThick - outT, dotOuter, dotOuter, outline);
+            }
+        }
+
+        switch (cfg.crosshairStyle) {
+            case 1 -> fillRectF(ctx, cx - halfThick, cy - halfThick, thick, thick, color);
+            case 2 -> {
+                fillRectF(ctx, cx - gap - split - size, cy - halfThick, size, thick, color);
+                fillRectF(ctx, cx + gap + split,        cy - halfThick, size, thick, color);
+                fillRectF(ctx, cx - halfThick,          cy + gap + split, thick, size, color);
+            }
+            case 3 -> {
+                float start = gap + split;
+                float end = gap + split + size;
+                for (float i = start; i < end; i++) {
+                    fillRectF(ctx, cx + i, cy + i, thick, thick, color);
+                    fillRectF(ctx, cx - i, cy + i, thick, thick, color);
+                    fillRectF(ctx, cx + i, cy - i, thick, thick, color);
+                    fillRectF(ctx, cx - i, cy - i, thick, thick, color);
+                }
+            }
+            default -> {
+                fillRectF(ctx, cx - gap - split - size, cy - halfThick, size, thick, color);
+                fillRectF(ctx, cx + gap + split,        cy - halfThick, size, thick, color);
+                fillRectF(ctx, cx - halfThick,          cy - gap - split - size, thick, size, color);
+                fillRectF(ctx, cx - halfThick,     cy + gap + split,        thick, size, color);
             }
         }
 
@@ -103,12 +181,12 @@ public final class CrosshairRenderer {
             return;
         }
 
-        // Full-coverage interior (if any)
-        if (ix1 + 1 < ix2 && iy1 + 1 < iy2) {
-            ctx.fill(ix1 + 1, iy1 + 1, ix2 - 1, iy2 - 1, color);
-        }
+        float leftCov  = 1.0f - (x - ix1);
+        float rightCov = x2 - (ix2 - 1);
+        float topCov   = 1.0f - (y - iy1);
+        float botCov   = y2 - (iy2 - 1);
 
-        // Handle thin rects (<=2 px) per-pixel to avoid overlapping passes
+        // Thin rect (<=2 px in either dimension): per-pixel loop
         if (ix2 - ix1 <= 2 || iy2 - iy1 <= 2) {
             for (int row = iy1; row < iy2; row++) {
                 float rowCov = Math.min(y2, row + 1) - Math.max(y, row);
@@ -124,33 +202,38 @@ public final class CrosshairRenderer {
             return;
         }
 
-        // 9-part decomposition for normal-sized rects
-        float leftCov  = 1.0f - (x - ix1);
-        float rightCov = x2 - (ix2 - 1);
-        float topCov   = 1.0f - (y - iy1);
-        float botCov   = y2 - (iy2 - 1);
+        // Interior: fully-covered pixels extended to include any edge with full coverage
+        int innerIx1 = ix1 + (leftCov < 0.999f ? 1 : 0);
+        int innerIy1 = iy1 + (topCov < 0.999f ? 1 : 0);
+        int innerIx2 = ix2 - (rightCov < 0.999f ? 1 : 0);
+        int innerIy2 = iy2 - (botCov < 0.999f ? 1 : 0);
 
-        // Left column (mid-section)
-        if (leftCov < 0.999f && iy1 + 1 < iy2 - 1) {
-            ctx.fill(ix1, iy1 + 1, ix1 + 1, iy2 - 1, mulAlpha(color, leftCov));
+        if (innerIx1 < innerIx2 && innerIy1 < innerIy2) {
+            ctx.fill(innerIx1, innerIy1, innerIx2, innerIy2, color);
         }
-        // Right column
-        if (rightCov < 0.999f && iy1 + 1 < iy2 - 1) {
-            ctx.fill(ix2 - 1, iy1 + 1, ix2, iy2 - 1, mulAlpha(color, rightCov));
+
+        // Partial-coverage edges only (skipped when interior already covers them)
+        if (leftCov < 0.999f && innerIy1 < innerIy2) {
+            ctx.fill(ix1, innerIy1, ix1 + 1, innerIy2, mulAlpha(color, leftCov));
         }
-        // Top row
-        if (topCov < 0.999f && ix1 + 1 < ix2 - 1) {
-            ctx.fill(ix1 + 1, iy1, ix2 - 1, iy1 + 1, mulAlpha(color, topCov));
+        if (rightCov < 0.999f && innerIy1 < innerIy2) {
+            ctx.fill(ix2 - 1, innerIy1, ix2, innerIy2, mulAlpha(color, rightCov));
         }
-        // Bottom row
-        if (botCov < 0.999f && ix1 + 1 < ix2 - 1) {
-            ctx.fill(ix1 + 1, iy2 - 1, ix2 - 1, iy2, mulAlpha(color, botCov));
+        if (topCov < 0.999f && innerIx1 < innerIx2) {
+            ctx.fill(innerIx1, iy1, innerIx2, iy1 + 1, mulAlpha(color, topCov));
         }
-        // Four corner pixels
-        ctx.fill(ix1, iy1, ix1 + 1, iy1 + 1, mulAlpha(color, Math.min(leftCov, topCov)));
-        ctx.fill(ix2 - 1, iy1, ix2, iy1 + 1, mulAlpha(color, Math.min(rightCov, topCov)));
-        ctx.fill(ix1, iy2 - 1, ix1 + 1, iy2, mulAlpha(color, Math.min(leftCov, botCov)));
-        ctx.fill(ix2 - 1, iy2 - 1, ix2, iy2, mulAlpha(color, Math.min(rightCov, botCov)));
+        if (botCov < 0.999f && innerIx1 < innerIx2) {
+            ctx.fill(innerIx1, iy2 - 1, innerIx2, iy2, mulAlpha(color, botCov));
+        }
+        // Corner pixels (both edges partial)
+        if (leftCov < 0.999f && topCov < 0.999f)
+            ctx.fill(ix1, iy1, ix1 + 1, iy1 + 1, mulAlpha(color, Math.min(leftCov, topCov)));
+        if (rightCov < 0.999f && topCov < 0.999f)
+            ctx.fill(ix2 - 1, iy1, ix2, iy1 + 1, mulAlpha(color, Math.min(rightCov, topCov)));
+        if (leftCov < 0.999f && botCov < 0.999f)
+            ctx.fill(ix1, iy2 - 1, ix1 + 1, iy2, mulAlpha(color, Math.min(leftCov, botCov)));
+        if (rightCov < 0.999f && botCov < 0.999f)
+            ctx.fill(ix2 - 1, iy2 - 1, ix2, iy2, mulAlpha(color, Math.min(rightCov, botCov)));
     }
 
     private static int mulAlpha(int color, float factor) {

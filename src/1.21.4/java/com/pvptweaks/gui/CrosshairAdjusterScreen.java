@@ -63,10 +63,15 @@ public class CrosshairAdjusterScreen extends Screen {
         addDrawableChild(new ModernButtonWidget(cx - 28, 110, 22, sldH, Text.literal("↺"),
             () -> { cfg.crosshairThickness = 1.0f; init(); }));
 
+        addSlider(cx - 190, 134, 160, "Split", cfg.crosshairSplitDistance, 0.0, 10.0, false,
+            v -> cfg.crosshairSplitDistance = v.floatValue());
+        addDrawableChild(new ModernButtonWidget(cx - 28, 134, 22, sldH, Text.literal("↺"),
+            () -> { cfg.crosshairSplitDistance = 0.0f; init(); }));
+
         if (cfg.crosshairOutline) {
-            addSlider(cx - 190, 134, 160, "Outline px", cfg.crosshairOutlineThickness, 0.5, 3.5, false,
+            addSlider(cx - 190, 158, 160, "Outline px", cfg.crosshairOutlineThickness, 0.5, 3.5, false,
                 v -> cfg.crosshairOutlineThickness = v.floatValue());
-            addDrawableChild(new ModernButtonWidget(cx - 28, 134, 22, sldH, Text.literal("↺"),
+            addDrawableChild(new ModernButtonWidget(cx - 28, 158, 22, sldH, Text.literal("↺"),
                 () -> { cfg.crosshairOutlineThickness = 1.0f; init(); }));
         }
 
@@ -80,14 +85,28 @@ public class CrosshairAdjusterScreen extends Screen {
         addSlider(cx + 5, 134, 185, "Alpha", cfg.crosshairAlpha, 0, 255, true,
             v -> cfg.crosshairAlpha = v.intValue());
 
+        // ── TOGGLE ROW ──
+        int toggleRowY = 164;
+        addDrawableChild(new ModernButtonWidget(cx - 190, toggleRowY, 75, btnH,
+            Text.literal("Recoil: " + (cfg.crosshairFollowRecoil ? "§aON" : "§7OFF")),
+            () -> { cfg.crosshairFollowRecoil = !cfg.crosshairFollowRecoil; init(); }));
+        addDrawableChild(new ModernButtonWidget(cx - 110, toggleRowY, 60, btnH,
+            Text.literal("FixGap: " + (cfg.crosshairFixedGap ? "§aON" : "§7OFF")),
+            () -> { cfg.crosshairFixedGap = !cfg.crosshairFixedGap; init(); }));
+        addDrawableChild(new ModernButtonWidget(cx - 45, toggleRowY, 75, btnH,
+            Text.literal("WpnGap: " + (cfg.crosshairGapUseWeapon ? "§aON" : "§7OFF")),
+            () -> { cfg.crosshairGapUseWeapon = !cfg.crosshairGapUseWeapon; init(); }));
+
         // ── IMPORT / EXPORT ──
-        codeField = new TextFieldWidget(textRenderer, cx - 120, 166, 195, 18, Text.literal(""));
+        int bottomY = 190;
+        codeField = new TextFieldWidget(textRenderer, cx - 120, bottomY + 2, 195, 18, Text.literal(""));
         codeField.setMaxLength(200);
         codeField.setPlaceholder(Text.literal("§8Paste CS2 code or config…"));
         codeField.setText(existingText);
         addDrawableChild(codeField);
 
-        addDrawableChild(new ModernButtonWidget(cx - 120, 188, 100, btnH,
+        int btnY = bottomY + 24;
+        addDrawableChild(new ModernButtonWidget(cx - 120, btnY, 100, btnH,
             Text.literal("⬇ Import"), () -> {
                 String raw = codeField.getText().trim();
                 if (raw.isEmpty()) { importStatus = "§cNothing to import"; return; }
@@ -101,7 +120,7 @@ public class CrosshairAdjusterScreen extends Screen {
                 init();
             }));
 
-        addDrawableChild(new ModernButtonWidget(cx - 15, 188, 90, btnH,
+        addDrawableChild(new ModernButtonWidget(cx - 15, btnY, 90, btnH,
             Text.literal("📋 Copy Code"), () -> {
                 String code = exportCs2ShareCode(cfg);
                 if (!code.isEmpty()) {
@@ -112,12 +131,15 @@ public class CrosshairAdjusterScreen extends Screen {
                 }
             }));
 
-        addDrawableChild(new ModernButtonWidget(cx + 80, 188, 110, btnH,
+        addDrawableChild(new ModernButtonWidget(cx + 80, btnY, 110, btnH,
             Text.literal("↺ Reset All"), () -> {
                 cfg.crosshairSize = 3.0f; cfg.crosshairGap = -2.0f; cfg.crosshairThickness = 1.0f;
                 cfg.crosshairOutlineThickness = 1.0f; cfg.crosshairRed = 0; cfg.crosshairGreen = 255;
                 cfg.crosshairBlue = 0; cfg.crosshairAlpha = 255; cfg.crosshairDot = false;
                 cfg.crosshairOutline = false; cfg.crosshairStyle = 0;
+                cfg.crosshairSplitDistance = 0.0f; cfg.crosshairFollowRecoil = false;
+                cfg.crosshairFixedGap = false; cfg.crosshairGapUseWeapon = false;
+                cfg.crosshairSplitSizeRatio = 0.0f;
                 importStatus = "§eReset crosshair settings"; init();
             }));
 
@@ -174,32 +196,32 @@ public class CrosshairAdjusterScreen extends Screen {
             int g = raw[5] & 0xFF;
             int b = raw[6] & 0xFF;
             int a = raw[7] & 0xFF;
+            int splitDist = raw[8] & 0x7F;
+            boolean followRecoil = (raw[8] & 0x80) != 0;
+            float fixedGap = ((byte) raw[9]) / 10.0f;
             boolean outlineEnabled = (raw[10] & 8) == 8;
-            float thickness = (raw[12] & 0xFF) / 10.0f;
+            float splitSizeRatio = ((raw[11] >> 4) & 0xF) / 10.0f;
+            float thickness = (raw[12] & 0x3F) / 10.0f;
             int flags = raw[13] & 0xFF;
             boolean centerDotEnabled = ((flags >> 4) & 1) == 1;
+            boolean gapUseWeapon = ((flags >> 4) & 2) == 2;
             boolean alphaEnabled = ((flags >> 4) & 4) == 4;
             boolean tStyleEnabled = ((flags >> 4) & 8) == 8;
-            boolean gapUseWeapon = ((flags >> 4) & 2) == 2;
-            int csStyle = (flags & 0xf) >> 1;
-            float size = (raw[14] & 0xFF) / 10.0f;
-
-            // Always use raw RGB from the code — colorIndex is cosmetic metadata
-            // CS2 predefined color values used in-game: 0=(250,50,50), 1=(50,250,50),
-            // 2=(250,250,50), 3=(50,50,250), 4=(50,250,250)
+            int csStyle = (flags & 0x0e) >> 1;
+            float size = (((raw[15] & 0x1F) << 8) | (raw[14] & 0xFF)) / 10.0f;
 
             // Map CS2 style to our style enum:
-            // CS2 0=classic, 1=classic-static, 2=classic-dynamic, 3=legacy, 4=classic-static2, 5=legacy2
-            // We use: 0=Cross, 1=Dot, 2=T-Shape, 3=X-Cross
             if (tStyleEnabled) {
-                cfg.crosshairStyle = 2; // T-Shape
+                cfg.crosshairStyle = 2;
+            } else if (csStyle == 2) {
+                cfg.crosshairStyle = 3;
             } else if (size <= 0 && centerDotEnabled) {
-                cfg.crosshairStyle = 1; // Dot (size=0 + dot flag)
+                cfg.crosshairStyle = 1;
             } else {
-                cfg.crosshairStyle = 0; // Classic Cross
+                cfg.crosshairStyle = 0;
             }
 
-            cfg.crosshairSize = Math.max(size, 0.5f);
+            cfg.crosshairSize = size;
             cfg.crosshairGap = gap;
             cfg.crosshairThickness = thickness;
             cfg.crosshairRed = r;
@@ -209,6 +231,11 @@ public class CrosshairAdjusterScreen extends Screen {
             cfg.crosshairDot = centerDotEnabled;
             cfg.crosshairOutline = outlineEnabled;
             cfg.crosshairOutlineThickness = outline;
+            cfg.crosshairSplitDistance = splitDist;
+            cfg.crosshairFollowRecoil = followRecoil;
+            cfg.crosshairFixedGap = fixedGap != 0.0f;
+            cfg.crosshairGapUseWeapon = gapUseWeapon;
+            cfg.crosshairSplitSizeRatio = splitSizeRatio;
             cfg.customCrosshairEnabled = true;
             return true;
         } catch (Exception e) {
@@ -239,6 +266,11 @@ public class CrosshairAdjusterScreen extends Screen {
                 case "_t": cfg.crosshairStyle = fv > 0 ? 2 : 0; anyHit = true; break;
                 case "drawoutline": case "_drawoutline": cfg.crosshairOutline = fv > 0; anyHit = true; break;
                 case "outlinethickness": case "_outlinethickness": cfg.crosshairOutlineThickness = fv; anyHit = true; break;
+                case "dynamic_splitdist": case "_dynamic_splitdist": cfg.crosshairSplitDistance = fv; anyHit = true; break;
+                case "follow_recoil": case "_follow_recoil": cfg.crosshairFollowRecoil = fv > 0; anyHit = true; break;
+                case "fixed_gap": case "_fixed_gap": cfg.crosshairFixedGap = fv > 0; anyHit = true; break;
+                case "gap_use_weapon_value": case "_gap_use_weapon_value": cfg.crosshairGapUseWeapon = fv > 0; anyHit = true; break;
+                case "dynamic_splitalpha_ot": case "_dynamic_splitalpha_ot": cfg.crosshairSplitSizeRatio = fv; anyHit = true; break;
             }
         }
         if (anyHit) cfg.customCrosshairEnabled = true;
@@ -262,32 +294,28 @@ public class CrosshairAdjusterScreen extends Screen {
             bytes[6] = cfg.crosshairBlue & 0xFF;
             bytes[7] = cfg.crosshairAlpha & 0xFF;
 
-            // Byte 8: splitDistance (bits 0-6) = 0, followRecoil (bit 7) = 0
-            bytes[8] = 0;
-            // Byte 9: fixedCrosshairGap = 0
-            bytes[9] = 0;
-
-            // Byte 10: color=5 (custom), outline, innerSplitAlpha=1.0
+            bytes[8] = (Math.round(cfg.crosshairSplitDistance) & 0x7F) | (cfg.crosshairFollowRecoil ? 0x80 : 0);
+            bytes[9] = cfg.crosshairFixedGap ? 10 & 0xFF : 0;
             bytes[10] = 5 | (cfg.crosshairOutline ? 8 : 0) | (10 << 4);
-
-            // Byte 11: outerSplitAlpha=1.0 (bits 0-3), splitSizeRatio=0 (bits 4-7)
-            bytes[11] = 10;
+            bytes[11] = 10 | ((Math.round(cfg.crosshairSplitSizeRatio * 10.0f) & 0xF) << 4);
 
             bytes[12] = thickness & 0xFF;
 
-            // Byte 13 flags:
-            // bits 0-3: style field (0 << 1 = 0 for classic, we always use classic)
-            // bit 4: centerDot
-            // bit 5: gap_use_weapon_value (always false)
-            // bit 6: use_alpha (always true)
-            // bit 7: tStyle
             int flags = 0;
+            switch (cfg.crosshairStyle) {
+                case 2 -> {
+                    flags |= 8;     // Classic Static (style 4 << 1)
+                    flags |= (1 << 7);  // tStyle flag
+                }
+                case 3 -> flags |= 4;   // Classic (style 2 << 1)
+                default -> flags |= 8;  // Classic Static (style 4 << 1)
+            }
             if (cfg.crosshairDot) flags |= (1 << 4);
-            flags |= (1 << 6); // use_alpha always enabled
-            if (cfg.crosshairStyle == 2) flags |= (1 << 7); // tStyle (T-Shape)
+            if (cfg.crosshairGapUseWeapon) flags |= (1 << 5);
+            flags |= (1 << 6);
             bytes[13] = flags & 0xFF;
 
-            // Size uses 11 bits across bytes 14-15 (but our values fit in 8 bits)
+            // Size uses 13 bits across bytes 14-15 (5 from byte 15, 8 from byte 14)
             bytes[14] = length & 0xFF;
             bytes[15] = (length >> 8) & 0x1F;
             bytes[16] = 0;
@@ -341,7 +369,7 @@ public class CrosshairAdjusterScreen extends Screen {
         }
         int prevW = 60, prevH = 60;
         int px = this.width / 2 - 190;
-        int py = 164;
+        int py = 190;
         RenderUtils.drawRoundedRect(ctx, px, py, prevW, prevH, 4, 0xA0101020);
         RenderUtils.drawOutline(ctx, px, py, prevW, prevH, 1, UiPalette.BORDER);
         super.render(ctx, mouseX, mouseY, delta);

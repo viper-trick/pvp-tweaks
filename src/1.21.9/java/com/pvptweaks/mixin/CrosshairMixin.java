@@ -6,6 +6,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.client.util.Window;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -26,9 +27,10 @@ public class CrosshairMixin {
 
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.options.getPerspective().isFirstPerson()) {
-            int cx = context.getScaledWindowWidth()  / 2;
-            int cy = context.getScaledWindowHeight() / 2;
-            CrosshairRenderer.draw(context, cx, cy, cfg);
+            Window window = mc.getWindow();
+            int cx = window.getScaledWidth() / 2;
+            int cy = window.getScaledHeight() / 2;
+            CrosshairRenderer.drawNative(context, cx, cy, cfg);
         }
         ci.cancel();
     }
