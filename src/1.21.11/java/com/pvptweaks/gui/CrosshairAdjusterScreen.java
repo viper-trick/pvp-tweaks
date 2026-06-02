@@ -208,7 +208,6 @@ public class CrosshairAdjusterScreen extends Screen {
             int g = raw[5] & 0xFF;
             int b = raw[6] & 0xFF;
             int a = raw[7] & 0xFF;
-            int colorIndex = raw[10] & 7;
             boolean outlineEnabled = ((raw[10] & 0xFF) & 8) == 8;
             float thickness = (raw[12] & 0xFF) / 10.0f;
             int flags = raw[13] & 0xFF;
@@ -217,29 +216,27 @@ public class CrosshairAdjusterScreen extends Screen {
             boolean tStyleEnabled = ((flags >> 4) & 8) == 8;
             float size = (raw[14] & 0xFF) / 10.0f;
 
-            // Pre-defined color mapping if colorIndex is not 5 (custom)
-            int finalR = r, finalG = g, finalB = b;
-            if (colorIndex != 5) {
-                switch (colorIndex) {
-                    case 0 -> { finalR = 255; finalG = 0; finalB = 0; }
-                    case 1 -> { finalR = 0; finalG = 255; finalB = 0; }
-                    case 2 -> { finalR = 255; finalG = 255; finalB = 0; }
-                    case 3 -> { finalR = 0; finalG = 0; finalB = 255; }
-                    case 4 -> { finalR = 0; finalG = 255; finalB = 255; }
-                }
+            // Always use raw RGB from the code — colorIndex is cosmetic metadata
+
+            // Map CS2 style to our style enum:
+            if (tStyleEnabled) {
+                cfg.crosshairStyle = 2; // T-Shape
+            } else if (size <= 0 && centerDotEnabled) {
+                cfg.crosshairStyle = 1; // Dot (size=0 + dot flag)
+            } else {
+                cfg.crosshairStyle = 0; // Classic Cross
             }
 
-            cfg.crosshairSize = size;
+            cfg.crosshairSize = Math.max(size, 0.5f);
             cfg.crosshairGap = gap;
             cfg.crosshairThickness = thickness;
-            cfg.crosshairRed = finalR;
-            cfg.crosshairGreen = finalG;
-            cfg.crosshairBlue = finalB;
+            cfg.crosshairRed = r;
+            cfg.crosshairGreen = g;
+            cfg.crosshairBlue = b;
             cfg.crosshairAlpha = alphaEnabled ? a : 255;
             cfg.crosshairDot = centerDotEnabled;
             cfg.crosshairOutline = outlineEnabled;
             cfg.crosshairOutlineThickness = outline;
-            cfg.crosshairStyle = tStyleEnabled ? 2 : 0;
             cfg.customCrosshairEnabled = true;
             return true;
         } catch (Exception e) {
@@ -296,19 +293,18 @@ public class CrosshairAdjusterScreen extends Screen {
             bytes[7] = cfg.crosshairAlpha & 0xFF;
             bytes[8] = 0;
             bytes[9] = 0;
-            bytes[10] = 5 | (cfg.crosshairOutline ? 8 : 0); // Custom color index 5
-            bytes[11] = 0;
+            bytes[10] = 5 | (cfg.crosshairOutline ? 8 : 0) | (10 << 4);
+            bytes[11] = 10;
             bytes[12] = thickness & 0xFF;
 
             int flags = 0;
-            flags |= (4 << 1); // classic static style
             if (cfg.crosshairDot) flags |= (1 << 4);
-            flags |= (1 << 6); // alphaEnabled
-            if (cfg.crosshairStyle == 2) flags |= (1 << 7); // tStyleEnabled
+            flags |= (1 << 6);
+            if (cfg.crosshairStyle == 2) flags |= (1 << 7);
             bytes[13] = flags & 0xFF;
 
             bytes[14] = length & 0xFF;
-            bytes[15] = 0;
+            bytes[15] = (length >> 8) & 0x1F;
             bytes[16] = 0;
             bytes[17] = 0;
 

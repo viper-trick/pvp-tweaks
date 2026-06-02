@@ -146,6 +146,7 @@ public class CrosshairAdjusterScreen extends Screen {
             for (char c : code.toCharArray()) {
                 if (CS2_DICT.indexOf(c) < 0) return false;
             }
+
             java.math.BigInteger val = java.math.BigInteger.ZERO;
             java.math.BigInteger base = java.math.BigInteger.valueOf(57);
             for (int i = code.length() - 1; i >= 0; i--) {
@@ -154,43 +155,65 @@ public class CrosshairAdjusterScreen extends Screen {
                 if (idx < 0) return false;
                 val = val.multiply(base).add(java.math.BigInteger.valueOf(idx));
             }
+
             byte[] raw = new byte[18];
             for (int i = 17; i >= 0; i--) {
                 raw[i] = (byte) (val.and(java.math.BigInteger.valueOf(0xFF)).intValue());
                 val = val.shiftRight(8);
             }
+
             int sum = 0;
-            for (int i = 1; i < 18; i++) { sum += raw[i] & 0xFF; }
+            for (int i = 1; i < 18; i++) {
+                sum += raw[i] & 0xFF;
+            }
             if ((raw[0] & 0xFF) != (sum % 256)) return false;
 
             float gap = ((byte) raw[2]) / 10.0f;
             float outline = (raw[3] & 0xFF) / 2.0f;
-            int r = raw[4] & 0xFF; int g = raw[5] & 0xFF; int b = raw[6] & 0xFF; int a = raw[7] & 0xFF;
-            int colorIndex = raw[10] & 7;
-            boolean outlineEnabled = ((raw[10] & 0xFF) & 8) == 8;
+            int r = raw[4] & 0xFF;
+            int g = raw[5] & 0xFF;
+            int b = raw[6] & 0xFF;
+            int a = raw[7] & 0xFF;
+            boolean outlineEnabled = (raw[10] & 8) == 8;
             float thickness = (raw[12] & 0xFF) / 10.0f;
             int flags = raw[13] & 0xFF;
             boolean centerDotEnabled = ((flags >> 4) & 1) == 1;
             boolean alphaEnabled = ((flags >> 4) & 4) == 4;
             boolean tStyleEnabled = ((flags >> 4) & 8) == 8;
+            boolean gapUseWeapon = ((flags >> 4) & 2) == 2;
+            int csStyle = (flags & 0xf) >> 1;
             float size = (raw[14] & 0xFF) / 10.0f;
 
-            if (colorIndex != 5) {
-                switch (colorIndex) {
-                    case 0: r = 255; g = 0; b = 0; break;
-                    case 1: r = 0; g = 255; b = 0; break;
-                    case 2: r = 255; g = 255; b = 0; break;
-                    case 3: r = 0; g = 0; b = 255; break;
-                    case 4: r = 0; g = 255; b = 255; break;
-                }
+            // Always use raw RGB from the code — colorIndex is cosmetic metadata
+            // CS2 predefined color values used in-game: 0=(250,50,50), 1=(50,250,50),
+            // 2=(250,250,50), 3=(50,50,250), 4=(50,250,250)
+
+            // Map CS2 style to our style enum:
+            // CS2 0=classic, 1=classic-static, 2=classic-dynamic, 3=legacy, 4=classic-static2, 5=legacy2
+            // We use: 0=Cross, 1=Dot, 2=T-Shape, 3=X-Cross
+            if (tStyleEnabled) {
+                cfg.crosshairStyle = 2; // T-Shape
+            } else if (size <= 0 && centerDotEnabled) {
+                cfg.crosshairStyle = 1; // Dot (size=0 + dot flag)
+            } else {
+                cfg.crosshairStyle = 0; // Classic Cross
             }
-            cfg.crosshairSize = size; cfg.crosshairGap = gap; cfg.crosshairThickness = thickness;
-            cfg.crosshairRed = r; cfg.crosshairGreen = g; cfg.crosshairBlue = b;
-            cfg.crosshairAlpha = alphaEnabled ? a : 255; cfg.crosshairDot = centerDotEnabled;
-            cfg.crosshairOutline = outlineEnabled; cfg.crosshairOutlineThickness = outline;
-            cfg.crosshairStyle = tStyleEnabled ? 2 : 0; cfg.customCrosshairEnabled = true;
+
+            cfg.crosshairSize = Math.max(size, 0.5f);
+            cfg.crosshairGap = gap;
+            cfg.crosshairThickness = thickness;
+            cfg.crosshairRed = r;
+            cfg.crosshairGreen = g;
+            cfg.crosshairBlue = b;
+            cfg.crosshairAlpha = alphaEnabled ? a : 255;
+            cfg.crosshairDot = centerDotEnabled;
+            cfg.crosshairOutline = outlineEnabled;
+            cfg.crosshairOutlineThickness = outline;
+            cfg.customCrosshairEnabled = true;
             return true;
-        } catch (Exception e) { return false; }
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private static boolean importCs2ConsoleConfig(String text, PvpTweaksConfig cfg) {
@@ -228,33 +251,72 @@ public class CrosshairAdjusterScreen extends Screen {
             int outline = Math.round(cfg.crosshairOutlineThickness * 2.0f);
             int thickness = Math.round(cfg.crosshairThickness * 10.0f);
             int length = Math.round(cfg.crosshairSize * 10.0f);
+
             int[] bytes = new int[18];
-            bytes[1] = 1; bytes[2] = gap & 0xFF; bytes[3] = outline & 0xFF;
-            bytes[4] = cfg.crosshairRed & 0xFF; bytes[5] = cfg.crosshairGreen & 0xFF;
-            bytes[6] = cfg.crosshairBlue & 0xFF; bytes[7] = cfg.crosshairAlpha & 0xFF;
-            bytes[10] = 5 | (cfg.crosshairOutline ? 8 : 0); bytes[12] = thickness & 0xFF;
-            int flags = (4 << 1);
+            bytes[0] = 0;
+            bytes[1] = 1;
+            bytes[2] = gap & 0xFF;
+            bytes[3] = outline & 0xFF;
+            bytes[4] = cfg.crosshairRed & 0xFF;
+            bytes[5] = cfg.crosshairGreen & 0xFF;
+            bytes[6] = cfg.crosshairBlue & 0xFF;
+            bytes[7] = cfg.crosshairAlpha & 0xFF;
+
+            // Byte 8: splitDistance (bits 0-6) = 0, followRecoil (bit 7) = 0
+            bytes[8] = 0;
+            // Byte 9: fixedCrosshairGap = 0
+            bytes[9] = 0;
+
+            // Byte 10: color=5 (custom), outline, innerSplitAlpha=1.0
+            bytes[10] = 5 | (cfg.crosshairOutline ? 8 : 0) | (10 << 4);
+
+            // Byte 11: outerSplitAlpha=1.0 (bits 0-3), splitSizeRatio=0 (bits 4-7)
+            bytes[11] = 10;
+
+            bytes[12] = thickness & 0xFF;
+
+            // Byte 13 flags:
+            // bits 0-3: style field (0 << 1 = 0 for classic, we always use classic)
+            // bit 4: centerDot
+            // bit 5: gap_use_weapon_value (always false)
+            // bit 6: use_alpha (always true)
+            // bit 7: tStyle
+            int flags = 0;
             if (cfg.crosshairDot) flags |= (1 << 4);
-            flags |= (1 << 6);
-            if (cfg.crosshairStyle == 2) flags |= (1 << 7);
-            bytes[13] = flags & 0xFF; bytes[14] = length & 0xFF;
+            flags |= (1 << 6); // use_alpha always enabled
+            if (cfg.crosshairStyle == 2) flags |= (1 << 7); // tStyle (T-Shape)
+            bytes[13] = flags & 0xFF;
+
+            // Size uses 11 bits across bytes 14-15 (but our values fit in 8 bits)
+            bytes[14] = length & 0xFF;
+            bytes[15] = (length >> 8) & 0x1F;
+            bytes[16] = 0;
+            bytes[17] = 0;
+
             int sum = 0;
-            for (int i = 1; i < 18; i++) { sum += bytes[i]; }
+            for (int i = 1; i < 18; i++) {
+                sum += bytes[i];
+            }
             bytes[0] = sum % 256;
+
             java.math.BigInteger val = java.math.BigInteger.ZERO;
             for (int i = 0; i < 18; i++) {
                 val = val.shiftLeft(8).add(java.math.BigInteger.valueOf(bytes[i]));
             }
+
             StringBuilder sb = new StringBuilder();
             java.math.BigInteger base = java.math.BigInteger.valueOf(57);
             for (int i = 0; i < 25; i++) {
-                java.math.BigInteger[] dr = val.divideAndRemainder(base);
-                sb.append(CS2_DICT.charAt(dr[1].intValue()));
-                val = dr[0];
+                java.math.BigInteger[] divRem = val.divideAndRemainder(base);
+                sb.append(CS2_DICT.charAt(divRem[1].intValue()));
+                val = divRem[0];
             }
-            String c = sb.toString();
-            return "CSGO-" + c.substring(0,5)+"-"+c.substring(5,10)+"-"+c.substring(10,15)+"-"+c.substring(15,20)+"-"+c.substring(20,25);
-        } catch (Exception e) { return ""; }
+            String chars = sb.toString();
+            return "CSGO-" + chars.substring(0, 5) + "-" + chars.substring(5, 10) + "-" +
+                   chars.substring(10, 15) + "-" + chars.substring(15, 20) + "-" + chars.substring(20, 25);
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     @Override
