@@ -28,9 +28,13 @@ public class CrosshairMixin {
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.options.getPerspective().isFirstPerson()) {
             Window window = mc.getWindow();
-            int cx = window.getScaledWidth() / 2;
-            int cy = window.getScaledHeight() / 2;
+            float scale = (float) window.getScaleFactor();
+            context.getMatrices().pushMatrix();
+            context.getMatrices().scale(1.0f / scale, 1.0f / scale);
+            int cx = window.getFramebufferWidth() / 2;
+            int cy = window.getFramebufferHeight() / 2;
             CrosshairRenderer.drawNative(context, cx, cy, cfg);
+            context.getMatrices().popMatrix();
         }
         ci.cancel();
     }

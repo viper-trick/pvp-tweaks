@@ -428,7 +428,13 @@ public class CrosshairAdjusterScreen extends Screen {
         super.render(ctx, mouseX, mouseY, delta);
 
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
-        CrosshairRenderer.draw(ctx, px + prevW / 2, py + prevH / 2, cfg);
+        float s = (float) this.client.getWindow().getScaleFactor();
+        ctx.getMatrices().pushMatrix();
+        ctx.getMatrices().scale(1.0f / s, 1.0f / s);
+        int cx = Math.round((px + prevW / 2.0f) * s);
+        int cy = Math.round((py + prevH / 2.0f) * s);
+        CrosshairRenderer.drawNative(ctx, cx, cy, cfg);
+        ctx.getMatrices().popMatrix();
 
         // Preview colour swatch
         int swatchColor = (cfg.crosshairAlpha << 24) | (cfg.crosshairRed << 16) |
