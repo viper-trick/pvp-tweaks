@@ -29,7 +29,7 @@ public final class CrosshairRenderer {
                 case 2 -> {
                     fillRectF(ctx, cx - gap - split - size - outT, cy - halfThick - outT, size + 2.0f * outT, thick + 2.0f * outT, outline);
                     fillRectF(ctx, cx + gap + split - outT, cy - halfThick - outT, size + 2.0f * outT, thick + 2.0f * outT, outline);
-                    fillRectF(ctx, cx - halfThick - outT, cy + gap + split - outT, thick + 2.0f * outT, size + 2.0f * outT, outline);
+                    fillRectF(ctx, cx - halfThick - outT, cy - gap - split - size - outT, thick + 2.0f * outT, size + 2.0f * outT, outline);
                 }
                 case 3 -> {
                     float start = gap + split;
@@ -46,7 +46,7 @@ public final class CrosshairRenderer {
                     fillRectF(ctx, cx - gap - split - size - outT, cy - halfThick - outT, size + 2.0f * outT, thick + 2.0f * outT, outline);
                     fillRectF(ctx, cx + gap + split - outT, cy - halfThick - outT, size + 2.0f * outT, thick + 2.0f * outT, outline);
                     fillRectF(ctx, cx - halfThick - outT, cy - gap - split - size - outT, thick + 2.0f * outT, size + 2.0f * outT, outline);
-                    fillRectF(ctx, cx - halfThick - outT, cy + gap + split - outT, thick + 2.0f * outT, size + 2.0f * outT, outline);
+                    fillRectF(ctx, cx - halfThick - outT, cy - gap - split - size - outT, thick + 2.0f * outT, size + 2.0f * outT, outline);
                 }
             }
             if (cfg.crosshairDot) {
@@ -60,7 +60,7 @@ public final class CrosshairRenderer {
             case 2 -> {
                 fillRectF(ctx, cx - gap - split - size, cy - halfThick, size, thick, color);
                 fillRectF(ctx, cx + gap + split,        cy - halfThick, size, thick, color);
-                fillRectF(ctx, cx - halfThick,          cy + gap + split, thick, size, color);
+                fillRectF(ctx, cx - halfThick,          cy - gap - split - size, thick, size, color);
             }
             case 3 -> {
                 float start = gap + split;
@@ -105,7 +105,7 @@ public final class CrosshairRenderer {
                 case 2 -> {
                     fillRectF(ctx, cx - gap - split - size - outT, cy - halfThick - outT, size + 2.0f * outT, thick + 2.0f * outT, outline);
                     fillRectF(ctx, cx + gap + split - outT, cy - halfThick - outT, size + 2.0f * outT, thick + 2.0f * outT, outline);
-                    fillRectF(ctx, cx - halfThick - outT, cy + gap + split - outT, thick + 2.0f * outT, size + 2.0f * outT, outline);
+                    fillRectF(ctx, cx - halfThick - outT, cy - gap - split - size - outT, thick + 2.0f * outT, size + 2.0f * outT, outline);
                 }
                 case 3 -> {
                     float start = gap + split;
@@ -122,7 +122,7 @@ public final class CrosshairRenderer {
                     fillRectF(ctx, cx - gap - split - size - outT, cy - halfThick - outT, size + 2.0f * outT, thick + 2.0f * outT, outline);
                     fillRectF(ctx, cx + gap + split - outT, cy - halfThick - outT, size + 2.0f * outT, thick + 2.0f * outT, outline);
                     fillRectF(ctx, cx - halfThick - outT, cy - gap - split - size - outT, thick + 2.0f * outT, size + 2.0f * outT, outline);
-                    fillRectF(ctx, cx - halfThick - outT, cy + gap + split - outT, thick + 2.0f * outT, size + 2.0f * outT, outline);
+                    fillRectF(ctx, cx - halfThick - outT, cy - gap - split - size - outT, thick + 2.0f * outT, size + 2.0f * outT, outline);
                 }
             }
             if (cfg.crosshairDot) {
@@ -136,7 +136,7 @@ public final class CrosshairRenderer {
             case 2 -> {
                 fillRectF(ctx, cx - gap - split - size, cy - halfThick, size, thick, color);
                 fillRectF(ctx, cx + gap + split,        cy - halfThick, size, thick, color);
-                fillRectF(ctx, cx - halfThick,          cy + gap + split, thick, size, color);
+                fillRectF(ctx, cx - halfThick,          cy - gap - split - size, thick, size, color);
             }
             case 3 -> {
                 float start = gap + split;

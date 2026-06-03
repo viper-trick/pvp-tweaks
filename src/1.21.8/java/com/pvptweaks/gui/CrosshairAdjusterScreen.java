@@ -86,7 +86,7 @@ public class CrosshairAdjusterScreen extends Screen {
             v -> cfg.crosshairAlpha = v.intValue());
 
         // ── TOGGLE ROW ──
-        int toggleRowY = 164;
+        int toggleRowY = 184;
         addDrawableChild(new ModernButtonWidget(cx - 190, toggleRowY, 75, btnH,
             Text.literal("Recoil: " + (cfg.crosshairFollowRecoil ? "§aON" : "§7OFF")),
             () -> { cfg.crosshairFollowRecoil = !cfg.crosshairFollowRecoil; init(); }));
@@ -98,7 +98,7 @@ public class CrosshairAdjusterScreen extends Screen {
             () -> { cfg.crosshairGapUseWeapon = !cfg.crosshairGapUseWeapon; init(); }));
 
         // ── IMPORT / EXPORT ──
-        int bottomY = 190;
+        int bottomY = 210;
         codeField = new TextFieldWidget(textRenderer, cx - 120, bottomY + 2, 195, 18, Text.literal(""));
         codeField.setMaxLength(200);
         codeField.setPlaceholder(Text.literal("§8Paste CS2 code or config…"));
@@ -369,7 +369,7 @@ public class CrosshairAdjusterScreen extends Screen {
         }
         int prevW = 60, prevH = 60;
         int px = this.width / 2 - 190;
-        int py = 190;
+        int py = 210;
         RenderUtils.drawRoundedRect(ctx, px, py, prevW, prevH, 4, 0xA0101020);
         RenderUtils.drawOutline(ctx, px, py, prevW, prevH, 1, UiPalette.BORDER);
         super.render(ctx, mouseX, mouseY, delta);
