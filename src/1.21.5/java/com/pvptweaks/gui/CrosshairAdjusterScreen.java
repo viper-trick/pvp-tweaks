@@ -379,7 +379,8 @@ public class CrosshairAdjusterScreen extends Screen {
         ctx.getMatrices().scale(1.0f / s, 1.0f / s, 1.0f);
         int cx = Math.round((px + prevW / 2.0f) * s);
         int cy = Math.round((py + prevH / 2.0f) * s);
-        CrosshairRenderer.drawNative(ctx, cx, cy, cfg);
+        float cs2Scale = (float) client.getWindow().getWidth() / 640.0f;
+        CrosshairRenderer.drawNative(ctx, cx, cy, cfg, cs2Scale);
         ctx.getMatrices().pop();
         int swatchColor = (cfg.crosshairAlpha << 24) | (cfg.crosshairRed << 16) |
                           (cfg.crosshairGreen << 8) | cfg.crosshairBlue;

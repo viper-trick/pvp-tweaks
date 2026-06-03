@@ -11,15 +11,15 @@ public final class CrosshairRenderer {
     /** Render at native framebuffer resolution (in-game HUD).
      *  Caller must have pushed scale(1/scaleFactor) on the DrawContext's matrix stack
      *  so that coordinates are in physical pixels. */
-    public static void drawNative(DrawContext ctx, int cx, int cy, PvpTweaksConfig cfg) {
+    public static void drawNative(DrawContext ctx, int cx, int cy, PvpTweaksConfig cfg, float cs2Scale) {
         int color = argb(cfg.crosshairAlpha, cfg.crosshairRed, cfg.crosshairGreen, cfg.crosshairBlue);
         int outline = argb(cfg.crosshairAlpha, 0, 0, 0);
 
-        float size  = Math.max(0.0f, cfg.crosshairSize);
-        float gap   = cfg.crosshairGap;
-        float split = Math.max(0.0f, cfg.crosshairSplitDistance);
-        float thick = Math.max(0.1f, cfg.crosshairThickness);
-        float outT  = Math.max(0.1f, cfg.crosshairOutlineThickness);
+        float size  = Math.max(0.0f, cfg.crosshairSize) * cs2Scale;
+        float gap   = cfg.crosshairGap * cs2Scale;
+        float split = Math.max(0.0f, cfg.crosshairSplitDistance) * cs2Scale;
+        float thick = Math.max(0.1f, cfg.crosshairThickness) * cs2Scale;
+        float outT  = Math.max(0.1f, cfg.crosshairOutlineThickness) * cs2Scale;
 
         float halfThick = thick * 0.5f;
 
@@ -86,16 +86,16 @@ public final class CrosshairRenderer {
     }
 
     /** Render in GUI-scaled coordinates (adjuster screen preview). */
-    public static void draw(DrawContext ctx, int cx, int cy, PvpTweaksConfig cfg) {
+    public static void draw(DrawContext ctx, int cx, int cy, PvpTweaksConfig cfg, float cs2Scale) {
         int color = argb(cfg.crosshairAlpha, cfg.crosshairRed, cfg.crosshairGreen, cfg.crosshairBlue);
         int outline = argb(cfg.crosshairAlpha, 0, 0, 0);
 
         float scale = (float) net.minecraft.client.MinecraftClient.getInstance().getWindow().getScaleFactor();
-        float size  = Math.max(0.0f, cfg.crosshairSize) / scale;
-        float gap   = cfg.crosshairGap / scale;
-        float split = Math.max(0.0f, cfg.crosshairSplitDistance) / scale;
-        float thick = Math.max(0.1f, cfg.crosshairThickness) / scale;
-        float outT  = Math.max(0.1f, cfg.crosshairOutlineThickness) / scale;
+        float size  = Math.max(0.0f, cfg.crosshairSize) * cs2Scale / scale;
+        float gap   = cfg.crosshairGap * cs2Scale / scale;
+        float split = Math.max(0.0f, cfg.crosshairSplitDistance) * cs2Scale / scale;
+        float thick = Math.max(0.1f, cfg.crosshairThickness) * cs2Scale / scale;
+        float outT  = Math.max(0.1f, cfg.crosshairOutlineThickness) * cs2Scale / scale;
 
         float halfThick = thick * 0.5f;
 
