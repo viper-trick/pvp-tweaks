@@ -16,7 +16,7 @@ public final class CrosshairRenderer {
         int outline = argb(cfg.crosshairAlpha, 0, 0, 0);
 
         float size  = Math.max(0.0f, cfg.crosshairSize) * cs2Scale;
-        float gap   = cfg.crosshairGap * cs2Scale;
+        float gap   = Math.max(cfg.crosshairGap + 5.0f, 0.0f) * cs2Scale;
         float split = Math.max(0.0f, cfg.crosshairSplitDistance) * cs2Scale;
         float thick = Math.max(0.1f, cfg.crosshairThickness) * cs2Scale;
         float outT  = Math.max(0.1f, cfg.crosshairOutlineThickness) * cs2Scale;
@@ -92,7 +92,7 @@ public final class CrosshairRenderer {
 
         float scale = (float) net.minecraft.client.MinecraftClient.getInstance().getWindow().getScaleFactor();
         float size  = Math.max(0.0f, cfg.crosshairSize) * cs2Scale / scale;
-        float gap   = cfg.crosshairGap * cs2Scale / scale;
+        float gap   = Math.max(cfg.crosshairGap + 5.0f, 0.0f) * cs2Scale / scale;
         float split = Math.max(0.0f, cfg.crosshairSplitDistance) * cs2Scale / scale;
         float thick = Math.max(0.1f, cfg.crosshairThickness) * cs2Scale / scale;
         float outT  = Math.max(0.1f, cfg.crosshairOutlineThickness) * cs2Scale / scale;

@@ -53,10 +53,10 @@ public class CrosshairAdjusterScreen extends Screen {
         addDrawableChild(new ModernButtonWidget(cx - 28, 62, 22, sldH, Text.literal("↺"),
             () -> { cfg.crosshairSize = 3.0f; init(); }));
 
-        addSlider(cx - 190, 86, 160, "Gap", cfg.crosshairGap, -10.0, 10.0, false,
+        addSlider(cx - 190, 86, 160, "Gap", cfg.crosshairGap, -5.0, 5.0, false,
             v -> cfg.crosshairGap = v.floatValue());
         addDrawableChild(new ModernButtonWidget(cx - 28, 86, 22, sldH, Text.literal("↺"),
-            () -> { cfg.crosshairGap = -2.0f; init(); }));
+            () -> { cfg.crosshairGap = 1.0f; init(); }));
 
         addSlider(cx - 190, 110, 160, "Thickness", cfg.crosshairThickness, 0.0, 6.0, false,
             v -> cfg.crosshairThickness = v.floatValue());
@@ -133,7 +133,7 @@ public class CrosshairAdjusterScreen extends Screen {
 
         addDrawableChild(new ModernButtonWidget(cx + 80, btnY, 110, btnH,
             Text.literal("↺ Reset All"), () -> {
-                cfg.crosshairSize = 3.0f; cfg.crosshairGap = -2.0f; cfg.crosshairThickness = 1.0f;
+                cfg.crosshairSize = 3.0f; cfg.crosshairGap = 1.0f; cfg.crosshairThickness = 1.0f;
                 cfg.crosshairOutlineThickness = 1.0f; cfg.crosshairRed = 0; cfg.crosshairGreen = 255;
                 cfg.crosshairBlue = 0; cfg.crosshairAlpha = 255; cfg.crosshairDot = false;
                 cfg.crosshairOutline = false; cfg.crosshairStyle = 0;
@@ -379,7 +379,7 @@ public class CrosshairAdjusterScreen extends Screen {
         ctx.getMatrices().scale(1.0f / s, 1.0f / s);
         int cx = Math.round((px + prevW / 2.0f) * s);
         int cy = Math.round((py + prevH / 2.0f) * s);
-        float cs2Scale = (float) client.getWindow().getWidth() / 640.0f;
+        float cs2Scale = (float) client.getWindow().getWidth() / 960.0f;
         CrosshairRenderer.drawNative(ctx, cx, cy, cfg, cs2Scale);
         ctx.getMatrices().popMatrix();
         int swatchColor = (cfg.crosshairAlpha << 24) | (cfg.crosshairRed << 16) |
