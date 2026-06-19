@@ -33,7 +33,9 @@
     "GameRendererMixin",
     "DrawContextMixin",
     "ZoomifyMixin",
-    "CrosshairMixin"
+    "GammaUtilsMixin",
+    "CrosshairMixin",
+    "GameOptionsMixin"
   ],
   "injectors": {
     "defaultRequire": 1

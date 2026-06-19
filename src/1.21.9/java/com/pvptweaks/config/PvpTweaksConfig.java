@@ -113,6 +113,7 @@ public class PvpTweaksConfig {
     public boolean disablePumpkinBlur  = false;
     public boolean fullbright          = false;
     public float   fullbrightGamma     = 5.0f;  // 1.0–5.0; 5.0 = maximum visible
+    public String fullbrightManagementMode = net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("gammautils") ? "gammautils" : "pvp-tweaks";
 
     // Item Backgrounds
     public boolean totemBackgroundEnabled = true;
@@ -330,6 +331,14 @@ public class PvpTweaksConfig {
             } catch (Exception ignored) {}
         }
 
+        // Migration: set defaults for new fields that may be null in existing configs
+        if (NEW_INSTANCE.fullbrightManagementMode == null) {
+            NEW_INSTANCE.fullbrightManagementMode = net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("gammautils") ? "gammautils" : "pvp-tweaks";
+        }
+        if (NEW_INSTANCE.zoomManagementMode == null) {
+            NEW_INSTANCE.zoomManagementMode = net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("zoomify") ? "zoomify" : "pvp-tweaks";
+        }
+
         // Load legacy menu config
         if (Files.exists(legacyFile)) {
             try (Reader r = Files.newBufferedReader(legacyFile)) {
@@ -350,6 +359,14 @@ public class PvpTweaksConfig {
                     GSON.toJson(LEGACY_INSTANCE, w);
                 }
             } catch (Exception ignored) {}
+        }
+
+        // Migration: set defaults for new fields that may be null in existing configs
+        if (LEGACY_INSTANCE.fullbrightManagementMode == null) {
+            LEGACY_INSTANCE.fullbrightManagementMode = net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("gammautils") ? "gammautils" : "pvp-tweaks";
+        }
+        if (LEGACY_INSTANCE.zoomManagementMode == null) {
+            LEGACY_INSTANCE.zoomManagementMode = net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("zoomify") ? "zoomify" : "pvp-tweaks";
         }
     }
 
@@ -444,5 +461,7 @@ public class PvpTweaksConfig {
         cfg.disablePumpkinBlur = false;
         cfg.fullbright = false;
         cfg.fullbrightGamma = 1.0f;
+
+
     }
 }

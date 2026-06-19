@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Set;
 
 public class DurabilityHudRenderer {
+    /** When true, the real durability HUD is suppressed (sample preview active in adjuster). */
+    public static boolean sampleActive = false;
     private static long lastAlertTime = 0;
 
     /** Tracks which items were already "low" so we can detect new low events. */
@@ -27,6 +29,7 @@ public class DurabilityHudRenderer {
     private static boolean alertPlayed = false;
 
     public static void render(DrawContext context, RenderTickCounter tickCounter) {
+        if (sampleActive) return;
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         if (!cfg.durabilityHudEnabled) return;
 
@@ -126,8 +129,16 @@ public class DurabilityHudRenderer {
                 int dur = stack.getMaxDamage() - stack.getDamage();
                 String text = String.valueOf(dur);
                 int col = low ? 0xFFFF5555 : 0xFFFFFFFF;
-                int textWidth = client.textRenderer.getWidth(text);
-                context.drawTextWithShadow(client.textRenderer, text, ix + 8 - textWidth / 2, iy - 10, col);
+                int tw = client.textRenderer.getWidth(text);
+                int tx, ty;
+                if ("vertical".equals(cfg.durabilityHudAlign)) {
+                    tx = ix + 18;
+                    ty = iy + 4;
+                } else {
+                    tx = ix + 8 - tw / 2;
+                    ty = iy - 10;
+                }
+                context.drawTextWithShadow(client.textRenderer, text, tx, ty, col);
             }
 
             offset += 20;
@@ -150,7 +161,15 @@ public class DurabilityHudRenderer {
         }
 
         if (ev != null) {
-            mc.getSoundManager().play(PositionedSoundInstance.ui(ev, 1.0f, 1.0f));
+            try {
+                java.lang.reflect.Method m = PositionedSoundInstance.class.getMethod("ui", SoundEvent.class, float.class, float.class);
+                mc.getSoundManager().play((PositionedSoundInstance) m.invoke(null, ev, 1.0f, 1.0f));
+            } catch (Exception e) {
+                try {
+                    java.lang.reflect.Method m = PositionedSoundInstance.class.getMethod("master", SoundEvent.class, float.class, float.class);
+                    mc.getSoundManager().play((PositionedSoundInstance) m.invoke(null, ev, 1.0f, 1.0f));
+                } catch (Exception ignored) {}
+            }
         }
     }
 }

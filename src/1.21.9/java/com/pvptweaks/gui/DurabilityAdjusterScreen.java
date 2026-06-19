@@ -5,18 +5,31 @@ import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.KeyInput;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 import org.lwjgl.glfw.GLFW;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DurabilityAdjusterScreen extends Screen {
     private final Screen parent;
     private boolean dragging = false;
     private double dragOffsetX, dragOffsetY;
+    private List<ItemStack> sampleItems = null;
 
     public DurabilityAdjusterScreen(Screen parent) {
         super(Text.literal("Durability Adjuster"));
         this.parent = parent;
+        DurabilityHudRenderer.sampleActive = (sampleItems != null);
+    }
+
+    @Override
+    public void removed() {
+        super.removed();
+        DurabilityHudRenderer.sampleActive = false;
     }
 
     @Override
@@ -35,6 +48,16 @@ public class DurabilityAdjusterScreen extends Screen {
             cfg.durabilityHudShowExact = !cfg.durabilityHudShowExact;
             refresh();
         }));
+        addDrawableChild(new ModernButtonWidget(width - 245, btnY, 75, 20, (Text)Text.literal(sampleItems == null ? "Armor Sample" : "\u2714 Sampled"), () -> {
+            if (sampleItems == null) {
+                sampleItems = createSampleItems();
+                DurabilityHudRenderer.sampleActive = true;
+            } else {
+                sampleItems = null;
+                DurabilityHudRenderer.sampleActive = false;
+            }
+            refresh();
+        }));
         addDrawableChild(new ModernButtonWidget(width - 160, btnY, 70, 20, (Text)Text.literal("Reset"), () -> {
             cfg.durabilityHudX = 5f; cfg.durabilityHudY = 5f;
         }));
@@ -43,7 +66,50 @@ public class DurabilityAdjusterScreen extends Screen {
         }));
     }
 
+    private static List<ItemStack> createSampleItems() {
+        List<ItemStack> list = new ArrayList<>();
+        ItemStack helmet = new ItemStack(Items.NETHERITE_HELMET);
+        helmet.setDamage((int)(helmet.getMaxDamage() * 0.25));
+        list.add(helmet);
+
+        ItemStack chest = new ItemStack(Items.NETHERITE_CHESTPLATE);
+        chest.setDamage((int)(chest.getMaxDamage() * 0.92));
+        list.add(chest);
+
+        ItemStack legs = new ItemStack(Items.NETHERITE_LEGGINGS);
+        legs.setDamage((int)(legs.getMaxDamage() * 0.15));
+        list.add(legs);
+
+        ItemStack boots = new ItemStack(Items.NETHERITE_BOOTS);
+        boots.setDamage((int)(boots.getMaxDamage() * 0.60));
+        list.add(boots);
+
+        ItemStack sword = new ItemStack(Items.NETHERITE_SWORD);
+        sword.setDamage((int)(sword.getMaxDamage() * 0.35));
+        list.add(sword);
+
+        ItemStack shield = new ItemStack(Items.SHIELD);
+        shield.setDamage((int)(shield.getMaxDamage() * 0.50));
+        list.add(shield);
+
+        return list;
+    }
+
     private void refresh() { this.clearChildren(); this.init(); }
+
+    private int hudItemCount() {
+        return sampleItems != null ? sampleItems.size() : 6;
+    }
+
+    private int hudWidth(PvpTweaksConfig cfg) {
+        if ("vertical".equals(cfg.durabilityHudAlign)) return 50;
+        return hudItemCount() * 20;
+    }
+
+    private int hudHeight(PvpTweaksConfig cfg) {
+        if ("vertical".equals(cfg.durabilityHudAlign)) return hudItemCount() * 20;
+        return 26;
+    }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
@@ -54,8 +120,59 @@ public class DurabilityAdjusterScreen extends Screen {
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         int hudX = (int) (width * (cfg.durabilityHudX / 100.0f));
         int hudY = (int) (height * (cfg.durabilityHudY / 100.0f));
-        if (dragging) RenderUtils.drawOutline(context, hudX - 5, hudY - 5, 80, 80, 1, UiPalette.ACCENT_BLUE);
+        int hw = hudWidth(cfg);
+        int hh = hudHeight(cfg);
+        if (dragging) RenderUtils.drawOutline(context, hudX - 5, hudY - 5, hw + 10, hh + 10, 1, UiPalette.ACCENT_BLUE);
+
+        if (sampleItems != null) {
+            renderSampleItems(context, hudX, hudY, cfg);
+        }
+
         super.render(context, mouseX, mouseY, delta);
+    }
+
+    private void renderSampleItems(DrawContext context, int x, int y, PvpTweaksConfig cfg) {
+        int offset = 0;
+        for (ItemStack stack : sampleItems) {
+            int ix = x;
+            int iy = y;
+            if ("vertical".equals(cfg.durabilityHudAlign)) iy += offset;
+            else ix += offset;
+
+            if (cfg.durabilityHudBackground) {
+                context.fill(ix, iy, ix + 16, iy + 16, 0x55000000);
+                context.fill(ix, iy, ix + 16, iy + 1, 0x88FFFFFF);
+                context.fill(ix, iy + 15, ix + 16, iy + 16, 0x88000000);
+                context.fill(ix, iy, ix + 1, iy + 16, 0x88FFFFFF);
+                context.fill(ix + 15, iy, ix + 16, iy + 16, 0x88000000);
+            }
+
+            boolean low = stack.isDamageable() && stack.getDamage() > (stack.getMaxDamage() * 0.9);
+            if (low) {
+                context.fill(ix, iy, ix + 16, iy + 16, 0x33FF0000);
+            }
+
+            context.drawItem(stack, ix, iy);
+            context.drawStackOverlay(client.textRenderer, stack, ix, iy);
+
+            if (cfg.durabilityHudShowExact && stack.isDamageable()) {
+                int dur = stack.getMaxDamage() - stack.getDamage();
+                String text = String.valueOf(dur);
+                int col = low ? 0xFFFF5555 : 0xFFFFFFFF;
+                int tw = client.textRenderer.getWidth(text);
+                int tx, ty;
+                if ("vertical".equals(cfg.durabilityHudAlign)) {
+                    tx = ix + 18;
+                    ty = iy + 4;
+                } else {
+                    tx = ix + 8 - tw / 2;
+                    ty = iy - 10;
+                }
+                context.drawTextWithShadow(client.textRenderer, text, tx, ty, col);
+            }
+
+            offset += 20;
+        }
     }
 
     @Override
@@ -63,7 +180,9 @@ public class DurabilityAdjusterScreen extends Screen {
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         int hudX = (int) (width * (cfg.durabilityHudX / 100.0f));
         int hudY = (int) (height * (cfg.durabilityHudY / 100.0f));
-        if (click.x() >= hudX - 10 && click.x() <= hudX + 100 && click.y() >= hudY - 10 && click.y() <= hudY + 100) {
+        int hw = hudWidth(cfg);
+        int hh = hudHeight(cfg);
+        if (click.x() >= hudX - 10 && click.x() <= hudX + hw + 10 && click.y() >= hudY - 10 && click.y() <= hudY + hh + 10) {
             dragging = true;
             dragOffsetX = click.x() - hudX;
             dragOffsetY = click.y() - hudY;

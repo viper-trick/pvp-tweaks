@@ -60,12 +60,6 @@ public class PvpTweaksClient implements ClientModInitializer {
                 }
             }
 
-            // Track mouse clicks via GLFW
-            long handle = client.getWindow().getHandle();
-            boolean leftDown  = org.lwjgl.glfw.GLFW.glfwGetMouseButton(handle, org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_1) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
-            boolean rightDown = org.lwjgl.glfw.GLFW.glfwGetMouseButton(handle, org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_2) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
-            com.pvptweaks.gui.CpsTracker.update(leftDown, rightDown);
-
             com.pvptweaks.zoom.ZoomManager.updateToggleState();
 
             PvpTweaksConfig cfg = PvpTweaksConfig.get();
@@ -79,10 +73,17 @@ public class PvpTweaksClient implements ClientModInitializer {
             }
 
             // ── Fullbright ────────────────────────────────────────────────────
+            boolean gammaUtilsMode = "gammautils".equals(cfg.fullbrightManagementMode)
+                && net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("gammautils");
             net.minecraft.client.option.SimpleOption<Double> gammaOpt = client.options.getGamma();
-            if (cfg.fullbright) {
-                if (savedGamma < 0.0) savedGamma = gammaOpt.getValue();
-                gammaOpt.setValue((double) cfg.fullbrightGamma);
+            if (!gammaUtilsMode) {
+                if (cfg.fullbright) {
+                    if (savedGamma < 0.0) savedGamma = gammaOpt.getValue();
+                    gammaOpt.setValue((double) cfg.fullbrightGamma);
+                } else if (savedGamma >= 0.0) {
+                    gammaOpt.setValue(savedGamma);
+                    savedGamma = -1.0;
+                }
             } else if (savedGamma >= 0.0) {
                 gammaOpt.setValue(savedGamma);
                 savedGamma = -1.0;

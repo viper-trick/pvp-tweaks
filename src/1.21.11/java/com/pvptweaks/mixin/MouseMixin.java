@@ -2,8 +2,10 @@ package com.pvptweaks.mixin;
 
 import com.pvptweaks.gui.CpsTracker;
 import com.pvptweaks.zoom.ZoomManager;
+import org.lwjgl.glfw.GLFW;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.input.MouseInput;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,14 +21,22 @@ public class MouseMixin {
     @Final
     private MinecraftClient client;
 
+    @Shadow
+    private double cursorDeltaX;
+
+    @Shadow
+    private double cursorDeltaY;
+
     private boolean pvptweaks$originalSmoothCameraState;
 
     @Inject(method = "onMouseButton", at = @At("HEAD"))
-    private void pvptweaks$onMouseButton(long window, MouseInput mouseInput, int action, CallbackInfo ci) {
-        if (action == 1) {
-            int btn = mouseInput.button();
-            if (btn == 0 || btn == 1) {
-                CpsTracker.registerClick(btn);
+    private void pvptweaks$onMouseButton(long window, MouseInput input, int action, CallbackInfo ci) {
+        if (action == GLFW.GLFW_PRESS && client != null && client.options != null) {
+            Click click = new Click(0.0, 0.0, input);
+            if (client.options.attackKey.matchesMouse(click)) {
+                CpsTracker.registerClick(0);
+            } else if (client.options.useKey.matchesMouse(click)) {
+                CpsTracker.registerClick(1);
             }
         }
     }
@@ -43,7 +53,7 @@ public class MouseMixin {
     private void pvptweaks$preUpdateMouse(double delta, CallbackInfo ci) {
         if (this.client != null && this.client.options != null) {
             pvptweaks$originalSmoothCameraState = this.client.options.smoothCameraEnabled;
-            if (ZoomManager.isZooming() && com.pvptweaks.config.PvpTweaksConfig.get().zoomSmoothCamera) {
+            if (ZoomManager.isZooming()) {
                 this.client.options.smoothCameraEnabled = true;
             }
         }

@@ -33,8 +33,8 @@ public class CrosshairMixin {
             context.getMatrices().scale(1.0f / scale, 1.0f / scale, 1.0f);
             int cx = window.getFramebufferWidth() / 2;
             int cy = window.getFramebufferHeight() / 2;
-            float cs2Scale = (float) window.getWidth() / 960.0f;
-            CrosshairRenderer.drawNative(context, cx, cy, cfg, cs2Scale);
+            float pixelScale = (float) window.getFramebufferHeight() / 1080.0f;
+            CrosshairRenderer.drawNative(context, cx, cy, cfg, pixelScale);
             context.getMatrices().pop();
         }
         ci.cancel();

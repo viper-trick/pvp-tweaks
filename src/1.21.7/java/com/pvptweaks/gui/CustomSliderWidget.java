@@ -10,6 +10,8 @@ public class CustomSliderWidget extends SliderWidget {
     private final String prefix;
     private final double min;
     private final double max;
+    public double vanillaMin = Double.NaN;
+    public double vanillaMax = Double.NaN;
     private final Consumer<Double> setter;
     private final boolean isInt;
     public boolean forced = false;
@@ -37,6 +39,16 @@ public class CustomSliderWidget extends SliderWidget {
     }
 
     private String formatValueWithColor(double val) {
+        // If vanilla range is set and value is outside it, show red
+        if (!Double.isNaN(vanillaMin) && val < vanillaMin) {
+            String vs = isInt ? String.valueOf((int) val) : String.format("%.1f", val);
+            return "§c" + vs + "§r";
+        }
+        if (!Double.isNaN(vanillaMax) && val > vanillaMax) {
+            String vs = isInt ? String.valueOf((int) val) : String.format("%.1f", val);
+            return "§c" + vs + "§r";
+        }
+
         String lowerPrefix = prefix.toLowerCase();
         boolean isCrosshair = lowerPrefix.contains("size") || lowerPrefix.contains("gap") || 
                               lowerPrefix.contains("thickness") || lowerPrefix.contains("outline") ||

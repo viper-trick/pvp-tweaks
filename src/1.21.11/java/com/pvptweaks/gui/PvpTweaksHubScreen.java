@@ -6,6 +6,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.client.input.KeyInput;
@@ -26,6 +27,7 @@ public class PvpTweaksHubScreen extends Screen {
     private static boolean fireChanged = false;
     private static String lastCategoryName = "Home";
     private int contentHeight = 300;
+    private final java.util.IdentityHashMap<ClickableWidget, String> tooltips = new java.util.IdentityHashMap<>();
 
     public PvpTweaksHubScreen(Screen parent) {
         this(parent, lastCategoryName);
@@ -40,6 +42,7 @@ public class PvpTweaksHubScreen extends Screen {
         categories.add(new Category("Visuals", "\ud83d\udc41"));
         categories.add(new Category("HUD", "\ud83d\udcca"));
         categories.add(new Category("Sounds", "\ud83d\udd0a"));
+        categories.add(new Category("Info", "\u2139"));
         categories.add(new Category("Optimization", "\u26a1"));
         categories.add(new Category("Profiles", "\ud83d\udcc1"));
         
@@ -60,8 +63,10 @@ public class PvpTweaksHubScreen extends Screen {
 
     private void refreshCategoryWidgets() {
         this.clearChildren();
+        tooltips.clear();
         
-        this.addDrawableChild(new ModernButtonWidget(this.width - 65, 12, 55, 20, Text.literal("Done"), () -> {
+        addTooltipped(this.width - 65, 12, 55, 20, "Done",
+            "Save configuration and close", () -> {
             PvpTweaksConfig.save();
             if (fireChanged) {
                 if (client.worldRenderer != null) client.worldRenderer.reload();
@@ -69,7 +74,7 @@ public class PvpTweaksHubScreen extends Screen {
                 fireChanged = false;
             }
             this.client.setScreen(parent);
-        }));
+        });
 
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         int x = sidebarWidth + 25;
@@ -79,77 +84,80 @@ public class PvpTweaksHubScreen extends Screen {
 
         if (activeCategory.name.equals("Home")) {
             y += 10;
-            addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("\u2694 Apply Competitive Preset"), () -> { PvpTweaksProfiles.applyCompetitive(); refreshCategoryWidgets(); }));
+            addTooltipped(x, y, 180, 20, "\u2694 Apply Competitive Preset",
+                "Apply competitive PVP settings preset", () -> { PvpTweaksProfiles.applyCompetitive(); refreshCategoryWidgets(); });
             y += spacing;
             
             String keyName = com.pvptweaks.PvpTweaksClient.openMenuKeyBinding.getBoundKeyLocalizedText().getString();
             Text btnText = listeningForKeybind ? Text.literal("> \u00a7e???\u00a7r <") : Text.literal("Menu Key: " + keyName);
-            addDrawableChild(new ModernButtonWidget(x, y, 180, 20, btnText, () -> {
+            String keyTip = listeningForKeybind ? "Press a key to bind, Escape to unbind" : "Click to rebind the menu key";
+            var keyBtn = addDrawableChild(new ModernButtonWidget(x, y, 180, 20, btnText, () -> {
                 listeningForKeybind = true;
                 refreshCategoryWidgets();
             }));
+            tooltips.put(keyBtn, keyTip);
             y += spacing;
             
-            addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("\u21ba Reset to Vanilla"), () -> { PvpTweaksProfiles.applyVanilla(); refreshCategoryWidgets(); }));
+            addTooltipped(x, y, 180, 20, "\u21ba Reset to Vanilla",
+                "Restore all vanilla Minecraft defaults", () -> { PvpTweaksProfiles.applyVanilla(); refreshCategoryWidgets(); });
             y += spacing;
             this.contentHeight = y + (int)contentScroll;
-            addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("\u26ef Reset to Profile Defaults"), () -> { PvpTweaksProfiles.applyDefault(); refreshCategoryWidgets(); }));
+            addTooltipped(x, y, 180, 20, "\u26ef Reset to Profile Defaults",
+                "Reset to the saved profile defaults", () -> { PvpTweaksProfiles.applyDefault(); refreshCategoryWidgets(); });
         } else if (activeCategory.name.equals("Item Sizes")) {
             int x1 = x;
             int x2 = x + colWidth;
 
             y += 5;
 
-            // Global slider row
             String[] modes = {"listed", "unlisted", "custom", "off"};
             String[] modeLabels = {"\u00a7eListed", "\u00a7eUnlisted", "\u00a7eCustom", "\u00a77Off"};
             int modeIdx = java.util.Arrays.asList(modes).indexOf(cfg.itemScaleGlobalMode);
             if (modeIdx < 0) modeIdx = 3;
             final int fModeIdx = modeIdx;
 
-            addDrawableChild(new CustomSliderWidget(x1, y, 155, 20, "Global", cfg.itemScaleGlobalPct, 25, 300, true,
-                v -> { cfg.itemScaleGlobalPct = v.intValue(); refreshCategoryWidgets(); }));
+            addTooltippedSlider(x1, y, 155, "Global", cfg.itemScaleGlobalPct, 25, 300, true,
+                v -> { cfg.itemScaleGlobalPct = v.intValue(); refreshCategoryWidgets(); },
+                "Master scale for all items (25-300%)");
             y += spacing;
 
-            // Mode selector row
-            addDrawableChild(new ModernButtonWidget(x1, y, 180, 20,
-                Text.literal("Mode: " + modeLabels[fModeIdx]), () -> {
+            addTooltipped(x1, y, 180, 20, "Mode: " + modeLabels[fModeIdx],
+                "Switch item scaling mode (Listed/Unlisted/Custom/Off)", () -> {
                 int next = (fModeIdx + 1) % 4;
                 cfg.itemScaleGlobalMode = modes[next];
                 refreshCategoryWidgets();
-            }));
+            });
             y += spacing;
 
-            // Both columns start here
             int firstItemRow = y;
 
-            // Left column
-            addItemScaleSlider(x1, y, "Sword", "sword", cfg, v -> cfg.swordScalePct = v.intValue(), cfg.swordScalePct); y += spacing;
-            addItemScaleSlider(x1, y, "Axe", "axe", cfg, v -> cfg.axeScalePct = v.intValue(), cfg.axeScalePct); y += spacing;
-            addItemScaleSlider(x1, y, "Mace", "mace", cfg, v -> cfg.maceScalePct = v.intValue(), cfg.maceScalePct); y += spacing;
-            addItemScaleSlider(x1, y, "Trident", "trident", cfg, v -> cfg.tridentScalePct = v.intValue(), cfg.tridentScalePct); y += spacing;
-            addItemScaleSlider(x1, y, "Shield", "shield", cfg, v -> cfg.shieldScalePct = v.intValue(), cfg.shieldScalePct); y += spacing;
-            addItemScaleSlider(x1, y, "Armor", "armor", cfg, v -> cfg.armorScalePct = v.intValue(), cfg.armorScalePct); y += spacing;
+            addItemScaleSlider(x1, y, "Sword", "sword", cfg, v -> cfg.swordScalePct = v.intValue(), cfg.swordScalePct, "Scale for swords (25-300%)"); y += spacing;
+            addItemScaleSlider(x1, y, "Axe", "axe", cfg, v -> cfg.axeScalePct = v.intValue(), cfg.axeScalePct, "Scale for axes (25-300%)"); y += spacing;
+            addItemScaleSlider(x1, y, "Mace", "mace", cfg, v -> cfg.maceScalePct = v.intValue(), cfg.maceScalePct, "Scale for mace (25-300%)"); y += spacing;
+            addItemScaleSlider(x1, y, "Trident", "trident", cfg, v -> cfg.tridentScalePct = v.intValue(), cfg.tridentScalePct, "Scale for tridents (25-300%)"); y += spacing;
+            addItemScaleSlider(x1, y, "Shield", "shield", cfg, v -> cfg.shieldScalePct = v.intValue(), cfg.shieldScalePct, "Scale for shields (25-300%)"); y += spacing;
+            addItemScaleSlider(x1, y, "Armor", "armor", cfg, v -> cfg.armorScalePct = v.intValue(), cfg.armorScalePct, "Scale for armor pieces (25-300%)"); y += spacing;
             int leftColEndItems = y;
-            addDrawableChild(new ModernButtonWidget(x1, y, 180, 20, Text.literal("\ud83d\udd0d Search Items..."), () -> {
+            addTooltipped(x1, y, 180, 20, "\ud83d\udd0d Search Items...",
+                "Search and customize scale for individual items", () -> {
                 PvpTweaksConfig.save();
                 client.setScreen(new com.pvptweaks.gui.ItemSearchScreen(this, false));
-            }));
+            });
             
-            // Right column
             y = firstItemRow;
-            addItemScaleSlider(x2, y, "Bow", "bow", cfg, v -> cfg.bowScalePct = v.intValue(), cfg.bowScalePct); y += spacing;
-            addItemScaleSlider(x2, y, "Crossbow", "crossbow", cfg, v -> cfg.crossbowScalePct = v.intValue(), cfg.crossbowScalePct); y += spacing;
-            addItemScaleSlider(x2, y, "Totem", "totem", cfg, v -> cfg.totemScalePct = v.intValue(), cfg.totemScalePct); y += spacing;
-            addItemScaleSlider(x2, y, "G-Apple", "goldenApple", cfg, v -> cfg.goldenAppleScalePct = v.intValue(), cfg.goldenAppleScalePct); y += spacing;
-            addItemScaleSlider(x2, y, "Anchor", "anchor", cfg, v -> cfg.anchorScalePct = v.intValue(), cfg.anchorScalePct); y += spacing;
-            addItemScaleSlider(x2, y, "Misc Items", "otherItems", cfg, v -> cfg.otherItemScalePct = v.intValue(), cfg.otherItemScalePct); y += spacing;
+            addItemScaleSlider(x2, y, "Bow", "bow", cfg, v -> cfg.bowScalePct = v.intValue(), cfg.bowScalePct, "Scale for bows (25-300%)"); y += spacing;
+            addItemScaleSlider(x2, y, "Crossbow", "crossbow", cfg, v -> cfg.crossbowScalePct = v.intValue(), cfg.crossbowScalePct, "Scale for crossbows (25-300%)"); y += spacing;
+            addItemScaleSlider(x2, y, "Totem", "totem", cfg, v -> cfg.totemScalePct = v.intValue(), cfg.totemScalePct, "Scale for totems (25-300%)"); y += spacing;
+            addItemScaleSlider(x2, y, "G-Apple", "goldenApple", cfg, v -> cfg.goldenAppleScalePct = v.intValue(), cfg.goldenAppleScalePct, "Scale for golden apples (25-300%)"); y += spacing;
+            addItemScaleSlider(x2, y, "Anchor", "anchor", cfg, v -> cfg.anchorScalePct = v.intValue(), cfg.anchorScalePct, "Scale for respawn anchors (25-300%)"); y += spacing;
+            addItemScaleSlider(x2, y, "Misc Items", "otherItems", cfg, v -> cfg.otherItemScalePct = v.intValue(), cfg.otherItemScalePct, "Scale for all other items (25-300%)"); y += spacing;
             
             List<String> customs = new ArrayList<>(cfg.customItemScales.keySet());
             for (String id : customs) {
                 String label = id.contains(":") ? id.substring(id.lastIndexOf(':') + 1) : id;
-                addSlider(x2, y, label, cfg.customItemScales.get(id), 25, 300, 100, v -> cfg.customItemScales.put(id, v.intValue()));
-                addDrawableChild(new ModernButtonWidget(x2 + 185, y - 10, 20, 20, Text.literal("\u2716"), () -> { cfg.customItemScales.remove(id); refreshCategoryWidgets(); }));
+                addSlider(x2, y, label, cfg.customItemScales.get(id), 25, 300, 100, v -> cfg.customItemScales.put(id, v.intValue()), "Custom item scale (25-300%)");
+                var delBtn = addDrawableChild(new ModernButtonWidget(x2 + 185, y - 10, 20, 20, Text.literal("\u2716"), () -> { cfg.customItemScales.remove(id); refreshCategoryWidgets(); }));
+                tooltips.put(delBtn, "Remove this custom item entry");
                 y += spacing;
             }
             this.contentHeight = Math.max(leftColEndItems, y) + (int)contentScroll;
@@ -159,111 +167,150 @@ public class PvpTweaksHubScreen extends Screen {
             int startY = y;
 
             y += 5;
-            addDrawableChild(new ModernButtonWidget(x1, y, 180, 20, Text.literal("Entity Fire Height: " + cfg.firePreset.toUpperCase()), () -> {
+            addTooltipped(x1, y, 180, 20, "Entity Fire Height: " + cfg.firePreset.toUpperCase(),
+                "Cycle through fire height presets (vanilla/full/mid/low/flat/none)", () -> {
                 int idx = (java.util.Arrays.asList("vanilla", "full", "mid", "low", "flat", "none").indexOf(cfg.firePreset) + 1) % 6;
                 cfg.firePreset = new String[]{"vanilla", "full", "mid", "low", "flat", "none"}[idx];
                 fireChanged = true;
                 refreshCategoryWidgets();
-            })); y += spacing;
+            }); y += spacing;
 
             if (fireChanged) {
-                addDrawableChild(new ModernButtonWidget(x1, y, 180, 20, Text.literal("\u00a7aSave Fire"), () -> {
+                addTooltipped(x1, y, 180, 20, "\u00a7aSave Fire",
+                    "Apply fire changes immediately", () -> {
                     PvpTweaksConfig.save();
                     if (client.worldRenderer != null) client.worldRenderer.reload();
                     client.reloadResources();
                     fireChanged = false;
                     refreshCategoryWidgets();
-                })); y += spacing;
+                }); y += spacing;
             }
-            addSlider(x1, y, "Fire Overlay", cfg.fireOverlayScalePct, 0, 200, 100, v -> { cfg.fireOverlayScalePct = v.intValue(); fireChanged = true; }); y += spacing;
-            addDrawableChild(new ModernButtonWidget(x1, y, 180, 20, Text.literal("Fullbright: " + (cfg.fullbright ? "ON" : "OFF")), () -> { cfg.fullbright = !cfg.fullbright; refreshCategoryWidgets(); })); y += spacing;
-            addSlider(x1, y, "Gamma", (int)(cfg.fullbrightGamma * 100), 100, 1500, 100, v -> cfg.fullbrightGamma = v.floatValue() / 100f); y += spacing;
-            addDrawableChild(new ModernButtonWidget(x1, y, 180, 20, Text.literal("Pumpkin Blur: " + (cfg.disablePumpkinBlur ? "HIDDEN" : "SHOWN")), () -> { cfg.disablePumpkinBlur = !cfg.disablePumpkinBlur; refreshCategoryWidgets(); })); y += spacing;
-            addDrawableChild(new ModernButtonWidget(x1, y, 180, 20, Text.literal("Crit Particles: " + (cfg.showHitParticles ? "ON" : "OFF")), () -> { cfg.showHitParticles = !cfg.showHitParticles; refreshCategoryWidgets(); })); y += spacing;
-            addDrawableChild(new ModernButtonWidget(x1, y, 180, 20, Text.literal("\u2756 Shield Adjuster..."), () -> client.setScreen(new ShieldConfigScreen(this)))); y += spacing;
-            addDrawableChild(new ModernButtonWidget(x1, y, 180, 20, Text.literal("\ud83d\udd0e Zoom Settings..."), () -> client.setScreen(new ZoomScreen(this))));
+            addSlider(x1, y, "Fire Overlay", cfg.fireOverlayScalePct, 0, 200, 100, v -> { cfg.fireOverlayScalePct = v.intValue(); fireChanged = true; }, "Scale of the fire overlay effect (0-200%)"); y += spacing;
+            addTooltipped(x1, y, 180, 20, "\ud83d\udca1 Fullbright...",
+                "Open fullbright and gamma settings screen", () -> client.setScreen(new FullbrightScreen(this))); y += spacing;
+            addTooltipped(x1, y, 180, 20, "Pumpkin Blur: " + (cfg.disablePumpkinBlur ? "HIDDEN" : "SHOWN"),
+                "Toggle pumpkin overlay effect", () -> { cfg.disablePumpkinBlur = !cfg.disablePumpkinBlur; refreshCategoryWidgets(); }); y += spacing;
+            addTooltipped(x1, y, 180, 20, "\u2728 Particles...",
+                "Configure particle effects (crit, totem, crystal, explosions)", () -> client.setScreen(new ParticlesScreen(this))); y += spacing;
+            addTooltipped(x1, y, 180, 20, "\u2756 Shield Adjuster...",
+                "Configure shield rendering and position", () -> client.setScreen(new ShieldConfigScreen(this))); y += spacing;
+            addTooltipped(x1, y, 180, 20, "\ud83d\udd0e Zoom Settings...",
+                "Configure zoom controls and speed", () -> client.setScreen(new ZoomScreen(this)));
             int leftColEndVisuals = y;
 
             y = startY + 5;
-            addDrawableChild(new ModernButtonWidget(x2, y, 180, 20, Text.literal("\ud83c\udf3f Plants Control..."), () -> client.setScreen(new com.pvptweaks.gui.PlantsControlScreen(this)))); y += spacing;
-            addSlider(x2, y, "Totem Anim Size", cfg.totemPopAnimScalePct, 0, 200, 100, v -> cfg.totemPopAnimScalePct = v.intValue()); y += spacing;
-            addSlider(x2, y, "Totem Particles", cfg.totemPopScalePct, 0, 200, 100, v -> cfg.totemPopScalePct = v.intValue()); y += spacing;
-            addSlider(x2, y, "Crystal Entity Size", cfg.endCrystalScalePct, 25, 300, 100, v -> cfg.endCrystalScalePct = v.intValue()); y += spacing;
-            addSlider(x2, y, "Crystal Particles", cfg.crystalParticlePct, 0, 200, 100, v -> cfg.crystalParticlePct = v.intValue()); y += spacing;
-            addSlider(x2, y, "Crystal Expl Part.", cfg.enderExplosionParticlePct, 0, 200, 100, v -> cfg.enderExplosionParticlePct = v.intValue()); y += spacing;
-            addSlider(x2, y, "Anchor Expl Part.", cfg.anchorExplosionParticlePct, 0, 200, 100, v -> cfg.anchorExplosionParticlePct = v.intValue());
+            addTooltipped(x2, y, 180, 20, "\ud83c\udf3f Plants Control...",
+                "Adjust plant and tall grass rendering", () -> client.setScreen(new com.pvptweaks.gui.PlantsControlScreen(this))); y += spacing;
+            addSlider(x2, y, "Totem Anim Size", cfg.totemPopAnimScalePct, 0, 200, 100, v -> cfg.totemPopAnimScalePct = v.intValue(), "Size of totem pop animation (0-200%)"); y += spacing;
+            addSlider(x2, y, "Crystal Entity Size", cfg.endCrystalScalePct, 25, 300, 100, v -> cfg.endCrystalScalePct = v.intValue(), "Scale of end crystal entities (25-300%)"); y += spacing;
             this.contentHeight = Math.max(leftColEndVisuals, y) + (int)contentScroll;
         } else if (activeCategory.name.equals("HUD")) {
             y += 10;
-            addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("CPS HUD: " + (cfg.cpsEnabled ? "ON" : "OFF")), () -> { cfg.cpsEnabled = !cfg.cpsEnabled; refreshCategoryWidgets(); })); y += spacing;
-            addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("\u26ef Move CPS"), () -> client.setScreen(new CpsAdjusterScreen(this)))); y += spacing * 1.5;
-            addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("Durability HUD: " + (cfg.durabilityHudEnabled ? "ON" : "OFF")), () -> { cfg.durabilityHudEnabled = !cfg.durabilityHudEnabled; refreshCategoryWidgets(); })); y += spacing;
-            addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("\u26E8 Move Durability"), () -> client.setScreen(new DurabilityAdjusterScreen(this)))); y += spacing;
-            addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("Alert Sound Once: " + (cfg.durabilityAlertSoundOnce ? "ON" : "OFF")), () -> { cfg.durabilityAlertSoundOnce = !cfg.durabilityAlertSoundOnce; refreshCategoryWidgets(); })); y += spacing;
-            addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("\ud83d\udd0d Item Background..."), () -> client.setScreen(new ItemBackgroundScreen(this)))); y += spacing;
-            addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("\u271c Crosshair..."), () -> client.setScreen(new CrosshairAdjusterScreen(this)))); y += spacing;
+            addTooltipped(x, y, 180, 20, "CPS HUD: " + (cfg.cpsEnabled ? "ON" : "OFF"),
+                "Toggle clicks-per-second HUD display", () -> { cfg.cpsEnabled = !cfg.cpsEnabled; refreshCategoryWidgets(); }); y += spacing;
+            addTooltipped(x, y, 180, 20, "\u26ef Move CPS",
+                "Reposition the CPS counter on screen", () -> client.setScreen(new CpsAdjusterScreen(this))); y += (int)(spacing * 1.5);
+            addTooltipped(x, y, 180, 20, "Durability HUD: " + (cfg.durabilityHudEnabled ? "ON" : "OFF"),
+                "Toggle durability HUD display", () -> { cfg.durabilityHudEnabled = !cfg.durabilityHudEnabled; refreshCategoryWidgets(); }); y += spacing;
+            addTooltipped(x, y, 180, 20, "\u26E8 Move Durability",
+                "Reposition the durability display", () -> client.setScreen(new DurabilityAdjusterScreen(this))); y += spacing;
+            addTooltipped(x, y, 180, 20, "Alert Sound Once: " + (cfg.durabilityAlertSoundOnce ? "ON" : "OFF"),
+                "Only play durability alert sound once per item", () -> { cfg.durabilityAlertSoundOnce = !cfg.durabilityAlertSoundOnce; refreshCategoryWidgets(); }); y += spacing;
+            addTooltipped(x, y, 180, 20, "\ud83d\udd0d Item Background...",
+                "Configure item background rendering in inventory", () -> client.setScreen(new ItemBackgroundScreen(this))); y += spacing;
+            addTooltipped(x, y, 180, 20, "\u271c Crosshair...",
+                "Open crosshair customization screen", () -> client.setScreen(new CrosshairAdjusterScreen(this))); y += spacing;
             String[] lbModes = {"keybinds", "numbers", "off"};
             String[] lbLabels = {"\u00a7eKeybinds", "\u00a7eNumbers", "\u00a77Off"};
             int lbIdx = java.util.Arrays.asList(lbModes).indexOf(cfg.hotbarSlotLabelMode);
             if (lbIdx < 0) lbIdx = 2;
             final int fLbIdx = lbIdx;
-            addDrawableChild(new ModernButtonWidget(x, y, 180, 20,
-                Text.literal("Slot Labels: " + lbLabels[fLbIdx]), () -> {
+            addTooltipped(x, y, 180, 20, "Slot Labels: " + lbLabels[fLbIdx],
+                "Toggle hotbar slot label display mode", () -> {
                 int next = (fLbIdx + 1) % 3;
                 cfg.hotbarSlotLabelMode = lbModes[next];
                 refreshCategoryWidgets();
-            }));
+            });
             this.contentHeight = y + (int)contentScroll;
         } else if (activeCategory.name.equals("Sounds")) {
             y += 10;
-            addSlider(x, y, "Hit Vol", cfg.hitVolumePct, 0, 200, 100, v -> cfg.hitVolumePct = v.intValue()); y += spacing;
-            addDrawableChild(new ModernButtonWidget(x, y, 200, 20, Text.literal("\ud83d\udca5 Explosions..."), () -> client.setScreen(new SoundSubCategoryScreen(this, "Explosions"))));
+            addSlider(x, y, "Hit Vol", cfg.hitVolumePct, 0, 200, 100, v -> cfg.hitVolumePct = v.intValue(), "Volume of hit sounds (0-200%)"); y += spacing;
+            addTooltipped(x, y, 200, 20, "\ud83d\udca5 Explosions...",
+                "Configure explosion sound settings", () -> client.setScreen(new SoundSubCategoryScreen(this, "Explosions")));
             y += spacing;
-            addDrawableChild(new ModernButtonWidget(x, y, 200, 20, Text.literal("\u2694 Combat..."), () -> client.setScreen(new SoundSubCategoryScreen(this, "Combat"))));
+            addTooltipped(x, y, 200, 20, "\u2694 Combat...",
+                "Configure combat sound settings", () -> client.setScreen(new SoundSubCategoryScreen(this, "Combat")));
             y += spacing;
             this.contentHeight = y + (int)contentScroll;
-            addDrawableChild(new ModernButtonWidget(x, y, 200, 20, Text.literal("\ud83c\udfb6 Misc..."),  () -> client.setScreen(new SoundSubCategoryScreen(this, "Misc"))));
+            addTooltipped(x, y, 200, 20, "\ud83c\udfb6 Misc...",
+                "Configure miscellaneous sound settings", () -> client.setScreen(new SoundSubCategoryScreen(this, "Misc")));
         } else if (activeCategory.name.equals("Optimization")) {
             y += 10;
-            addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("Crystal Opt: " + (cfg.crystalOptimizer ? "ON" : "OFF")), () -> { cfg.crystalOptimizer = !cfg.crystalOptimizer; refreshCategoryWidgets(); })); y += spacing;
+            addTooltipped(x, y, 180, 20, "Crystal Opt: " + (cfg.crystalOptimizer ? "ON" : "OFF"),
+                "Toggle end crystal performance optimization", () -> { cfg.crystalOptimizer = !cfg.crystalOptimizer; refreshCategoryWidgets(); }); y += spacing;
             this.contentHeight = y + (int)contentScroll;
-            addDrawableChild(new ModernButtonWidget(x, y, 180, 20, Text.literal("Anchor Opt: " + (cfg.anchorOptimizer ? "ON" : "OFF")), () -> { cfg.anchorOptimizer = !cfg.anchorOptimizer; refreshCategoryWidgets(); }));
+            addTooltipped(x, y, 180, 20, "Anchor Opt: " + (cfg.anchorOptimizer ? "ON" : "OFF"),
+                "Toggle respawn anchor performance optimization", () -> { cfg.anchorOptimizer = !cfg.anchorOptimizer; refreshCategoryWidgets(); });
         } else if (activeCategory.name.equals("Profiles")) {
             y += 10;
-            addDrawableChild(new ModernButtonWidget(x, y, 160, 20, Text.literal("\u00a7a+ Create Profile"), () -> client.setScreen(new ProfileNameScreen(this, null, name -> { PvpTweaksProfiles.save(name); client.execute(() -> client.setScreen(new PvpTweaksHubScreen(parent, "Profiles"))); }))));
-            y += spacing * 1.5;
+            addTooltipped(x, y, 160, 20, "\u00a7a+ Create Profile",
+                "Save current settings as a new profile", () -> client.setScreen(new ProfileNameScreen(this, null, name -> { PvpTweaksProfiles.save(name); client.execute(() -> client.setScreen(new PvpTweaksHubScreen(parent, "Profiles"))); })));
+            y += (int)(spacing * 1.5);
             List<String> profiles = PvpTweaksProfiles.list();
             for (String p : profiles) {
                 if (y > height - 70) break;
                 final String pn = p;
-                addDrawableChild(new ModernButtonWidget(x, y, 120, 20, Text.literal(pn), () -> { if (PvpTweaksProfiles.load(pn)) refreshCategoryWidgets(); }));
-                addDrawableChild(new ModernButtonWidget(x + 125, y, 35, 20, Text.literal("\u00a7c\u2716"), () -> { PvpTweaksProfiles.delete(pn); refreshCategoryWidgets(); }));
+                var loadBtn = addDrawableChild(new ModernButtonWidget(x, y, 120, 20, Text.literal(pn), () -> { if (PvpTweaksProfiles.load(pn)) refreshCategoryWidgets(); }));
+                tooltips.put(loadBtn, "Load this profile");
+                var delBtn = addDrawableChild(new ModernButtonWidget(x + 125, y, 35, 20, Text.literal("\u00a7c\u2716"), () -> { PvpTweaksProfiles.delete(pn); refreshCategoryWidgets(); }));
+                tooltips.put(delBtn, "Delete this profile");
                 y += spacing;
             }
             
             this.contentHeight = y + (int)contentScroll;
             int x2 = x + colWidth;
             int y2 = 65 + 10 - (int)contentScroll;
-            addDrawableChild(new ModernButtonWidget(x2, y2, 160, 20, Text.literal("\ud83d\udce4 Export Mod Settings"), () -> promptExport(true, false))); y2 += spacing;
-            addDrawableChild(new ModernButtonWidget(x2, y2, 160, 20, Text.literal("\ud83d\udce5 Import Mod Settings"), () -> handleImport(true, false))); y2 += spacing * 1.5;
-            addDrawableChild(new ModernButtonWidget(x2, y2, 160, 20, Text.literal("\ud83d\udce4 Export Keybinds"), () -> promptExport(false, true))); y2 += spacing;
-            addDrawableChild(new ModernButtonWidget(x2, y2, 160, 20, Text.literal("\ud83d\udce5 Import Keybinds"), () -> handleImport(false, true))); y2 += spacing * 1.5;
-            addDrawableChild(new ModernButtonWidget(x2, y2, 160, 20, Text.literal("\ud83d\udcc1 Profiles Folder"), () -> {
+            addTooltipped(x2, y2, 160, 20, "\ud83d\udce4 Export Mod Settings",
+                "Export mod settings as a shareable string", () -> promptExport(true, false)); y2 += spacing;
+            addTooltipped(x2, y2, 160, 20, "\ud83d\udce5 Import Mod Settings",
+                "Import mod settings from clipboard", () -> handleImport(true, false)); y2 += (int)(spacing * 1.5);
+            addTooltipped(x2, y2, 160, 20, "\ud83d\udce4 Export Keybinds",
+                "Export keybindings as a shareable string", () -> promptExport(false, true)); y2 += spacing;
+            addTooltipped(x2, y2, 160, 20, "\ud83d\udce5 Import Keybinds",
+                "Import keybindings from clipboard", () -> handleImport(false, true)); y2 += (int)(spacing * 1.5);
+            addTooltipped(x2, y2, 160, 20, "\ud83d\udcc1 Profiles Folder",
+                "Open the profiles folder in file manager", () -> {
                 try { net.minecraft.util.Util.getOperatingSystem().open(PvpTweaksProfiles.PROFILES_DIR.toFile()); } catch (Exception ignored) {}
-            }));
+            });
+        } else if (activeCategory.name.equals("Info")) {
+            this.contentHeight = 550;
         }
     }
 
-    private void addSlider(int x, int y, String label, double val, double min, double max, double defVal, java.util.function.Consumer<Double> setter) {
+    private ModernButtonWidget addTooltipped(int x, int y, int w, int h, String label, String tip, Runnable action) {
+        var btn = addDrawableChild(new ModernButtonWidget(x, y, w, h, Text.literal(label), action));
+        tooltips.put(btn, tip);
+        return btn;
+    }
+
+    private void addSlider(int x, int y, String label, double val, double min, double max, double defVal, java.util.function.Consumer<Double> setter, String tip) {
         if (y < 40 || y > height - 10) return;
-        addDrawableChild(new CustomSliderWidget(x, y, 155, 20, label, val, min, max, true, setter)); 
-        addDrawableChild(new ModernButtonWidget(x + 160, y, 20, 20, Text.literal("\u21ba"), () -> {
+        var slider = addDrawableChild(new CustomSliderWidget(x, y, 155, 20, label, val, min, max, true, setter));
+        tooltips.put(slider, tip);
+        var resetBtn = addDrawableChild(new ModernButtonWidget(x + 160, y, 20, 20, Text.literal("\u21ba"), () -> {
             setter.accept(defVal);
             refreshCategoryWidgets();
         }));
+        tooltips.put(resetBtn, "Reset " + label + " to default (" + (int)defVal + "%)");
     }
 
-    private void addItemScaleSlider(int x, int y, String label, String key, PvpTweaksConfig cfg, java.util.function.Consumer<Double> setter, int currentVal) {
+    private void addTooltippedSlider(int x, int y, int w, String label, double val, double min, double max, boolean isInt, java.util.function.Consumer<Double> setter, String tip) {
+        if (y < 40 || y > height - 10) return;
+        var slider = addDrawableChild(new CustomSliderWidget(x, y, w, 20, label, val, min, max, isInt, setter));
+        tooltips.put(slider, tip);
+    }
+
+    private void addItemScaleSlider(int x, int y, String label, String key, PvpTweaksConfig cfg, java.util.function.Consumer<Double> setter, int currentVal, String tip) {
         if (y < 40 || y > height - 10) return;
         boolean linked = "custom".equals(cfg.itemScaleGlobalMode) && cfg.itemScaleGlobalLinked.contains(key);
         boolean forced = ("listed".equals(cfg.itemScaleGlobalMode) || linked
@@ -273,22 +320,26 @@ public class PvpTweaksHubScreen extends Screen {
         CustomSliderWidget slider = new CustomSliderWidget(x, y, 155, 20, label, displayVal, 25, 300, true, s);
         slider.forced = forced;
         addDrawableChild(slider);
+        tooltips.put(slider, forced ? "Currently controlled by Global slider" : tip);
         if ("custom".equals(cfg.itemScaleGlobalMode)) {
-            addDrawableChild(new ModernButtonWidget(x + 155, y, 20, 20,
+            var linkBtn = addDrawableChild(new ModernButtonWidget(x + 155, y, 20, 20,
                 Text.literal(linked ? "\u26a1" : "\u26aa"), () -> {
                 if (linked) cfg.itemScaleGlobalLinked.remove(key);
                 else cfg.itemScaleGlobalLinked.add(key);
                 refreshCategoryWidgets();
             }));
-            addDrawableChild(new ModernButtonWidget(x + 180, y, 20, 20, Text.literal("\u21ba"), () -> {
+            tooltips.put(linkBtn, linked ? "Unlink from Global" : "Link to Global");
+            var resetBtn = addDrawableChild(new ModernButtonWidget(x + 180, y, 20, 20, Text.literal("\u21ba"), () -> {
                 setter.accept((double)100);
                 refreshCategoryWidgets();
             }));
+            tooltips.put(resetBtn, "Reset " + label + " to default (100%)");
         } else {
-            addDrawableChild(new ModernButtonWidget(x + 160, y, 20, 20, Text.literal("\u21ba"), () -> {
+            var resetBtn = addDrawableChild(new ModernButtonWidget(x + 160, y, 20, 20, Text.literal("\u21ba"), () -> {
                 setter.accept((double)100);
                 refreshCategoryWidgets();
             }));
+            tooltips.put(resetBtn, "Reset " + label + " to default (100%)");
         }
     }
 
@@ -359,9 +410,52 @@ public class PvpTweaksHubScreen extends Screen {
                 context.drawTextWithShadow(textRenderer, Text.literal("\u00a77entity interactions and may be disallowed by some"), textX, textY + 27, 0xFFAAAAAA);
                 context.drawTextWithShadow(textRenderer, Text.literal("\u00a77multiplayer servers. Toggle with caution."), textX, textY + 39, 0xFFAAAAAA);
             }
+        } else if (activeCategory.name.equals("Info")) {
+            int textX = sidebarWidth + 25;
+            int iy = 65 - (int)contentScroll;
+            int lh = 12;
+
+            context.drawTextWithShadow(textRenderer, Text.literal("\u00a7l\u2139 ABOUT PVP TWEAKS"), textX, iy, UiPalette.ACCENT_BLUE);
+            iy += 22;
+
+            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77Version: \u00a7f1.0.0"), textX, iy, 0xFFAAAAAA);
+            iy += lh + 2;
+            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77Author: \u00a7fviper-trick"), textX, iy, 0xFFAAAAAA);
+            iy += lh + 2;
+            context.drawTextWithShadow(textRenderer, Text.literal("\u00a7lGitHub: \u00a79github.com/viper-trick/pvp-tweaks"), textX, iy, 0xFFAAAAAA);
+            iy += lh + 2;
+            context.drawTextWithShadow(textRenderer, Text.literal("\u00a7lIssues: \u00a79github.com/viper-trick/pvp-tweaks/issues"), textX, iy, 0xFFAAAAAA);
+            iy += lh + 2;
+            context.drawTextWithShadow(textRenderer, Text.literal("\u00a7lModrinth: \u00a79modrinth.com/mod/pvptweak"), textX, iy, 0xFFAAAAAA);
+            iy += 24;
+
+            context.drawTextWithShadow(textRenderer, Text.literal("\u00a7lContact"), textX, iy, UiPalette.ACCENT_BLUE);
+            iy += 16;
+            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77Email: \u00a7fyag.fvt@gmail.com"), textX, iy, 0xFFAAAAAA);
+            iy += lh + 2;
+            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77Discord: \u00a7fvipertrick"), textX, iy, 0xFFAAAAAA);
         }
 
         super.render(context, mouseX, mouseY, delta);
+
+        ClickableWidget hovered = null;
+        for (ClickableWidget cw : tooltips.keySet()) {
+            if (cw.isHovered()) {
+                hovered = cw;
+                break;
+            }
+        }
+        if (hovered != null) {
+            renderTooltip(context, tooltips.get(hovered), mouseX, mouseY);
+        }
+    }
+
+    private void renderTooltip(DrawContext ctx, String text, int mx, int my) {
+        int tw = textRenderer.getWidth(text);
+        int tx = Math.max(3, Math.min(mx - tw / 2, width - tw - 3));
+        int ty = Math.max(3, my - 22);
+        ctx.fill(tx - 2, ty - 2, tx + tw + 2, ty + textRenderer.fontHeight + 2, 0xC0202020);
+        ctx.drawTextWithShadow(textRenderer, Text.literal(text), tx, ty, 0xFFFFFFFF);
     }
 
     @Override public boolean mouseClicked(Click click, boolean doubled) {

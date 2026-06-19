@@ -22,6 +22,9 @@ public class PvpTweaksMixinPlugin implements IMixinConfigPlugin {
         if (mixinClassName.contains("ZoomifyMixin") || targetClassName.contains("zoomify")) {
             return FabricLoader.getInstance().isModLoaded("zoomify");
         }
+        if (mixinClassName.contains("GammaUtilsMixin") || targetClassName.contains("gammautils")) {
+            return FabricLoader.getInstance().isModLoaded("gammautils");
+        }
         return true;
     }
 

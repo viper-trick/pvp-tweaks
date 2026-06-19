@@ -5,13 +5,13 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderTickCounter;
 import org.joml.Matrix3x2fStack;
-
 public class CpsHudRenderer {
     public static void render(DrawContext context, RenderTickCounter tickCounter) {
+        MinecraftClient client = MinecraftClient.getInstance();
+
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         if (!cfg.cpsEnabled) return;
 
-        MinecraftClient client = MinecraftClient.getInstance();
         if (client.options.hudHidden) return;
 
         String text;
