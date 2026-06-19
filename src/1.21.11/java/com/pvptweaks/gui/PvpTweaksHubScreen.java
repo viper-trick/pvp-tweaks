@@ -283,6 +283,23 @@ public class PvpTweaksHubScreen extends Screen {
                 try { net.minecraft.util.Util.getOperatingSystem().open(PvpTweaksProfiles.PROFILES_DIR.toFile()); } catch (Exception ignored) {}
             });
         } else if (activeCategory.name.equals("Info")) {
+            int lx = sidebarWidth + 25;
+            int ly = 65 - (int)contentScroll;
+            ly += 136;
+
+            addTooltipped(lx, ly, 300, 20, "\u00a79GitHub: \u00a77github.com/viper-trick/pvp-tweaks",
+                "Open the GitHub repository", () -> {
+                try { net.minecraft.util.Util.getOperatingSystem().open(new java.net.URI("https://github.com/viper-trick/pvp-tweaks")); } catch (Exception ignored) {}
+            }); ly += 26;
+            addTooltipped(lx, ly, 300, 20, "\u00a79Issues: \u00a77github.com/viper-trick/pvp-tweaks/issues",
+                "Report bugs or request features", () -> {
+                try { net.minecraft.util.Util.getOperatingSystem().open(new java.net.URI("https://github.com/viper-trick/pvp-tweaks/issues")); } catch (Exception ignored) {}
+            }); ly += 26;
+            addTooltipped(lx, ly, 300, 20, "\u00a79Modrinth: \u00a77modrinth.com/mod/pvptweak",
+                "View the mod on Modrinth", () -> {
+                try { net.minecraft.util.Util.getOperatingSystem().open(new java.net.URI("https://modrinth.com/mod/pvptweak")); } catch (Exception ignored) {}
+            });
+
             this.contentHeight = 550;
         }
     }
@@ -422,12 +439,21 @@ public class PvpTweaksHubScreen extends Screen {
             iy += lh + 2;
             context.drawTextWithShadow(textRenderer, Text.literal("\u00a77Author: \u00a7fviper-trick"), textX, iy, 0xFFAAAAAA);
             iy += lh + 2;
-            context.drawTextWithShadow(textRenderer, Text.literal("\u00a7lGitHub: \u00a79github.com/viper-trick/pvp-tweaks"), textX, iy, 0xFFAAAAAA);
-            iy += lh + 2;
-            context.drawTextWithShadow(textRenderer, Text.literal("\u00a7lIssues: \u00a79github.com/viper-trick/pvp-tweaks/issues"), textX, iy, 0xFFAAAAAA);
-            iy += lh + 2;
-            context.drawTextWithShadow(textRenderer, Text.literal("\u00a7lModrinth: \u00a79modrinth.com/mod/pvptweak"), textX, iy, 0xFFAAAAAA);
-            iy += 24;
+
+            context.drawTextWithShadow(textRenderer, Text.literal("\u00a7lDescription"), textX, iy, UiPalette.ACCENT_BLUE);
+            iy += 16;
+            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77A comprehensive PVP optimization and visual customization mod"), textX, iy, 0xFFAAAAAA);
+            iy += lh;
+            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77for Minecraft 1.21+. Features item scaling, crosshair"), textX, iy, 0xFFAAAAAA);
+            iy += lh;
+            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77editor, shield adjuster, CPS counter, durability HUD,"), textX, iy, 0xFFAAAAAA);
+            iy += lh;
+            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77fire presets, fullbright, particle controls, optimizers,"), textX, iy, 0xFFAAAAAA);
+            iy += lh;
+            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77explosion sounds, zoom, and more."), textX, iy, 0xFFAAAAAA);
+            iy += lh + 10;
+
+            iy += 78;
 
             context.drawTextWithShadow(textRenderer, Text.literal("\u00a7lContact"), textX, iy, UiPalette.ACCENT_BLUE);
             iy += 16;
