@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(FireCommandRenderer.class)
 public class FireEntityMixin {
 
-    @Inject(method = "render", at = @At("HEAD"))
+    @Inject(method = "method_73005", remap = false, at = @At("HEAD"))
     private void pvptweaks$scaleFire(
             MatrixStack.Entry matricesEntry, VertexConsumerProvider vertexConsumers,
             EntityRenderState renderState, Quaternionf rotation, AtlasManager atlasManager,

@@ -1,6 +1,6 @@
-PVP Tweaks consolidates essential combat, and visual utilities into one high-performance, client-side mod for Minecraft 1.21.4–1.21.11. This mod adds a button called "pvp tweaks", and clicking on it will take you to a dedicated tweaks screen, which will allow you to tweak items related to PVP. Such as totems, shield position, fire display, fire height, crystals, anchors, animations, particles, sounds, item display size. 
+PVP Tweaks consolidates essential combat, and visual utilities into one high-performance, client-side mod for Minecraft 1.21.4–1.21.11. This mod adds a button called "pvp tweaks", and clicking on it will take you to a dedicated hub screen with categories for Item Sizes, Visuals, HUD, Sounds, Optimization, Profiles, and Info. You can tweak everything related to PVP — totems, shield position, fire display, fire height, crystals, anchors, animations, particles, sounds, item display size, crosshair, and more.
 
-The mod also adds special features, such as Armor HUD, zoom, and the ability to choose custom sounds for in-game events, vanilla sounds, and also import your own sounds.
+The mod also adds special features, such as Armor HUD, zoom, custom crosshair, and the ability to choose custom sounds for in-game events, and also import your own sounds.
 
   Note to Players & Server Admins: This mod is designed purely for quality-of-life. It does not provide any "cheats," automation, or unfair advantages. It simply allows you to fine-tune your client's
   visuals and responsiveness to ensure your game runs smoothly in competitive environments.
@@ -29,19 +29,41 @@ The mod also adds special features, such as Armor HUD, zoom, and the ability to 
    - CPS HUD: Left/Right CPS tracker with customizable scale, position, color, shadow, and a "Smart Rainbow" mode.
    - Armor Durability HUD: Track armor and hand items. Includes low-durability blink alerts and custom sound triggers.
    - Coordinates & Potion Effects: Display your position and active effects with adjustable scale and position.
+   - Crosshair Editor: Custom crosshair with color, size, transparency, outline, and the ability to import crosshair codes from other games (like CS2).
+   - Item Background: Toggle and configure item background rendering in your inventory.
+   - Hotbar Slot Labels: Display keybind hints or numbers on hotbar slots.
    - Live Adjusters: Use dedicated screens to drag and drop HUD elements anywhere on your screen.
 
   🔊 Audio & Visual Control
    - Sound Profiles: Profile-based sound replacement with a built-in picker, import/export, and per-profile sound packs.
-   - Sound Picker: Built-in browser for all vanilla sound events with live preview and pitch control.
+   - Sound Picker: Built-in browser for all vanilla sound events with live preview and pitch control. Organized into Explosions, Combat, Misc, and Custom categories.
    - Custom Sounds: Import .mp3, .ogg, .wav, or .flac files directly without creating a resource pack.
+   - Durability Alert: Choose a custom sound for low-durability warnings.
    - Per-Event Volume: Independent sliders for End Crystals, Respawn Anchors, TNT, hits, and more.
    - Explosion Particles: Per-type sliders to control TNT, Creeper, Bed, Ghast, and Wind Charge particles.
-   - Visuals: Fire height presets, custom fire overlay, first-person item scaling, potion color override, and a real-time Shield Adjuster (position/rotation).
+
+  👁 Visuals
+   - Fire Presets: Cycle through Vanilla, Full, Mid, Low, Flat, or None for entity fire height.
+   - Fire Overlay: Adjust the scale of the fire overlay effect on your screen (0-200%).
+   - Fullbright: Dedicated screen with gamma settings for brightening dark areas.
+   - Pumpkin Blur: Toggle the pumpkin overlay on/off.
+   - Shield Adjuster: Real-time shield position and rotation configuration.
+   - Plants Control: Client-side adjustment of plant and tall grass rendering.
+   - Totem Animation Size: Scale the totem pop animation (0-200%).
+   - Crystal Entity Size: Scale end crystal entities (25-300%).
+   - Potion Color Override: Change potion effect indicator colors.
+   - Menu Background Blur: Toggle the background blur effect in GUIs.
+   - Smooth Scrolling: Enable smooth scrolling in menus.
+   - Item Tooltip Scaling: Adjust tooltip text size.
+
+  🛡 Item Sizes
+   - Global Scale: Master slider controlling all held items (25-300%).
+   - Per-Item Sliders: Individual scaling for Sword, Axe, Mace, Trident, Shield, Armor, Bow, Crossbow, Totem, Golden Apple, Respawn Anchor, and Misc items.
+   - Search Mode: Find and customize scale for any item in the game.
+   - Scaling Modes: Listed mode — only affect items you configure; Unlisted mode — affect everything except what you configure; Custom mode — show a per-item search screen; Off.
 
   🎨 Modern UI
-   - Hub Screen: A clean tab-based interface with categories for Item Sizes, Visuals, HUD, Sounds, Optimization, Profiles, and Info.
-   - Rounded Corners: Buttons, sliders, and outlines use smooth rounded rectangles for a polished look.
+   - Hub Screen: A clean tab-based interface with all the categories and rounded corners (radius 8) on every button, slider, and panel.
 
   🎯 Zoom
    - Configurable zoom (smooth or instant) with adjustable FOV and scroll sensitivity.
@@ -49,9 +71,8 @@ The mod also adds special features, such as Armor HUD, zoom, and the ability to 
   📁 Profiles & Presets
    - Built-in "Competitive" preset for one-click high-performance optimization.
    - Profile System: Save, load, import, and export full config setups via the system clipboard.
-   - Keybind & settings import/export.
-
-"Vision" tab, including Fulbright, pumpkin blur removal, and a small client-side version of my existing mod, "Plants Control". Option to change the size of the armor in hand, in the "Item Sizes" tab. Option to prevent low-durability sound from repeating in the armor. Menu background blur toggle, smooth scrolling, and item tooltip scaling.
+   - Keybind import/export: Share your keybinding setup separately.
+   - Profiles Folder: One-click button to open your profiles folder in the file manager.
   
   📥 Installation
 
