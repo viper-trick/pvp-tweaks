@@ -407,7 +407,7 @@ public class PvpTweaksHubScreen extends Screen {
             boolean hovered = mouseX < sidebarWidth && mouseY >= y && mouseY < y + 40;
             boolean selected = activeCategory == cat;
             int color = selected ? UiPalette.ACCENT_BLUE : (hovered ? UiPalette.TEXT_PRIMARY : UiPalette.TEXT_SECONDARY);
-            if (selected) { RenderUtils.drawRoundedRect(context, 8, y, sidebarWidth - 16, 36, 6, 0x4000A3FF); RenderUtils.drawOutline(context, 8, y, sidebarWidth - 16, 36, 1, UiPalette.ACCENT_BLUE); }
+            if (selected) { RenderUtils.drawRoundedRect(context, 8, y, sidebarWidth - 16, 36, 6, 0x4000A3FF); RenderUtils.drawRoundedOutline(context, 8, y, sidebarWidth - 16, 36, 6, 1, UiPalette.ACCENT_BLUE); }
             else if (hovered) RenderUtils.drawRoundedRect(context, 8, y, sidebarWidth - 16, 36, 6, 0x20FFFFFF);
             context.drawCenteredTextWithShadow(textRenderer, cat.icon, sidebarWidth / 2, y + 6, color);
             context.drawCenteredTextWithShadow(textRenderer, cat.name, sidebarWidth / 2, y + 20, color);

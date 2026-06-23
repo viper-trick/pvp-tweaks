@@ -28,6 +28,35 @@ public class RenderUtils {
         }
     }
 
+    public static void drawRoundedFill(DrawContext ctx, int x, int y, int totalWidth, int height, int radius, int fillWidth, int color) {
+        if (fillWidth <= 0 || height <= 0) return;
+        fillWidth = Math.min(fillWidth, totalWidth);
+        radius = Math.min(radius, height / 2);
+        if (radius <= 0) {
+            ctx.fill(x, y, x + fillWidth, y + height, color);
+            return;
+        }
+        for (int row = 0; row < height; row++) {
+            int leftX = x;
+            int rightX = x + fillWidth;
+            if (row < radius) {
+                int dx = (int) Math.sqrt(radius * radius - (radius - row) * (radius - row));
+                leftX = x + radius - dx;
+                rightX = Math.min(rightX, x + totalWidth - radius + dx);
+            } else if (row >= height - radius) {
+                int dyFromBottom = row - (height - radius);
+                int dx = (int) Math.sqrt(radius * radius - (dyFromBottom + 1) * (dyFromBottom + 1));
+                leftX = x + radius - dx;
+                rightX = Math.min(rightX, x + totalWidth - radius + dx);
+            } else {
+                rightX = Math.min(rightX, x + totalWidth);
+            }
+            if (leftX < rightX) {
+                ctx.fill(leftX, y + row, rightX, y + row + 1, color);
+            }
+        }
+    }
+
     public static void drawGradientRect(DrawContext context, int x, int y, int width, int height, int startColor, int endColor) {
         context.fillGradient(x, y, x + width, y + height, startColor, endColor);
     }

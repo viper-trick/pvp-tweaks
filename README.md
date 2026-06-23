@@ -1,14 +1,20 @@
-# PVP Tweaks
+# PVP Tweaks 1.9.1
 
 Comprehensive PVP performance and visual optimizations for Modern Minecraft (1.21.4–1.21.11).
 
 ## Features
 
-- **Crystal/Anchor Lag Mitigation** — ExplosionTracker suppresses crystal and respawn anchor explosion sounds, particles, and animations through adjustable post-explosion cooldowns.
-- **HUD Adjusters** — CPS counter, armor durability %, coordinates, potion effects — all movable and scalable via built-in adjuster screens.
-- **Combat Visuals** — Fire preset system (entity fire height/opacity, ground fire toggle), fire overlay scaling, fullbright, custom FOV, item scale, potion color override.
-- **Sound Profile System** — Profile-based sound replacement with a built-in picker GUI, import/export, and per-profile sound packs.
-- **General QoL** — Smooth scrolling in GUIs, menu background blur toggle, vertical sync toggle, and more.
+- **Home** — Settings dashboard, mod version info, quick links.
+- **Item Sizes** — Per-item-type scale and offset adjustments (held items, armor, tools, food, etc.).
+- **Visuals** — Fire preset system (entity fire height/opacity, ground fire toggle), fire overlay scaling, fullbright, custom FOV, potion color override, menu background blur toggle.
+- **HUD** — CPS counter, armor durability %, coordinates, potion effects display — all movable and scalable via built-in adjuster screens.
+- **Sounds** — Profile-based sound replacement with a built-in picker GUI, import/export, per-profile sound packs, and pitch/tempo control.
+- **Optimization** — ExplosionTracker suppresses crystal and respawn anchor explosion sounds, particles, and animations through adjustable post-explosion cooldowns.
+- **Profiles** — Save, load, import, and export full config profiles.
+- **Zoom** — Configurable zoom (smooth or instant) with adjustable FOV and scroll sensitivity.
+- **General QoL** — Smooth scrolling in GUIs, vertical sync toggle, item tooltip scaling, and more.
+
+Access settings via the config keybind or the Mod Menu screen (if installed). A modern hub GUI is available by default; a Cloth Config–based legacy menu can be enabled as an alternative.
 
 ## License
 
@@ -22,8 +28,8 @@ All Rights Reserved. The source code is made available for educational and revie
 - Fabric Language Kotlin 1.11.0+kotlin.2.0.0
 
 **Optional:**
-- Mod Menu — adds a config screen button
-- Cloth Config — required for some config screen features
+- Mod Menu — adds a config screen button in the mods list
+- Cloth Config — required for the legacy settings screen
 
 ## Building
 
@@ -52,7 +58,7 @@ Built JARs are placed in each version's `build/libs/` directory, e.g. `src/1.21.
 build-all.bat
 ```
 
-These scripts run `./gradlew build` for all versions, then collect the resulting JARs (excluding `-sources.jar`) into `final-jars/` at the project root.
+These scripts run `./gradlew build` for all versions, then move the resulting JARs (excluding `-sources.jar`) into `final-jars/` at the project root.
 
 ### Building a single version
 
@@ -68,11 +74,15 @@ The subproject name uses underscores in place of dots (`1_21_11` for MC 1.21.11)
 src/
 ├── 1.21.4/ … 1.21.11/     # Version-specific subprojects
 │   ├── java/               # Source code
-│   ├── resources/          # Mixin configs, assets, mod metadata
+│   ├── resources/          # Mixin configs, assets, mod metadata, icons
 │   ├── build.gradle        # Version-specific dependencies & mappings
 │   └── gradle.properties   # MC version, yarn mappings, fabric version
 ├── main/                   # Shared source (compiled per-version via subproject)
+│   ├── java/               # Shared source code
+│   └── resources/          # Shared assets, reference mappings, icon
 ├── build.gradle            # Root build config (Fabric Loom, common deps)
 ├── settings.gradle         # Enumerates all version subprojects
-└── gradle.properties       # Shared build properties
+├── gradle.properties       # Shared build properties
+├── build-all.sh            # Linux/macOS build helper
+└── build-all.bat           # Windows build helper
 ```
