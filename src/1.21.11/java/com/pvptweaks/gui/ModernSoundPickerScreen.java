@@ -45,22 +45,31 @@ public class ModernSoundPickerScreen extends Screen {
 
     @Override
     protected void init() {
-        int listT = 88;
+        int listT = 104;
         int listB = 52;
         list = new SoundListWidget(client, width - 40, height - listT - listB, listT, 36);
         list.setX(20);
         addSelectableChild(list);
         list.refresh(tab);
 
-        searchField = new TextFieldWidget(textRenderer, width / 2 - 100, 60, 200, 16, Text.literal("Search..."));
+        searchField = new TextFieldWidget(textRenderer, width / 2 - 100, 84, 200, 16, Text.literal("Search..."));
         searchField.setChangedListener(list::filter);
         addSelectableChild(searchField);
+
+        selectActiveSound();
 
         int tabW = 70;
         int tabX = width / 2 - 115;
         addDrawableChild(new ModernButtonWidget(tabX, 34, tabW, 20, Text.literal("Presets"), () -> switchTab(0)));
         addDrawableChild(new ModernButtonWidget(tabX + 80, 34, tabW, 20, Text.literal("Registry"), () -> switchTab(1)));
         addDrawableChild(new ModernButtonWidget(tabX + 160, 34, tabW, 20, Text.literal("Custom"), () -> switchTab(2)));
+
+        int pitchY = 60;
+        addDrawableChild(new CustomSliderWidget(width / 2 - 100, pitchY, 160, 20, "Pitch", profile.pitchPct, 0, 200, true, v -> profile.pitchPct = v.intValue()));
+        addDrawableChild(new ModernButtonWidget(width / 2 + 65, pitchY, 20, 20, Text.literal("\u21ba"), () -> {
+            profile.pitchPct = 100;
+            init();
+        }));
 
         int btnY = height - 36;
         addDrawableChild(new ModernButtonWidget(20, btnY, 70, 20, Text.literal("Default"), () -> {
@@ -119,6 +128,21 @@ public class ModernSoundPickerScreen extends Screen {
         this.tab = t;
         list.refresh(t);
         searchField.setText("");
+        selectActiveSound();
+    }
+
+    private void selectActiveSound() {
+        if (!"preset".equals(profile.mode)) return;
+        String targetId = profile.presetId;
+        if (targetId == null || targetId.isEmpty()) return;
+
+        for (SoundEntry entry : list.children()) {
+            if (entry.id.equals(targetId)) {
+                list.setSelected(entry);
+                list.scrollToEntry(entry);
+                return;
+            }
+        }
     }
 
     private void saveEntry(SoundEntry entry) {
@@ -197,6 +221,14 @@ public class ModernSoundPickerScreen extends Screen {
         private final List<SoundEntry> all = new ArrayList<>();
         public SoundListWidget(MinecraftClient mc, int width, int height, int top, int entryH) { super(mc, width, height, top, entryH); }
         @Override protected void drawScrollbar(DrawContext context, int mouseX, int mouseY) {}
+        public void scrollToEntry(SoundEntry entry) {
+            int idx = children().indexOf(entry);
+            if (idx >= 0) {
+                int entryHeight = 36;
+                int visibleHeight = getHeight();
+                setScrollY(Math.max(0, idx * entryHeight - (visibleHeight / 2.0) + (entryHeight / 2.0)));
+            }
+        }
         public void refresh(int tab) {
             clearEntries(); all.clear();
             if (tab == 0) {

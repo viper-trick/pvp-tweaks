@@ -275,6 +275,10 @@ public class PvpTweaksConfig {
     public SoundProfile soundGhast      = new SoundProfile();
     public SoundProfile soundWindCharge = new SoundProfile();
 
+    // User-added extra sound overrides (sound event ID -> profile)
+    public java.util.Map<String, SoundProfile> extraSounds =
+        new java.util.LinkedHashMap<>();
+
     // Texture overrides (item name -> absolute file path)
     public java.util.Map<String, String> textureOverrides =
         new java.util.HashMap<>();

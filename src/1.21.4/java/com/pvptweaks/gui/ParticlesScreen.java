@@ -45,6 +45,26 @@ public class ParticlesScreen extends Screen {
             v -> cfg.anchorExplosionParticlePct = v.intValue());
         y += spacing;
 
+        addSlider(x, y, "TNT Particles", cfg.tntExplosionParticlePct, 0, 200, 100,
+            v -> cfg.tntExplosionParticlePct = v.intValue());
+        y += spacing;
+
+        addSlider(x, y, "Creeper Particles", cfg.creeperExplosionParticlePct, 0, 200, 100,
+            v -> cfg.creeperExplosionParticlePct = v.intValue());
+        y += spacing;
+
+        addSlider(x, y, "Bed Particles", cfg.bedExplosionParticlePct, 0, 200, 100,
+            v -> cfg.bedExplosionParticlePct = v.intValue());
+        y += spacing;
+
+        addSlider(x, y, "Ghast Particles", cfg.ghastExplosionParticlePct, 0, 200, 100,
+            v -> cfg.ghastExplosionParticlePct = v.intValue());
+        y += spacing;
+
+        addSlider(x, y, "Wind Particles", cfg.windChargeParticlePct, 0, 200, 100,
+            v -> cfg.windChargeParticlePct = v.intValue());
+        y += spacing;
+
         addDrawableChild(new ModernButtonWidget(this.width - PANEL_W + 20, height - 35, 60, 20,
             Text.literal("Done"), () -> {
             PvpTweaksConfig.save();

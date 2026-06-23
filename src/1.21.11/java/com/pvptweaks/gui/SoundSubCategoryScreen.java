@@ -21,7 +21,7 @@ public class SoundSubCategoryScreen extends Screen {
         
         int x = width / 2 - 100;
         int y = 60;
-        int spacing = 44;
+        int spacing = 26;
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
 
         if (category.equals("Explosions")) {
@@ -40,15 +40,38 @@ public class SoundSubCategoryScreen extends Screen {
             addSoundRow(x, y, "Durability Low", cfg.soundDurabilityLow); y += spacing;
             addSoundRow(x, y, "Ghast", cfg.soundGhast); y += spacing;
             addSoundRow(x, y, "Wind Charge", cfg.soundWindCharge);
+        } else if (category.equals("Custom")) {
+            for (java.util.Map.Entry<String, com.pvptweaks.config.SoundProfile> e : cfg.extraSounds.entrySet()) {
+                String id = e.getKey();
+                com.pvptweaks.config.SoundProfile profile = e.getValue();
+                String shortLabel = id.contains(":") ? id.substring(id.lastIndexOf(':') + 1) : id;
+                addSoundRow(x, y, shortLabel, profile);
+                addDrawableChild(new ModernButtonWidget(x + 205, y, 20, 20, Text.literal("\u2716"), () -> {
+                    cfg.extraSounds.remove(id);
+                    PvpTweaksConfig.save();
+                    init();
+                }));
+                y += spacing;
+            }
+            if (cfg.extraSounds.isEmpty()) {
+                addDrawableChild(new ModernButtonWidget(x, y, 200, 20, Text.literal("No extra sounds yet — add one below"), () -> {}));
+                y += spacing;
+            }
+            addDrawableChild(new ModernButtonWidget(x, y, 110, 20, Text.literal("+ Add Sound"), () -> {
+                client.setScreen(new SoundSearchScreen(this));
+            }));
         }
 
-        addDrawableChild(new ModernButtonWidget(width / 2 - 50, height - 35, 100, 20, Text.literal("Back"), () -> client.setScreen(parent)));
+        addDrawableChild(new ModernButtonWidget(width / 2 - 50, height - 35, 100, 20, Text.literal("Back"), () -> {
+            PvpTweaksConfig.save();
+            client.setScreen(parent);
+        }));
     }
 
     private void addSoundRow(int x, int y, String label, com.pvptweaks.config.SoundProfile profile) {
-        addDrawableChild(new CustomSliderWidget(x, y, 115, 20, label + " P", profile.pitchPct, 0, 200, true, v -> profile.pitchPct = v.intValue()));
+        addDrawableChild(new CustomSliderWidget(x, y, 115, 20, label + " V", profile.volumePct, 0, 200, true, v -> profile.volumePct = v.intValue()));
         addDrawableChild(new ModernButtonWidget(x + 120, y, 20, 20, Text.literal("\u21ba"), () -> {
-            profile.pitchPct = 100;
+            profile.volumePct = 100;
             init();
         }));
         addDrawableChild(new ModernButtonWidget(x + 145, y, 55, 20, Text.literal("Adv..."), () -> {

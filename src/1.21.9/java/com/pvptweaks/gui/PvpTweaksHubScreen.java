@@ -42,9 +42,10 @@ public class PvpTweaksHubScreen extends Screen {
         categories.add(new Category("Visuals", "\ud83d\udc41"));
         categories.add(new Category("HUD", "\ud83d\udcca"));
         categories.add(new Category("Sounds", "\ud83d\udd0a"));
-        categories.add(new Category("Info", "\u2139"));
         categories.add(new Category("Optimization", "\u26a1"));
+
         categories.add(new Category("Profiles", "\ud83d\udcc1"));
+        categories.add(new Category("Info", "\u2139"));
         
         lastCategoryName = initialCategory;
         for (Category cat : categories) {
@@ -206,16 +207,10 @@ public class PvpTweaksHubScreen extends Screen {
             this.contentHeight = Math.max(leftColEndVisuals, y) + (int)contentScroll;
         } else if (activeCategory.name.equals("HUD")) {
             y += 10;
-            addTooltipped(x, y, 180, 20, "CPS HUD: " + (cfg.cpsEnabled ? "ON" : "OFF"),
-                "Toggle clicks-per-second HUD display", () -> { cfg.cpsEnabled = !cfg.cpsEnabled; refreshCategoryWidgets(); }); y += spacing;
-            addTooltipped(x, y, 180, 20, "\u26ef Move CPS",
-                "Reposition the CPS counter on screen", () -> client.setScreen(new CpsAdjusterScreen(this))); y += (int)(spacing * 1.5);
-            addTooltipped(x, y, 180, 20, "Durability HUD: " + (cfg.durabilityHudEnabled ? "ON" : "OFF"),
-                "Toggle durability HUD display", () -> { cfg.durabilityHudEnabled = !cfg.durabilityHudEnabled; refreshCategoryWidgets(); }); y += spacing;
-            addTooltipped(x, y, 180, 20, "\u26E8 Move Durability",
-                "Reposition the durability display", () -> client.setScreen(new DurabilityAdjusterScreen(this))); y += spacing;
-            addTooltipped(x, y, 180, 20, "Alert Sound Once: " + (cfg.durabilityAlertSoundOnce ? "ON" : "OFF"),
-                "Only play durability alert sound once per item", () -> { cfg.durabilityAlertSoundOnce = !cfg.durabilityAlertSoundOnce; refreshCategoryWidgets(); }); y += spacing;
+            addTooltipped(x, y, 180, 20, "\u26a1 CPS...",
+                "Open CPS HUD settings", () -> client.setScreen(new CpsScreen(this))); y += spacing;
+            addTooltipped(x, y, 180, 20, "\u2764 Durability HUD...",
+                "Open durability HUD settings", () -> client.setScreen(new DurabilityScreen(this))); y += spacing;
             addTooltipped(x, y, 180, 20, "\ud83d\udd0d Item Background...",
                 "Configure item background rendering in inventory", () -> client.setScreen(new ItemBackgroundScreen(this))); y += spacing;
             addTooltipped(x, y, 180, 20, "\u271c Crosshair...",
@@ -241,9 +236,15 @@ public class PvpTweaksHubScreen extends Screen {
             addTooltipped(x, y, 200, 20, "\u2694 Combat...",
                 "Configure combat sound settings", () -> client.setScreen(new SoundSubCategoryScreen(this, "Combat")));
             y += spacing;
-            this.contentHeight = y + (int)contentScroll;
             addTooltipped(x, y, 200, 20, "\ud83c\udfb6 Misc...",
                 "Configure miscellaneous sound settings", () -> client.setScreen(new SoundSubCategoryScreen(this, "Misc")));
+            y += spacing;
+            addTooltipped(x, y, 200, 20, "\ud83c\udfb5 Custom...",
+                "Add and configure custom sounds for any game event", () -> client.setScreen(new SoundSubCategoryScreen(this, "Custom")));
+            y += spacing;
+            addTooltipped(x, y, 200, 20, "\ud83d\udd14 Durability Alert...",
+                "Configure the durability low alert sound", () -> client.setScreen(new ModernSoundPickerScreen(this, cfg.soundDurabilityLow, "Durability Low", PvpTweaksConfig::save)));
+            this.contentHeight = y + (int)contentScroll;
         } else if (activeCategory.name.equals("Optimization")) {
             y += 10;
             addTooltipped(x, y, 180, 20, "Crystal Opt: " + (cfg.crystalOptimizer ? "ON" : "OFF"),
@@ -255,7 +256,7 @@ public class PvpTweaksHubScreen extends Screen {
             y += 10;
             addTooltipped(x, y, 160, 20, "\u00a7a+ Create Profile",
                 "Save current settings as a new profile", () -> client.setScreen(new ProfileNameScreen(this, null, name -> { PvpTweaksProfiles.save(name); client.execute(() -> client.setScreen(new PvpTweaksHubScreen(parent, "Profiles"))); })));
-            y += (int)(spacing * 1.5);
+            y += spacing;
             List<String> profiles = PvpTweaksProfiles.list();
             for (String p : profiles) {
                 if (y > height - 70) break;

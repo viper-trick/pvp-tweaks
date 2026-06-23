@@ -102,6 +102,10 @@ public abstract class SoundRedirectMixin {
         Identifier newId = Identifier.tryParse(rawId);
         if (newId == null) return;
 
+        if ("pvptweaks".equals(newId.getNamespace())) {
+            com.pvptweaks.sound.CustomSoundManager.injectIfMissing(newId);
+        }
+
         WeightedSoundSet newSet = manager.get(newId);
         if (newSet == null) return;
 

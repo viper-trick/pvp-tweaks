@@ -157,19 +157,16 @@ public class DurabilityHudRenderer {
             if (id != null) ev = SoundEvent.of(id);
         } else if (p.isPreset()) {
             Identifier id = Identifier.tryParse(p.presetId);
-            if (id != null) ev = SoundEvent.of(id);
+            if (id != null) {
+                if ("pvptweaks".equals(id.getNamespace())) {
+                    com.pvptweaks.sound.CustomSoundManager.injectIfMissing(id);
+                }
+                ev = SoundEvent.of(id);
+            }
         }
 
         if (ev != null) {
-            try {
-                java.lang.reflect.Method m = PositionedSoundInstance.class.getMethod("ui", SoundEvent.class, float.class, float.class);
-                mc.getSoundManager().play((PositionedSoundInstance) m.invoke(null, ev, 1.0f, 1.0f));
-            } catch (Exception e) {
-                try {
-                    java.lang.reflect.Method m = PositionedSoundInstance.class.getMethod("master", SoundEvent.class, float.class, float.class);
-                    mc.getSoundManager().play((PositionedSoundInstance) m.invoke(null, ev, 1.0f, 1.0f));
-                } catch (Exception ignored) {}
-            }
+            mc.getSoundManager().play(PositionedSoundInstance.master(ev, p.pitchPct / 100f, p.volumePct / 100f));
         }
     }
 }

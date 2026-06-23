@@ -77,7 +77,7 @@ public class CustomSoundManager {
         return id;
     }
 
-    private static void injectIfMissing(Identifier eventId) {
+    public static void injectIfMissing(Identifier eventId) {
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc == null) return;
         

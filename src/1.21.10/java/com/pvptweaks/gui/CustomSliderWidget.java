@@ -117,11 +117,11 @@ public class CustomSliderWidget extends SliderWidget {
         net.minecraft.client.font.TextRenderer tr = net.minecraft.client.MinecraftClient.getInstance().textRenderer;
         
         if (forced) {
-            RenderUtils.drawRoundedRect(context, this.getX(), this.getY(), this.width, this.height, 4, 0x30000000);
+            RenderUtils.drawRoundedRect(context, this.getX(), this.getY(), this.width, this.height, 8, 0x30000000);
             RenderUtils.drawOutline(context, this.getX(), this.getY(), this.width, this.height, 1, 0x20FFFFFF);
             int fillWidth = (int) (this.value * this.width);
             if (fillWidth > 0) {
-                RenderUtils.drawRoundedRect(context, this.getX(), this.getY(), fillWidth, this.height, 4, 0x40808080);
+                RenderUtils.drawRoundedRect(context, this.getX(), this.getY(), fillWidth, this.height, 8, 0x40808080);
             }
             int textX = this.getX() + (this.width - tr.getWidth(this.getMessage())) / 2;
             int textY = this.getY() + (this.height - 8) / 2;
@@ -129,14 +129,12 @@ public class CustomSliderWidget extends SliderWidget {
             return;
         }
 
-        // Background container
-        RenderUtils.drawRoundedRect(context, this.getX(), this.getY(), this.width, this.height, 4, 0x50000000);
+        RenderUtils.drawRoundedRect(context, this.getX(), this.getY(), this.width, this.height, 8, 0x50000000);
         RenderUtils.drawOutline(context, this.getX(), this.getY(), this.width, this.height, 1, 0x30FFFFFF);
         
-        // Active fill
         int fillWidth = (int) (this.value * this.width);
         if (fillWidth > 0) {
-            RenderUtils.drawRoundedRect(context, this.getX(), this.getY(), fillWidth, this.height, 4, UiPalette.ACCENT_BLUE & 0x80FFFFFF);
+            RenderUtils.drawRoundedRect(context, this.getX(), this.getY(), fillWidth, this.height, 8, UiPalette.ACCENT_BLUE & 0x80FFFFFF);
         }
         
         // Draw outline when hovered

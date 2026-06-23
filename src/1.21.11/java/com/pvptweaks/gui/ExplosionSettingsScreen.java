@@ -38,7 +38,10 @@ public class ExplosionSettingsScreen extends Screen {
         addSlider(x2, y, "Wind Particles", cfg.windChargeParticlePct, 0, 200, v -> cfg.windChargeParticlePct = v.intValue()); y += spacing;
         addSlider(x2, y, "Anchor Particles", cfg.anchorExplosionParticlePct, 0, 200, v -> cfg.anchorExplosionParticlePct = v.intValue());
 
-        addDrawableChild(new ModernButtonWidget(width / 2 - 50, height - 35, 100, 20, Text.literal("Done"), () -> client.setScreen(parent)));
+        addDrawableChild(new ModernButtonWidget(width / 2 - 50, height - 35, 100, 20, Text.literal("Done"), () -> {
+            PvpTweaksConfig.save();
+            client.setScreen(parent);
+        }));
     }
 
     private void addSlider(int x, int y, String label, double val, double min, double max, java.util.function.Consumer<Double> setter) {

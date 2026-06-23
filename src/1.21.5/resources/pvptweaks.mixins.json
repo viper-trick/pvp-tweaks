@@ -16,6 +16,7 @@
     "InGameOverlayRendererMixin",
     "HeldItemRendererMixin",
     "HotbarLabelsMixin",
+    "MouseMixin",
     "GameMenuScreenMixin",
     "SoundRedirectMixin",
     "ResourcePackInjectMixin",

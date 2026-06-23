@@ -36,7 +36,7 @@ public class ModernButtonWidget extends ClickableWidget {
         int bgColor = RenderUtils.lerpColor(UiPalette.BUTTON_IDLE, UiPalette.BUTTON_HOVER, hoverProgress);
         int borderColor = RenderUtils.lerpColor(UiPalette.BORDER, UiPalette.ACCENT_BLUE, hoverProgress);
 
-        RenderUtils.drawRoundedRect(context, this.getX(), this.getY(), this.width, this.height, 4, bgColor);
+        RenderUtils.drawRoundedRect(context, this.getX(), this.getY(), this.width, this.height, 8, bgColor);
         RenderUtils.drawOutline(context, this.getX(), this.getY(), this.width, this.height, 1, borderColor);
 
         int textColor = hovered ? UiPalette.ACCENT_BLUE : UiPalette.TEXT_PRIMARY;

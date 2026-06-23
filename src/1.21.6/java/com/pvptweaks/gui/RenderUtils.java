@@ -4,20 +4,28 @@ import net.minecraft.client.gui.DrawContext;
 
 public class RenderUtils {
 
-    public static void drawRoundedRect(DrawContext context, int x, int y, int width, int height, int radius, int color) {
-        // Simple rounded rect using 3 fills
-        // Center
-        context.fill(x + radius, y, x + width - radius, y + height, color);
-        // Left
-        context.fill(x, y + radius, x + radius, y + height - radius, color);
-        // Right
-        context.fill(x + width - radius, y + radius, x + width, y + height - radius, color);
-        
-        // Corners (simplified for now to avoid complex GL code)
-        context.fill(x, y, x + radius, y + radius, color);
-        context.fill(x + width - radius, y, x + width, y + radius, color);
-        context.fill(x, y + height - radius, x + radius, y + height, color);
-        context.fill(x + width - radius, y + height - radius, x + width, y + height, color);
+    public static void drawRoundedRect(DrawContext ctx, int x, int y, int width, int height, int radius, int color) {
+        if (radius <= 0) {
+            ctx.fill(x, y, x + width, y + height, color);
+            return;
+        }
+        radius = Math.min(radius, Math.min(width / 2, height / 2));
+
+        ctx.fill(x + radius, y, x + width - radius, y + height, color);
+        ctx.fill(x, y + radius, x + radius, y + height - radius, color);
+        ctx.fill(x + width - radius, y + radius, x + width, y + height - radius, color);
+
+        for (int dy = 0; dy < radius; dy++) {
+            int dx = (int) Math.sqrt(radius * radius - (radius - dy) * (radius - dy));
+
+            int topY = y + dy;
+            int botY = y + height - dy - 1;
+
+            ctx.fill(x + radius - dx, topY, x + radius, topY + 1, color);
+            ctx.fill(x + width - radius, topY, x + width - radius + dx, topY + 1, color);
+            ctx.fill(x + radius - dx, botY, x + radius, botY + 1, color);
+            ctx.fill(x + width - radius, botY, x + width - radius + dx, botY + 1, color);
+        }
     }
 
     public static void drawGradientRect(DrawContext context, int x, int y, int width, int height, int startColor, int endColor) {

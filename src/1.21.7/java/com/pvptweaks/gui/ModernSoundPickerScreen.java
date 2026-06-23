@@ -56,6 +56,8 @@ public class ModernSoundPickerScreen extends Screen {
         searchField.setChangedListener(list::filter);
         addSelectableChild(searchField);
 
+        selectActiveSound();
+
         int tabW = 70;
         int tabX = width / 2 - 115;
         addDrawableChild(new ModernButtonWidget(tabX, 34, tabW, 20, Text.literal("Presets"), () -> switchTab(0)));
@@ -119,6 +121,21 @@ public class ModernSoundPickerScreen extends Screen {
         this.tab = t;
         list.refresh(t);
         searchField.setText("");
+        selectActiveSound();
+    }
+
+    private void selectActiveSound() {
+        if (!"preset".equals(profile.mode)) return;
+        String targetId = profile.presetId;
+        if (targetId == null || targetId.isEmpty()) return;
+
+        for (SoundEntry entry : list.children()) {
+            if (entry.id.equals(targetId)) {
+                list.setSelected(entry);
+                list.scrollToEntry(entry);
+                return;
+            }
+        }
     }
 
     private void saveEntry(SoundEntry entry) {
@@ -197,6 +214,7 @@ public class ModernSoundPickerScreen extends Screen {
         private final List<SoundEntry> all = new ArrayList<>();
         public SoundListWidget(MinecraftClient mc, int width, int height, int top, int entryH) { super(mc, width, height, top, entryH); }
         @Override protected int getScrollbarX() { return -1000; }
+        public void scrollToEntry(SoundEntry entry) { ensureVisible(entry); }
         public void refresh(int tab) {
             clearEntries(); all.clear();
             if (tab == 0) {
