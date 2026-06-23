@@ -1,0 +1,178 @@
+package com.pvptweaks.gui;
+
+import com.pvptweaks.config.PvpTweaksConfig;
+import com.pvptweaks.config.SoundProfile;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.item.ItemStack;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.util.Identifier;
+
+import net.minecraft.client.sound.PositionedSoundInstance;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+public class DurabilityHudRenderer {
+    /** When true, the real durability HUD is suppressed (sample preview active in adjuster). */
+    public static boolean sampleActive = false;
+    private static long lastAlertTime = 0;
+
+    /** Tracks which items were already "low" so we can detect new low events. */
+    private static final Set<String> previouslyLow = new HashSet<>();
+    /** True once we've played the sound; reset when ALL previously-low items recover. */
+    private static boolean alertPlayed = false;
+
+    public static void render(DrawContext context, RenderTickCounter tickCounter) {
+        if (sampleActive) return;
+        PvpTweaksConfig cfg = PvpTweaksConfig.get();
+        if (!cfg.durabilityHudEnabled) return;
+
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player == null || client.options.hudHidden) return;
+
+        List<ItemStack> items = new ArrayList<>();
+        if (cfg.durabilityHudShowArmor) {
+            EquipmentSlot[] slots = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
+            for (EquipmentSlot slot : slots) {
+                ItemStack stack = client.player.getEquippedStack(slot);
+                if (stack != null && !stack.isEmpty()) items.add(stack);
+            }
+        }
+        if (cfg.durabilityHudShowMainHand) {
+            ItemStack stack = client.player.getMainHandStack();
+            if (stack != null && !stack.isEmpty()) items.add(stack);
+        }
+        if (cfg.durabilityHudShowOffHand) {
+            ItemStack stack = client.player.getOffHandStack();
+            if (stack != null && !stack.isEmpty()) items.add(stack);
+        }
+
+        if (items.isEmpty()) return;
+
+        // ── Durability alert sound-once logic ────────────────────────────────
+        Set<String> currentlyLow = new HashSet<>();
+        for (ItemStack stack : items) {
+            boolean low = stack.isDamageable() && stack.getDamage() > (stack.getMaxDamage() * 0.9);
+            if (low) currentlyLow.add(stack.getItem().toString());
+        }
+
+        // Detect any item that newly entered "low" state
+        boolean anyNewLow = false;
+        for (String key : currentlyLow) {
+            if (!previouslyLow.contains(key)) { anyNewLow = true; break; }
+        }
+        if (anyNewLow) alertPlayed = false;  // reset on new low item
+
+        // If ALL items recovered from low, also reset
+        if (currentlyLow.isEmpty() && !previouslyLow.isEmpty()) alertPlayed = false;
+
+        previouslyLow.clear();
+        previouslyLow.addAll(currentlyLow);
+        // ─────────────────────────────────────────────────────────────────────
+
+        int width = client.getWindow().getScaledWidth();
+        int height = client.getWindow().getScaledHeight();
+
+        int x = (int) (width * (cfg.durabilityHudX / 100.0f));
+        int y = (int) (height * (cfg.durabilityHudY / 100.0f));
+
+        int offset = 0;
+        for (ItemStack stack : items) {
+            int ix = x;
+            int iy = y;
+            if ("vertical".equals(cfg.durabilityHudAlign)) iy += offset;
+            else ix += offset;
+
+            // Background slot
+            if (cfg.durabilityHudBackground) {
+                context.fill(ix, iy, ix + 16, iy + 16, 0x55000000);
+                context.fill(ix, iy, ix + 16, iy + 1, 0x88FFFFFF);
+                context.fill(ix, iy + 15, ix + 16, iy + 16, 0x88000000);
+                context.fill(ix, iy, ix + 1, iy + 16, 0x88FFFFFF);
+                context.fill(ix + 15, iy, ix + 16, iy + 16, 0x88000000);
+            }
+
+            // Low durability check
+            boolean low = stack.isDamageable() && stack.getDamage() > (stack.getMaxDamage() * 0.9);
+            boolean blink = cfg.durabilityHudLowAlert && low && (System.currentTimeMillis() % 1000 < 500);
+
+            if (blink) {
+                context.fill(ix, iy, ix + 16, iy + 16, 0x66FF0000);
+
+                // Trigger alert sound
+                boolean shouldPlay;
+                if (cfg.durabilityAlertSoundOnce) {
+                    // Play once only — stop repeating after first play
+                    shouldPlay = !alertPlayed;
+                } else {
+                    // Original behaviour: repeat every 5 seconds
+                    shouldPlay = System.currentTimeMillis() - lastAlertTime >= 5000;
+                }
+
+                if (shouldPlay) {
+                    playSound(cfg.soundDurabilityLow);
+                    lastAlertTime = System.currentTimeMillis();
+                    alertPlayed = true;
+                }
+            }
+
+            context.drawItem(stack, ix, iy);
+            context.drawStackOverlay(client.textRenderer, stack, ix, iy);
+
+            if (cfg.durabilityHudShowExact && stack.isDamageable()) {
+                int dur = stack.getMaxDamage() - stack.getDamage();
+                String text = String.valueOf(dur);
+                int col = low ? 0xFFFF5555 : 0xFFFFFFFF;
+                int tw = client.textRenderer.getWidth(text);
+                int tx, ty;
+                if ("vertical".equals(cfg.durabilityHudAlign)) {
+                    tx = ix + 18;
+                    ty = iy + 4;
+                } else {
+                    tx = ix + 8 - tw / 2;
+                    ty = iy - 10;
+                }
+                context.drawTextWithShadow(client.textRenderer, text, tx, ty, col);
+            }
+
+            offset += 20;
+        }
+    }
+
+    private static void playSound(SoundProfile p) {
+        MinecraftClient mc = MinecraftClient.getInstance();
+        if (mc.player == null) return;
+
+        SoundEvent ev = null;
+        if (p.isDefault()) {
+            ev = net.minecraft.sound.SoundEvents.UI_BUTTON_CLICK.value();
+        } else if (p.isCustom()) {
+            Identifier id = com.pvptweaks.sound.CustomSoundManager.registerCustomSound(p.customPath);
+            if (id != null) ev = SoundEvent.of(id);
+        } else if (p.isPreset()) {
+            Identifier id = Identifier.tryParse(p.presetId);
+            if (id != null) {
+                if ("pvptweaks".equals(id.getNamespace())) {
+                    com.pvptweaks.sound.CustomSoundManager.injectIfMissing(id);
+                }
+                ev = SoundEvent.of(id);
+            }
+        }
+
+        if (ev != null) {
+            PositionedSoundInstance inst = PositionedSoundInstance.ui(ev, p.pitchPct / 100f);
+            try {
+                java.lang.reflect.Field f = PositionedSoundInstance.class.getSuperclass().getDeclaredField("volume");
+                f.setAccessible(true);
+                f.setFloat(inst, p.volumePct / 100f);
+            } catch (Exception ignored) {}
+            mc.getSoundManager().play(inst);
+        }
+    }
+}

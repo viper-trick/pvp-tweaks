@@ -10,7 +10,14 @@ buildscript {
 }
 
 subprojects {
-    apply plugin: 'fabric-loom'
+    // 26.x versions are unobfuscated — use the non-remapping loom plugin
+    def isUnobfuscated = project.name.startsWith('26')
+
+    if (isUnobfuscated) {
+        apply plugin: 'net.fabricmc.fabric-loom'
+    } else {
+        apply plugin: 'fabric-loom'
+    }
     apply plugin: 'maven-publish'
 
     version = project.mod_version
@@ -33,17 +40,17 @@ subprojects {
         maven { url = "https://maven.terraformersmc.com/releases/" }
     }
 
-
-
     dependencies {
         def impl = { dep -> add("modImplementation", dep) }
 
         minecraft "com.mojang:minecraft:${project.minecraft_version}"
 
-        if (project.hasProperty('use_mojmap') && project.use_mojmap == "true") {
-            mappings loom.officialMojangMappings()
-        } else if (project.hasProperty('yarn_mappings') && !project.yarn_mappings.startsWith('none')) {
-            mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+        if (!isUnobfuscated) {
+            if (project.hasProperty('use_mojmap') && project.use_mojmap == "true") {
+                mappings loom.officialMojangMappings()
+            } else if (project.hasProperty('yarn_mappings') && !project.yarn_mappings.startsWith('none')) {
+                mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+            }
         }
 
         impl "net.fabricmc:fabric-loader:${rootProject.loader_version}"
