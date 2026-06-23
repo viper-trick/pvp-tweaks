@@ -37,7 +37,7 @@ public class ModernButtonWidget extends ClickableWidget {
         int borderColor = RenderUtils.lerpColor(UiPalette.BORDER, UiPalette.ACCENT_BLUE, hoverProgress);
 
         RenderUtils.drawRoundedRect(context, this.getX(), this.getY(), this.width, this.height, 8, bgColor);
-        RenderUtils.drawOutline(context, this.getX(), this.getY(), this.width, this.height, 1, borderColor);
+        RenderUtils.drawRoundedOutline(context, this.getX(), this.getY(), this.width, this.height, 8, 1, borderColor);
 
         int textColor = hovered ? UiPalette.ACCENT_BLUE : UiPalette.TEXT_PRIMARY;
         context.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer, this.getMessage(), 

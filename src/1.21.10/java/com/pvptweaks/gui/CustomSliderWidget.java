@@ -118,7 +118,7 @@ public class CustomSliderWidget extends SliderWidget {
         
         if (forced) {
             RenderUtils.drawRoundedRect(context, this.getX(), this.getY(), this.width, this.height, 8, 0x30000000);
-            RenderUtils.drawOutline(context, this.getX(), this.getY(), this.width, this.height, 1, 0x20FFFFFF);
+            RenderUtils.drawRoundedOutline(context, this.getX(), this.getY(), this.width, this.height, 8, 1, 0x20FFFFFF);
             int fillWidth = (int) (this.value * this.width);
             if (fillWidth > 0) {
                 RenderUtils.drawRoundedRect(context, this.getX(), this.getY(), fillWidth, this.height, 8, 0x40808080);
@@ -130,7 +130,7 @@ public class CustomSliderWidget extends SliderWidget {
         }
 
         RenderUtils.drawRoundedRect(context, this.getX(), this.getY(), this.width, this.height, 8, 0x50000000);
-        RenderUtils.drawOutline(context, this.getX(), this.getY(), this.width, this.height, 1, 0x30FFFFFF);
+        RenderUtils.drawRoundedOutline(context, this.getX(), this.getY(), this.width, this.height, 8, 1, 0x30FFFFFF);
         
         int fillWidth = (int) (this.value * this.width);
         if (fillWidth > 0) {
@@ -139,7 +139,7 @@ public class CustomSliderWidget extends SliderWidget {
         
         // Draw outline when hovered
         if (this.isHovered()) {
-            RenderUtils.drawOutline(context, this.getX(), this.getY(), this.width, this.height, 1, UiPalette.ACCENT_BLUE);
+            RenderUtils.drawRoundedOutline(context, this.getX(), this.getY(), this.width, this.height, 8, 1, UiPalette.ACCENT_BLUE);
         }
         
         // Center text message

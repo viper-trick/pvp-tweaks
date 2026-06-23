@@ -33,10 +33,30 @@ public class RenderUtils {
     }
     
     public static void drawOutline(DrawContext context, int x, int y, int width, int height, int thickness, int color) {
-        context.fill(x, y, x + width, y + thickness, color); // Top
-        context.fill(x, y + height - thickness, x + width, y + height, color); // Bottom
-        context.fill(x, y, x + thickness, y + height, color); // Left
-        context.fill(x + width - thickness, y, x + width, y + height, color); // Right
+        context.fill(x, y, x + width, y + thickness, color);
+        context.fill(x, y + height - thickness, x + width, y + height, color);
+        context.fill(x, y, x + thickness, y + height, color);
+        context.fill(x + width - thickness, y, x + width, y + height, color);
+    }
+
+    public static void drawRoundedOutline(DrawContext ctx, int x, int y, int width, int height, int radius, int thickness, int color) {
+        if (radius <= 0 || radius >= Math.min(width / 2, height / 2)) {
+            drawOutline(ctx, x, y, width, height, thickness, color);
+            return;
+        }
+        ctx.fill(x + radius, y, x + width - radius, y + thickness, color);
+        ctx.fill(x + radius, y + height - thickness, x + width - radius, y + height, color);
+        ctx.fill(x, y + radius, x + thickness, y + height - radius, color);
+        ctx.fill(x + width - thickness, y + radius, x + width, y + height - radius, color);
+        for (int dy = 0; dy < radius; dy++) {
+            int dx = (int) Math.sqrt(radius * radius - (radius - dy) * (radius - dy));
+            int topY = y + dy;
+            int botY = y + height - dy - 1;
+            ctx.fill(x + radius - dx, topY, x + radius - dx + thickness, topY + 1, color);
+            ctx.fill(x + width - radius + dx - thickness, topY, x + width - radius + dx, topY + 1, color);
+            ctx.fill(x + radius - dx, botY, x + radius - dx + thickness, botY + 1, color);
+            ctx.fill(x + width - radius + dx - thickness, botY, x + width - radius + dx, botY + 1, color);
+        }
     }
 
     public static int lerpColor(int color1, int color2, float delta) {
