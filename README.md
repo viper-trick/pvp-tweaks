@@ -25,7 +25,6 @@ All Rights Reserved. The source code is made available for educational and revie
 **Required:**
 - Fabric Loader ≥0.18.4
 - Fabric API (any version matching the Minecraft target)
-- Fabric Language Kotlin 1.11.0+kotlin.2.0.0
 
 **Optional:**
 - Mod Menu — adds a config screen button in the mods list

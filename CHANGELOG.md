@@ -1,3 +1,18 @@
+## 1.9.1
+
+### Added
+- **Modern GUI** — rounded corners (radius 8) across all buttons, sliders, and tabs with proper circular-arc rendering
+- **Explosion particle controls** — per-type sliders for TNT, Creeper, Bed, Ghast, and Wind Charge particles
+- **Pitch control in sound picker** — pitch/tempo slider moved to the top of the sound picker screen
+
+### Changed
+- Updated mod version to 1.9.1 across all supported Minecraft versions (1.21.4–1.21.11)
+
+### Fixed
+- Slider fill overflowing the container outline at both low and high fill percentages
+- Bottom arc direction in rounded rectangle rendering
+- Sidebar selected outline using plain rect instead of rounded outline
+
 ## 1.9.0
 
 ### Added

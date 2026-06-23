@@ -9,10 +9,6 @@ buildscript {
     }
 }
 
-plugins {
-    id "org.jetbrains.kotlin.jvm" version "2.0.0" apply false
-}
-
 subprojects {
     apply plugin: 'fabric-loom'
     apply plugin: 'maven-publish'
@@ -55,8 +51,6 @@ subprojects {
         if (project.hasProperty('modmenu_version') && project.modmenu_version != '') {
             impl "com.terraformersmc:modmenu:${project.modmenu_version}"
         }
-        impl "net.fabricmc:fabric-language-kotlin:1.11.0+kotlin.2.0.0"
-
         implementation 'javazoom:jlayer:1.0.1'
         include 'javazoom:jlayer:1.0.1'
     }

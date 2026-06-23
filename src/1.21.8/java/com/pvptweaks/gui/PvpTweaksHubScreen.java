@@ -434,7 +434,7 @@ public class PvpTweaksHubScreen extends Screen {
             context.drawTextWithShadow(textRenderer, Text.literal("\u00a7l\u2139 ABOUT PVP TWEAKS"), textX, iy, UiPalette.ACCENT_BLUE);
             iy += 22;
 
-            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77Version: \u00a7f1.9.0"), textX, iy, 0xFFAAAAAA);
+            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77Version: \u00a7f1.9.1"), textX, iy, 0xFFAAAAAA);
             iy += lh + 2;
             context.drawTextWithShadow(textRenderer, Text.literal("\u00a77Author: \u00a7fviper-trick"), textX, iy, 0xFFAAAAAA);
             iy += lh + 2;

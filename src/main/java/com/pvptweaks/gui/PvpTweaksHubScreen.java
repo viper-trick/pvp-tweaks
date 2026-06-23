@@ -419,16 +419,25 @@ public class PvpTweaksHubScreen extends Screen {
             context.drawTextWithShadow(textRenderer, Text.literal("\u00a7l\u2139 ABOUT PVP TWEAKS"), textX, iy, UiPalette.ACCENT_BLUE);
             iy += 22;
 
-            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77Version: \u00a7f1.0.0"), textX, iy, 0xFFAAAAAA);
+            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77Version: \u00a7f1.9.1"), textX, iy, 0xFFAAAAAA);
             iy += lh + 2;
             context.drawTextWithShadow(textRenderer, Text.literal("\u00a77Author: \u00a7fviper-trick"), textX, iy, 0xFFAAAAAA);
             iy += lh + 2;
-            context.drawTextWithShadow(textRenderer, Text.literal("\u00a7lGitHub: \u00a79github.com/viper-trick/pvp-tweaks"), textX, iy, 0xFFAAAAAA);
-            iy += lh + 2;
-            context.drawTextWithShadow(textRenderer, Text.literal("\u00a7lIssues: \u00a79github.com/viper-trick/pvp-tweaks/issues"), textX, iy, 0xFFAAAAAA);
-            iy += lh + 2;
-            context.drawTextWithShadow(textRenderer, Text.literal("\u00a7lModrinth: \u00a79modrinth.com/mod/pvptweak"), textX, iy, 0xFFAAAAAA);
-            iy += 24;
+
+            context.drawTextWithShadow(textRenderer, Text.literal("\u00a7lDescription"), textX, iy, UiPalette.ACCENT_BLUE);
+            iy += 16;
+            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77A comprehensive PVP optimization and visual customization mod"), textX, iy, 0xFFAAAAAA);
+            iy += lh;
+            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77for Minecraft 1.21+. Features item scaling, crosshair"), textX, iy, 0xFFAAAAAA);
+            iy += lh;
+            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77editor, shield adjuster, CPS counter, durability HUD,"), textX, iy, 0xFFAAAAAA);
+            iy += lh;
+            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77fire presets, fullbright, particle controls, optimizers,"), textX, iy, 0xFFAAAAAA);
+            iy += lh;
+            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77explosion sounds, zoom, and more."), textX, iy, 0xFFAAAAAA);
+            iy += lh + 10;
+
+            iy += 78;
 
             context.drawTextWithShadow(textRenderer, Text.literal("\u00a7lContact"), textX, iy, UiPalette.ACCENT_BLUE);
             iy += 16;
