@@ -8,11 +8,16 @@ pluginManagement {
 
 rootProject.name = "pvp-tweaks"
 
-def versions = ["1.21.4", "1.21.5", "1.21.6", "1.21.7", "1.21.8",
-                "1.21.9", "1.21.10", "1.21.11",
-                "26.1", "26.1.1", "26.1.2", "26.2"]
-versions.each { ver ->
-    String safeName = ver.replace('.', '_')
+def groups = [
+    "1.21.4-5":  "build-1.21.4-5",
+    "1.21.6-8":  "build-1.21.6-8",
+    "1.21.9-10": "build-1.21.9-10",
+    "1.21.11":   "build-1.21.11",
+    "26.1.x":    "build-26.1",
+    "26.2":      "build-26.2",
+]
+groups.each { name, dir ->
+    String safeName = name.replace('.', '_').replace('-', '_')
     include safeName
-    project(":${safeName}").projectDir = file("src/${ver}")
+    project(":${safeName}").projectDir = file("src/${dir}")
 }

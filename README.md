@@ -40,14 +40,14 @@ All Rights Reserved. The source code is made available for educational and revie
 ### Steps
 
 ```sh
-git clone https://github.com/viper-trick/pvp-tweaks.git
-cd pvp-tweaks
-./gradlew build
+./gradlew :1_21_4_5:build
 ```
 
-Built JARs are placed in each version's `build/libs/` directory, e.g. `src/1.21.11/build/libs/pvp-tweaks-<version>.jar`.
+Each group JAR covers a range of compatible MC versions. See `settings.gradle` for the full group list.
 
-### Build all versions (helper scripts)
+Built JARs are placed in each build group's `build/libs/` directory, e.g. `src/build-1.21.4-5/build/libs/pvp-tweaks-<version>.jar`.
+
+### Build all groups (helper scripts)
 
 ```sh
 # Linux/macOS
@@ -57,21 +57,21 @@ Built JARs are placed in each version's `build/libs/` directory, e.g. `src/1.21.
 build-all.bat
 ```
 
-These scripts run `./gradlew build` for all versions, then move the resulting JARs (excluding `-sources.jar`) into `final-jars/` at the project root.
+These scripts run `./gradlew build` for all 6 groups, then move the resulting JARs (excluding `-sources.jar`) into `final-jars/` at the project root.
 
-### Building a single version
+### Building a single group
 
 ```sh
-./gradlew :1_21_11:build
+./gradlew :1_21_4_5:build
 ```
 
-The subproject name uses underscores in place of dots (`1_21_11` for MC 1.21.11). See `settings.gradle` for the full list.
+The subproject name uses underscores in place of dots and hyphens (`1_21_4_5` for group `1.21.4-5`). See `settings.gradle` for the full list.
 
 ## Project Structure
 
 ```
 ├── build.gradle              # Root build config (Fabric Loom, shared source logic)
-├── settings.gradle           # Enumerates all 12 version subprojects
+├── settings.gradle           # Enumerates all 6 multi-version build groups
 ├── gradle.properties         # Shared build properties (mod version, loader, loom)
 ├── build-all.sh              # Linux/macOS build helper
 ├── build-all.bat             # Windows build helper
@@ -90,30 +90,37 @@ The subproject name uses underscores in place of dots (`1_21_11` for MC 1.21.11)
 │   │   ├── java/             # Shared Mojang-mapped source
 │   │   └── resources/        # Shared assets
 │   │
-│   ├── 1.21.4/ … 1.21.11/   # Per-version subproject dirs
-│   │   ├── java/             # Override source (empty unless version-specific changes needed)
-│   │   ├── resources/        # Version-specific resources (fabric.mod.json, mixin configs)
-│   │   └── gradle.properties # MC version, yarn mappings, fabric version
+│   ├── build-1.21.4-5/       # Build group: JAR covers MC 1.21.4–1.21.5
+│   │   ├── java/             # Override source
+│   │   ├── resources/        # Group-specific resources (fabric.mod.json, version range)
+│   │   └── gradle.properties # MC version, fabric version, java version
 │   │
-│   ├── 26.1/ … 26.2/        # 26.x subproject dirs
-│   │   ├── java/             # Override source (26.2 has per-version 26.2 Vulkan API port)
-│   │   └── resources/        # Version-specific resources
+│   ├── build-1.21.6-8/       # Build group: JAR covers MC 1.21.6–1.21.8
+│   ├── build-1.21.9-10/      # Build group: JAR covers MC 1.21.9–1.21.10
+│   ├── build-1.21.11/        # Build group: JAR covers MC 1.21.11
+│   ├── build-26.1/           # Build group: JAR covers MC 26.1, 26.1.1, 26.1.2
+│   ├── build-26.2/           # Build group: JAR covers MC 26.2
+│   │
+│   ├── 1.21.4/ … 26.2/      # Per-version source dirs (kept as reference, not built)
 │   │
 │   └── final-jars/           # Output directory after running build-all.sh
 │
-└── build/                    # Gradle build outputs (per subproject)
+└── build/                    # Gradle build outputs (per build group)
 ```
 
 ### Source organisation
 
-The project uses **shared source groups** to minimise duplication across 12 Minecraft versions:
+The project uses **shared source groups** to minimise duplication across 12 MC versions, combined into **6 build groups** that each produce one multi-version JAR:
 
-| Group | Versions | API |
-|-------|----------|-----|
-| `group-1.21.4-8` | 1.21.4 – 1.21.10 | PoseStack/Matrix3x2fStack, ResourceLocation, old Util |
-| `group-1.21.9-11` | 1.21.11 | Identifier, new Util, newest 1.21 API |
-| `group-26x` | 26.1, 26.1.1, 26.1.2, 26.2 | Unobfuscated Mojang API |
+| Build Group | Shared Source | Covers | Distinguishing API |
+|-------------|--------------|--------|--------------------|
+| `build-1.21.4-5` | `group-1.21.4-8` | 1.21.4, 1.21.5 | `PoseStack` / `Matrix3x2fStack` |
+| `build-1.21.6-8` | `group-1.21.4-8` | 1.21.6, 1.21.7, 1.21.8 | `PoseStack` + `ItemStack` rendering API |
+| `build-1.21.9-10` | `group-1.21.4-8` | 1.21.9, 1.21.10 | Same API as 1.21.6-8 (only cosmetic diff) |
+| `build-1.21.11` | `group-1.21.9-11` | 1.21.11 | `Identifier`, new `Util`, `onPress` mouse handler |
+| `build-26.1` | `group-26x` | 26.1, 26.1.1, 26.1.2 | Unobfuscated, pre-Vulkan API |
+| `build-26.2` | `group-26x` | 26.2 | Unobfuscated, Vulkan rendering API |
 
-When a subproject dir has `.java` files in its `java/` directory, the build automatically merges shared + override source into `build/mergedJava`. Otherwise it uses the shared group directly.
+When a build group dir has `.java` files in its `java/` directory, the build automatically merges shared + override source into `build/mergedJava`. Otherwise it uses the shared group directly.
 
 MC 26.2 required significant manual API porting due to the Vulkan rendering rewrite (no `migrateMappings` path available).

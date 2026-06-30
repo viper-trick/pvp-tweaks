@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "pvptweaks",
+  "version": "${version}",
+
+  "name": "PVP Tweaks",
+  "description": "Comprehensive PVP performance and visual optimizations including Crystal/Anchor lag mitigation, HUD adjusters, and custom combat visuals.",
+  "authors": [ "viper-trick" ],
+  "contact": {
+    "homepage": "https://github.com/viper-trick/pvp-tweaks",
+    "issues":   "https://github.com/viper-trick/pvp-tweaks/issues"
+  },
+
+  "license": "All Rights Reserved",
+
+  "icon": "icon.png",
+
+  "environment": "client",
+
+  "entrypoints": {
+    "main":    [ "com.pvptweaks.PvpTweaksMod"               ],
+    "client":  [ "com.pvptweaks.PvpTweaksClient"            ],
+    "modmenu": [ "com.pvptweaks.integration.ModMenuIntegration" ]
+  },
+
+  "mixins": [ "pvptweaks.mixins.json" ],
+
+  "depends": {
+    "fabricloader": ">=0.18.4",
+    "fabric-api":   "*",
+    "minecraft":    "${minecraft_version_range}"
+  },
+  "suggests": {
+    "cloth-config": "*",
+    "modmenu":      "*"
+  }
+}
