@@ -2,17 +2,17 @@ package com.pvptweaks.gui;
 
 import com.pvptweaks.config.PvpTweaksConfig;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.network.chat.Component;
 
 public class FullbrightScreen extends Screen {
     private final Screen parent;
-    private final java.util.IdentityHashMap<ClickableWidget, String> tooltips = new java.util.IdentityHashMap<>();
+    private final java.util.IdentityHashMap<AbstractWidget, String> tooltips = new java.util.IdentityHashMap<>();
 
     public FullbrightScreen(Screen parent) {
-        super(Text.literal("Fullbright Settings"));
+        super(Component.literal("Fullbright Settings"));
         this.parent = parent;
     }
 
@@ -43,8 +43,8 @@ public class FullbrightScreen extends Screen {
         y += 28;
 
         if (!gammaUtilsInstalled) {
-            var btn = addDrawableChild(new ModernButtonWidget(cx - 100, y, 200, 20,
-                    Text.literal("\u00a78Gamma Utils (Fullbright) (not installed)"), () -> {}));
+            var btn = addRenderableWidget(new ModernButtonWidget(cx - 100, y, 200, 20,
+                    Component.literal("\u00a78Gamma Utils (Fullbright) (not installed)"), () -> {}));
             btn.active = false;
             tooltips.put(btn, "Gamma Utils mod is not installed");
             y += 28;
@@ -55,8 +55,8 @@ public class FullbrightScreen extends Screen {
                 "Open Gamma Utils configuration screen", () -> openGammaUtilsSettings());
             y += 28;
 
-            var disabledFB = addDrawableChild(new ModernButtonWidget(cx - 100, y, 200, 20,
-                    Text.literal("\u00a78PvP Tweaks Fullbright: DISABLED"), () -> {}));
+            var disabledFB = addRenderableWidget(new ModernButtonWidget(cx - 100, y, 200, 20,
+                    Component.literal("\u00a78PvP Tweaks Fullbright: DISABLED"), () -> {}));
             disabledFB.active = false;
             tooltips.put(disabledFB, "Gamma Utils is managing fullbright");
             y += 35;
@@ -85,17 +85,17 @@ public class FullbrightScreen extends Screen {
         }
 
         addTooltipped(cx - 100, y, 200, 20, "Back",
-            "Return to PvP Tweaks Hub", () -> client.setScreen(parent));
+            "Return to PvP Tweaks Hub", () -> minecraft.setScreenAndShow(parent));
     }
 
     private void addTooltipped(int x, int y, int w, int h, String label, String tip, Runnable action) {
-        var btn = addDrawableChild(new ModernButtonWidget(x, y, w, h, Text.literal(label), action));
+        var btn = addRenderableWidget(new ModernButtonWidget(x, y, w, h, Component.literal(label), action));
         tooltips.put(btn, tip);
     }
 
     private void addSlider(int x, int y, int w, String label, double val, double min, double max, double defVal,
                            java.util.function.Consumer<Double> setter, String tip) {
-        var slider = addDrawableChild(new CustomSliderWidget(x, y, w, 20, label, val, min, max, true, setter));
+        var slider = addRenderableWidget(new CustomSliderWidget(x, y, w, 20, label, val, min, max, true, setter));
         tooltips.put(slider, tip);
     }
 
@@ -106,13 +106,13 @@ public class FullbrightScreen extends Screen {
             java.lang.reflect.Method getScreen = autoConfig.getMethod("getConfigScreen", Class.class, Screen.class);
             Object result = getScreen.invoke(null, modConfig, this);
             if (result instanceof Screen) {
-                client.setScreen((Screen) result);
+                minecraft.setScreenAndShow((Screen) result);
                 return;
             }
             if (result instanceof java.util.function.Supplier) {
                 Object supplied = ((java.util.function.Supplier<?>) result).get();
                 if (supplied instanceof Screen) {
-                    client.setScreen((Screen) supplied);
+                    minecraft.setScreenAndShow((Screen) supplied);
                     return;
                 }
             }
@@ -122,61 +122,61 @@ public class FullbrightScreen extends Screen {
                     if (s instanceof Screen) ref.screen = (Screen) s;
                 });
                 if (ref.screen != null) {
-                    client.setScreen(ref.screen);
+                    minecraft.setScreenAndShow(ref.screen);
                     return;
                 }
             }
-            if (client.player != null)
-                client.player.sendMessage(Text.literal("§c[PvP Tweaks] AutoConfig.getConfigScreen returned unexpected type: " + result.getClass().getName()), false);
+            if (minecraft.player != null)
+                minecraft.player.sendSystemMessage(Component.literal("§c[PvP Tweaks] AutoConfig.getConfigScreen returned unexpected type: " + result.getClass().getName()));
         } catch (Exception e) {
-            if (client.player != null)
-                client.player.sendMessage(Text.literal("§c[PvP Tweaks] Error opening Gamma Utils settings: " + e.getClass().getSimpleName() + ": " + e.getMessage()), false);
+            if (minecraft.player != null)
+                minecraft.player.sendSystemMessage(Component.literal("§c[PvP Tweaks] Error opening Gamma Utils settings: " + e.getClass().getSimpleName() + ": " + e.getMessage()));
             try {
                 Class<?> apiImpl = Class.forName("io.github.sjouwer.gammautils.config.ModMenuApiImpl");
                 Object instance = apiImpl.getDeclaredConstructor().newInstance();
                 java.lang.reflect.Method getFactory = apiImpl.getMethod("getModConfigScreenFactory");
                 Object factory = getFactory.invoke(instance);
                 java.lang.reflect.Method create = factory.getClass().getMethod("create", Screen.class);
-                client.setScreen((Screen) create.invoke(factory, this));
+                minecraft.setScreenAndShow((Screen) create.invoke(factory, this));
             } catch (Exception e2) {
-                if (client.player != null)
-                    client.player.sendMessage(Text.literal("§c[PvP Tweaks] Fallback also failed: " + e2.getClass().getSimpleName() + ": " + e2.getMessage()), false);
+                if (minecraft.player != null)
+                    minecraft.player.sendSystemMessage(Component.literal("§c[PvP Tweaks] Fallback also failed: " + e2.getClass().getSimpleName() + ": " + e2.getMessage()));
             }
         }
     }
 
     private void refresh() {
-        this.clearChildren();
+        this.clearWidgets();
         this.init();
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
 
         boolean gammaUtilsInstalled = FabricLoader.getInstance().isModLoaded("gammautils");
         boolean gammaUtilsMode = "gammautils".equals(PvpTweaksConfig.get().fullbrightManagementMode) && gammaUtilsInstalled;
 
-        context.drawCenteredTextWithShadow(textRenderer,
-                Text.literal("\u00a7lFullbright Settings"), width / 2, 20, 0xFFFFFF);
+        context.text(font,
+                Component.literal("\u00a7lFullbright Settings"), width / 2, 20, 0xFFFFFF);
 
         if (gammaUtilsMode) {
-            context.drawCenteredTextWithShadow(textRenderer,
-                    Text.literal("\u00a77Gamma Utils is managing fullbright. PvP Tweaks fullbright is OFF."),
+            context.text(font,
+                    Component.literal("\u00a77Gamma Utils is managing fullbright. PvP Tweaks fullbright is OFF."),
                     width / 2, 38, 0xAAAAAA);
         } else {
-            context.drawCenteredTextWithShadow(textRenderer,
-                    Text.literal("\u00a77Adjust brightness for night vision. Values above 100% boost gamma."),
+            context.text(font,
+                    Component.literal("\u00a77Adjust brightness for night vision. Values above 100% boost gamma."),
                     width / 2, 38, 0xAAAAAA);
             if (gammaUtilsInstalled) {
-                context.drawCenteredTextWithShadow(textRenderer,
-                        Text.literal("\u00a76Tip: Disable fullbright in Gamma Utils to avoid conflicts."),
+                context.text(font,
+                        Component.literal("\u00a76Tip: Disable fullbright in Gamma Utils to avoid conflicts."),
                         width / 2, 50, 0xAAAAAA);
             }
         }
 
-        ClickableWidget hovered = null;
-        for (ClickableWidget cw : tooltips.keySet()) {
+        AbstractWidget hovered = null;
+        for (AbstractWidget cw : tooltips.keySet()) {
             if (cw.isHovered()) {
                 hovered = cw;
                 break;
@@ -187,14 +187,14 @@ public class FullbrightScreen extends Screen {
         }
     }
 
-    private void renderTooltip(DrawContext ctx, String text, int mx, int my) {
-        int tw = textRenderer.getWidth(text);
+    private void renderTooltip(GuiGraphicsExtractor ctx, String text, int mx, int my) {
+        int tw = font.width(text);
         int tx = Math.max(3, Math.min(mx - tw / 2, width - tw - 3));
         int ty = Math.max(3, my - 22);
-        ctx.fill(tx - 2, ty - 2, tx + tw + 2, ty + textRenderer.fontHeight + 2, 0xC0202020);
-        ctx.drawTextWithShadow(textRenderer, Text.literal(text), tx, ty, 0xFFFFFFFF);
+        ctx.fill(tx - 2, ty - 2, tx + tw + 2, ty + font.lineHeight + 2, 0xC0202020);
+        ctx.text(font, Component.literal(text), tx, ty, 0xFFFFFFFF);
     }
 
     @Override
-    public void close() { client.setScreen(parent); }
+    public void onClose() { minecraft.setScreenAndShow(parent); }
 }

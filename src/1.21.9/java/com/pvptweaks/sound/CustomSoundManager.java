@@ -4,15 +4,6 @@ import com.pvptweaks.PvpTweaksMod;
 import com.pvptweaks.config.PvpTweaksConfig;
 import com.pvptweaks.mixin.SoundManagerAccessor;
 import com.pvptweaks.resources.PvpTweaksDynamicPack;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.sound.Sound;
-import net.minecraft.client.sound.SoundManager;
-import net.minecraft.client.sound.WeightedSoundSet;
-import net.minecraft.resource.InputSupplier;
-import net.minecraft.resource.Resource;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.floatprovider.ConstantFloatProvider;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -20,16 +11,24 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.sounds.Sound;
+import net.minecraft.client.sounds.SoundManager;
+import net.minecraft.client.sounds.WeighedSoundEvents;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.IoSupplier;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.util.valueproviders.ConstantFloat;
 
 /**
  * Manages custom sound files and performs immediate injection into the sound engine.
  */
 public class CustomSoundManager {
 
-    private static final Map<String, Identifier> cache = new HashMap<>();
+    private static final Map<String, ResourceLocation> cache = new HashMap<>();
 
-    public static Identifier registerCustomSound(String sourcePath) {
-        Identifier id = cache.get(sourcePath);
+    public static ResourceLocation registerCustomSound(String sourcePath) {
+        ResourceLocation id = cache.get(sourcePath);
         if (id == null) {
             try {
                 Path src = Paths.get(sourcePath);
@@ -62,7 +61,7 @@ public class CustomSoundManager {
                     }
                 }
 
-                id = Identifier.of("pvptweaks", "custom/" + safeId);
+                id = ResourceLocation.fromNamespaceAndPath("pvptweaks", "custom/" + safeId);
                 cache.put(sourcePath, id);
                 PvpTweaksMod.LOGGER.info("[PVP Tweaks] Registered {} -> {}", filename, id);
             } catch (IOException e) {
@@ -77,12 +76,12 @@ public class CustomSoundManager {
         return id;
     }
 
-    public static void injectIfMissing(Identifier eventId) {
-        MinecraftClient mc = MinecraftClient.getInstance();
+    public static void injectIfMissing(ResourceLocation eventId) {
+        Minecraft mc = Minecraft.getInstance();
         if (mc == null) return;
         
         SoundManager manager = mc.getSoundManager();
-        if (manager.get(eventId) != null) return; // Already there
+        if (manager.getSoundEvent(eventId) != null) return; // Already there
 
         if (!(manager instanceof SoundManagerAccessor accessor)) {
             PvpTweaksMod.LOGGER.warn("[PVP Tweaks] SoundManager is not accessor-compatible");
@@ -100,24 +99,24 @@ public class CustomSoundManager {
             // 1. Create the Sound object
             Sound sound = new Sound(
                 eventId,
-                ConstantFloatProvider.create(1.0f),
-                ConstantFloatProvider.create(1.0f),
+                ConstantFloat.of(1.0f),
+                ConstantFloat.of(1.0f),
                 1,
-                Sound.RegistrationType.FILE,
+                Sound.Type.FILE,
                 false, // stream
                 false, // preload
                 16    // attenuation
             );
 
             // 2. Create WeightedSoundSet
-            WeightedSoundSet soundSet = new WeightedSoundSet(eventId, null);
-            soundSet.add(sound);
+            WeighedSoundEvents soundSet = new WeighedSoundEvents(eventId, null);
+            soundSet.addSound(sound);
 
             // 3. Inject into maps
             accessor.getSounds().put(eventId, soundSet);
             
-            Identifier resourceId = sound.getLocation();
-            InputSupplier<InputStream> supplier = () -> Files.newInputStream(soundFile);
+            ResourceLocation resourceId = sound.getPath();
+            IoSupplier<InputStream> supplier = () -> Files.newInputStream(soundFile);
             Resource resource = new Resource(PvpTweaksDynamicPack.INSTANCE, supplier);
             
             accessor.getSoundResources().put(resourceId, resource);
@@ -129,7 +128,7 @@ public class CustomSoundManager {
     }
 
     public static java.util.List<String> getAllGameSounds() {
-        return net.minecraft.registry.Registries.SOUND_EVENT.getIds().stream()
+        return net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.keySet().stream()
             .map(id -> id.getNamespace() + ":" + id.getPath())
             .sorted().collect(java.util.stream.Collectors.toList());
     }

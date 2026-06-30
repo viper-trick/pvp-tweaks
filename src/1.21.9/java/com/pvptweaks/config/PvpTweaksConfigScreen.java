@@ -1,7 +1,7 @@
 package com.pvptweaks.config;
 
 import com.pvptweaks.gui.PvpTweaksHubScreen;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screens.Screen;
 
 public class PvpTweaksConfigScreen {
     public static Screen build(Screen parent) {

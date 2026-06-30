@@ -5,8 +5,7 @@ import javazoom.jl.decoder.Bitstream;
 import javazoom.jl.decoder.Decoder;
 import javazoom.jl.decoder.Header;
 import javazoom.jl.decoder.SampleBuffer;
-import net.minecraft.client.sound.OggAudioStream;
-
+import net.minecraft.client.sounds.JOrbisAudioStream;
 import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -72,7 +71,7 @@ public class Mp3Converter {
 
     private static boolean convertOggToMonoWav(Path src, Path dest) {
         try (InputStream oggIs = Files.newInputStream(src)) {
-            OggAudioStream oggStream = new OggAudioStream(oggIs);
+            JOrbisAudioStream oggStream = new JOrbisAudioStream(oggIs);
             ByteBuffer pcmBuffer = oggStream.readAll();
             AudioFormat format = oggStream.getFormat();
             oggStream.close();

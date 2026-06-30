@@ -1,18 +1,17 @@
 package com.pvptweaks.gui;
 
 import com.pvptweaks.config.PvpTweaksConfig;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderTickCounter;
-import org.joml.Matrix3x2fStack;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 public class CpsHudRenderer {
-    public static void render(DrawContext context, RenderTickCounter tickCounter) {
-        MinecraftClient client = MinecraftClient.getInstance();
+    public static void render(GuiGraphics context, DeltaTracker tickCounter) {
+        Minecraft client = Minecraft.getInstance();
 
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         if (!cfg.cpsEnabled) return;
 
-        if (client.options.hudHidden) return;
+        if (client.options.hideGui) return;
 
         String text;
         if (cfg.cpsShowLabel) {
@@ -21,12 +20,12 @@ public class CpsHudRenderer {
             text = CpsTracker.getLeftCps() + " | " + CpsTracker.getRightCps();
         }
         
-        int width = client.getWindow().getScaledWidth();
-        int height = client.getWindow().getScaledHeight();
+        int width = client.getWindow().getGuiScaledWidth();
+        int height = client.getWindow().getGuiScaledHeight();
         int x = (int) (width * (cfg.cpsX / 100.0f));
         int y = (int) (height * (cfg.cpsY / 100.0f));
 
-        Matrix3x2fStack matrices = context.getMatrices();
+        var matrices = context.pose();
         matrices.pushMatrix();
         matrices.scale(cfg.cpsScale, cfg.cpsScale);
         
@@ -36,9 +35,9 @@ public class CpsHudRenderer {
         int color = cfg.cpsRainbow ? getRainbowColor() : cfg.cpsColor;
 
         if (cfg.cpsShadow) {
-            context.drawTextWithShadow(client.textRenderer, text, (int)scaledX, (int)scaledY, color);
+            context.drawString(client.font, text, (int)scaledX, (int)scaledY, color);
         } else {
-            context.drawText(client.textRenderer, text, (int)scaledX, (int)scaledY, color, false);
+            context.drawString(client.font, text, (int)scaledX, (int)scaledY, color, false);
         }
         matrices.popMatrix();
     }

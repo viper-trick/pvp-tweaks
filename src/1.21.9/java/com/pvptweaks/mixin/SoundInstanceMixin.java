@@ -2,9 +2,9 @@ package com.pvptweaks.mixin;
 
 import com.pvptweaks.ExplosionTracker;
 import com.pvptweaks.config.PvpTweaksConfig;
-import net.minecraft.client.sound.AbstractSoundInstance;
-import net.minecraft.client.sound.SoundInstance;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.resources.sounds.AbstractSoundInstance;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -16,7 +16,7 @@ public class SoundInstanceMixin {
     @Inject(method = "getVolume", at = @At("RETURN"), cancellable = true)
     private void pvptweaks$modifyVolume(CallbackInfoReturnable<Float> cir) {
         SoundInstance self = (SoundInstance)(Object) this;
-        Identifier id = self.getId();
+        ResourceLocation id = self.getLocation();
         if (id == null) return;
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         float original = cir.getReturnValue();

@@ -1,12 +1,11 @@
 package com.pvptweaks.gui;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.widget.SliderWidget;
-import net.minecraft.text.Text;
-
 import java.util.function.Consumer;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.network.chat.Component;
 
-public class CustomSliderWidget extends SliderWidget {
+public class CustomSliderWidget extends AbstractSliderButton {
     private final String prefix;
     private final double min;
     private final double max;
@@ -17,7 +16,7 @@ public class CustomSliderWidget extends SliderWidget {
     public boolean forced = false;
 
     public CustomSliderWidget(int x, int y, int width, int height, String prefix, double value, double min, double max, boolean isInt, Consumer<Double> setter) {
-        super(x, y, width, height, Text.literal(""), (value - min) / (max - min));
+        super(x, y, width, height, Component.literal(""), (value - min) / (max - min));
         this.prefix = prefix;
         this.min = min;
         this.max = max;
@@ -31,11 +30,11 @@ public class CustomSliderWidget extends SliderWidget {
         double val = min + (value * (max - min));
         if (forced) {
             String valStr = isInt ? String.valueOf((int) val) : String.format("%.1f", val);
-            this.setMessage(Text.literal("§7" + prefix + ": " + valStr + "% (Forced)"));
+            this.setMessage(Component.literal("§7" + prefix + ": " + valStr + "% (Forced)"));
             return;
         }
         String valStr = formatValueWithColor(val);
-        this.setMessage(Text.literal(prefix + ": " + valStr));
+        this.setMessage(Component.literal(prefix + ": " + valStr));
     }
 
     private String formatValueWithColor(double val) {
@@ -113,8 +112,8 @@ public class CustomSliderWidget extends SliderWidget {
     }
 
     @Override
-    public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
-        net.minecraft.client.font.TextRenderer tr = net.minecraft.client.MinecraftClient.getInstance().textRenderer;
+    public void renderWidget(GuiGraphics context, int mouseX, int mouseY, float delta) {
+        net.minecraft.client.gui.Font tr = net.minecraft.client.Minecraft.getInstance().font;
         
         if (forced) {
             RenderUtils.drawRoundedRect(context, this.getX(), this.getY(), this.width, this.height, 8, 0x30000000);
@@ -123,9 +122,9 @@ public class CustomSliderWidget extends SliderWidget {
             if (fillWidth > 0) {
                 RenderUtils.drawRoundedFill(context, this.getX(), this.getY(), this.width, this.height, 8, fillWidth, 0x40808080);
             }
-            int textX = this.getX() + (this.width - tr.getWidth(this.getMessage())) / 2;
+            int textX = this.getX() + (this.width - tr.width(this.getMessage())) / 2;
             int textY = this.getY() + (this.height - 8) / 2;
-            context.drawTextWithShadow(tr, this.getMessage(), textX, textY, 0xFFAAAAAA);
+            context.drawString(tr, this.getMessage(), textX, textY, 0xFFAAAAAA);
             return;
         }
 
@@ -143,8 +142,8 @@ public class CustomSliderWidget extends SliderWidget {
         }
         
         // Center text message
-        int textX = this.getX() + (this.width - tr.getWidth(this.getMessage())) / 2;
+        int textX = this.getX() + (this.width - tr.width(this.getMessage())) / 2;
         int textY = this.getY() + (this.height - 8) / 2;
-        context.drawTextWithShadow(tr, this.getMessage(), textX, textY, 0xFFFFFFFF);
+        context.drawString(tr, this.getMessage(), textX, textY, 0xFFFFFFFF);
     }
 }

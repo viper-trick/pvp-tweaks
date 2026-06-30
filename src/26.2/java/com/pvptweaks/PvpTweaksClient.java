@@ -5,12 +5,12 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.MinecraftClient;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-import net.minecraft.client.gui.screen.world.LevelLoadingScreen;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
+import net.minecraft.client.Minecraft;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.resources.Identifier;
+import com.mojang.blaze3d.platform.InputConstants;
 import org.lwjgl.glfw.GLFW;
 
 @Environment(EnvType.CLIENT)
@@ -19,43 +19,49 @@ public class PvpTweaksClient implements ClientModInitializer {
     private static String lastFirePreset = "";
     private static double savedGamma = -1.0;
     
-    public static KeyBinding openMenuKeyBinding;
-    public static KeyBinding zoomKeyBinding;
+    public static KeyMapping openMenuKeyBinding;
+    public static KeyMapping zoomKeyBinding;
 
     @Override
     public void onInitializeClient() {
         PvpTweaksMod.LOGGER.info("[PVP Tweaks] Client initialised.");
 
-        openMenuKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        openMenuKeyBinding = new KeyMapping(
                 "key.pvptweaks.open_menu",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_UNKNOWN,
-                net.minecraft.client.option.KeyBinding.Category.MISC
-        ));
+                KeyMapping.Category.MISC
+        );
 
-        zoomKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        zoomKeyBinding = new KeyMapping(
                 "key.pvptweaks.zoom",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_C,
-                net.minecraft.client.option.KeyBinding.Category.MISC
-        ));
+                KeyMapping.Category.MISC
+        );
 
-        HudRenderCallback.EVENT.register(DurabilityHudRenderer::render);
-        HudRenderCallback.EVENT.register(com.pvptweaks.gui.CpsHudRenderer::render);
+        HudElementRegistry.addLast(
+            Identifier.fromNamespaceAndPath("pvptweaks", "durability_hud"),
+            DurabilityHudRenderer::extractRenderState
+        );
+        HudElementRegistry.addLast(
+            Identifier.fromNamespaceAndPath("pvptweaks", "cps_hud"),
+            com.pvptweaks.gui.CpsHudRenderer::extractRenderState
+        );
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (client.world == null) return;
+            if (client.level == null) return;
             
-            while (openMenuKeyBinding.wasPressed()) {
-                if (client.currentScreen == null) {
+            while (openMenuKeyBinding.consumeClick()) {
+                if (client.gui.screen() == null) {
                     if (PvpTweaksConfig.get().useLegacyMenu) {
                         if (!net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("cloth-config")) {
-                            client.setScreen(new com.pvptweaks.gui.ClothConfigRequiredScreen(null));
+                            client.setScreenAndShow(new com.pvptweaks.gui.ClothConfigRequiredScreen(null));
                         } else {
-                            client.setScreen(com.pvptweaks.integration.ClothConfigScreenHelper.buildScreen(null));
+                            client.setScreenAndShow(com.pvptweaks.integration.ClothConfigScreenHelper.buildScreen(null));
                         }
                     } else {
-                        client.setScreen(new com.pvptweaks.gui.PvpTweaksHubScreen(null));
+                        client.setScreenAndShow(new com.pvptweaks.gui.PvpTweaksHubScreen(null));
                     }
                 }
             }
@@ -69,23 +75,23 @@ public class PvpTweaksClient implements ClientModInitializer {
             if (current == null) current = "vanilla";
             if (!current.equals(lastFirePreset)) {
                 lastFirePreset = current;
-                if (client.worldRenderer != null) client.worldRenderer.reload();
+                if (client.levelRenderer != null) client.levelRenderer.resetLevelRenderData();
             }
 
             // ── Fullbright ────────────────────────────────────────────────────
             boolean gammaUtilsMode = "gammautils".equals(cfg.fullbrightManagementMode)
                 && net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("gammautils");
-            net.minecraft.client.option.SimpleOption<Double> gammaOpt = client.options.getGamma();
+            var gammaOpt = client.options.gamma();
             if (!gammaUtilsMode) {
                 if (cfg.fullbright) {
-                    if (savedGamma < 0.0) savedGamma = gammaOpt.getValue();
-                    gammaOpt.setValue((double) cfg.fullbrightGamma);
+                    if (savedGamma < 0.0) savedGamma = gammaOpt.get();
+                    gammaOpt.set((double) cfg.fullbrightGamma);
                 } else if (savedGamma >= 0.0) {
-                    gammaOpt.setValue(savedGamma);
+                    gammaOpt.set(savedGamma);
                     savedGamma = -1.0;
                 }
             } else if (savedGamma >= 0.0) {
-                gammaOpt.setValue(savedGamma);
+                gammaOpt.set(savedGamma);
                 savedGamma = -1.0;
             }
         });

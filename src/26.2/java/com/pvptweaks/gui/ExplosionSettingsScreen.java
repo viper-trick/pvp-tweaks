@@ -1,15 +1,15 @@
 package com.pvptweaks.gui;
 
 import com.pvptweaks.config.PvpTweaksConfig;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 public class ExplosionSettingsScreen extends Screen {
     private final Screen parent;
 
     public ExplosionSettingsScreen(Screen parent) {
-        super(Text.literal("Explosion Settings"));
+        super(Component.literal("Explosion Settings"));
         this.parent = parent;
     }
 
@@ -38,21 +38,21 @@ public class ExplosionSettingsScreen extends Screen {
         addSlider(x2, y, "Wind Particles", cfg.windChargeParticlePct, 0, 200, v -> cfg.windChargeParticlePct = v.intValue()); y += spacing;
         addSlider(x2, y, "Anchor Particles", cfg.anchorExplosionParticlePct, 0, 200, v -> cfg.anchorExplosionParticlePct = v.intValue());
 
-        addDrawableChild(new ModernButtonWidget(width / 2 - 50, height - 35, 100, 20, Text.literal("Done"), () -> {
+        addRenderableWidget(new ModernButtonWidget(width / 2 - 50, height - 35, 100, 20, Component.literal("Done"), () -> {
             PvpTweaksConfig.save();
-            client.setScreen(parent);
+            minecraft.setScreenAndShow(parent);
         }));
     }
 
     private void addSlider(int x, int y, String label, double val, double min, double max, java.util.function.Consumer<Double> setter) {
-        addDrawableChild(new CustomSliderWidget(x, y, 180, 20, label, val, min, max, true, setter));
+        addRenderableWidget(new CustomSliderWidget(x, y, 180, 20, label, val, min, max, true, setter));
     }
 
     @Override
-    public void render(DrawContext ctx, int mx, int my, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor ctx, int mx, int my, float delta) {
         RenderUtils.drawGradientRect(ctx, 0, 0, width, height, UiPalette.GRADIENT_START, UiPalette.GRADIENT_END);
         RenderUtils.drawOutline(ctx, 20, 20, width - 40, height - 40, 1, UiPalette.BORDER);
-        ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("\u00a7lDETAILED EXPLOSION SETTINGS"), width / 2, 25, UiPalette.ACCENT_BLUE);
-        super.render(ctx, mx, my, delta);
+        ctx.centeredText(font, Component.literal("\u00a7lDETAILED EXPLOSION SETTINGS"), width / 2, 25, UiPalette.ACCENT_BLUE);
+        super.extractRenderState(ctx, mx, my, delta);
     }
 }

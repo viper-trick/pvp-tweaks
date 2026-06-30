@@ -2,14 +2,6 @@ package com.pvptweaks.resources;
 
 import com.pvptweaks.PvpTweaksMod;
 import com.pvptweaks.config.PvpTweaksConfig;
-import net.minecraft.resource.InputSupplier;
-import net.minecraft.resource.ResourcePack;
-import net.minecraft.resource.ResourcePackInfo;
-import net.minecraft.resource.ResourcePackSource;
-import net.minecraft.resource.ResourceType;
-import net.minecraft.resource.metadata.ResourceMetadataSerializer;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,8 +12,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackLocationInfo;
+import net.minecraft.server.packs.PackResources;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.metadata.MetadataSectionType;
+import net.minecraft.server.packs.repository.PackSource;
+import net.minecraft.server.packs.resources.IoSupplier;
 
-public class PvpTweaksDynamicPack implements ResourcePack {
+public class PvpTweaksDynamicPack implements PackResources {
     public static PvpTweaksDynamicPack INSTANCE;
 
     public PvpTweaksDynamicPack() {
@@ -29,13 +29,13 @@ public class PvpTweaksDynamicPack implements ResourcePack {
         System.out.println("[PVP Tweaks] DynamicPack instance created!");
     }
 
-    private static final ResourcePackInfo INFO = new ResourcePackInfo(
-        "pvptweaks:dynamic", Text.literal("PVP Tweaks Dynamic"),
-        ResourcePackSource.BUILTIN, Optional.empty()
+    private static final PackLocationInfo INFO = new PackLocationInfo(
+        "pvptweaks:dynamic", Component.literal("PVP Tweaks Dynamic"),
+        PackSource.BUILT_IN, Optional.empty()
     );
 
     @Override
-    public InputSupplier<InputStream> openRoot(String... segments) {
+    public IoSupplier<InputStream> getRootResource(String... segments) {
         if (segments.length == 1 && segments[0].equals("pack.mcmeta")) {
             String mcmeta = "{\"pack\":{\"pack_format\":34,\"description\":\"PVP Tweaks Dynamic Sounds\"}}";
             return () -> new ByteArrayInputStream(mcmeta.getBytes(StandardCharsets.UTF_8));
@@ -44,8 +44,8 @@ public class PvpTweaksDynamicPack implements ResourcePack {
     }
 
     @Override
-    public InputSupplier<InputStream> open(ResourceType type, Identifier id) {
-        if (type != ResourceType.CLIENT_RESOURCES) return null;
+    public IoSupplier<InputStream> getResource(PackType type, ResourceLocation id) {
+        if (type != PackType.CLIENT_RESOURCES) return null;
 
         String ns   = id.getNamespace();
         String path = id.getPath();
@@ -111,8 +111,8 @@ public class PvpTweaksDynamicPack implements ResourcePack {
     }
 
     @Override
-    public void findResources(ResourceType type, String namespace, String prefix, ResultConsumer consumer) {
-        if (type != ResourceType.CLIENT_RESOURCES) return;
+    public void listResources(PackType type, String namespace, String prefix, ResourceOutput consumer) {
+        if (type != PackType.CLIENT_RESOURCES) return;
 
         if (namespace.equals("pvptweaks")) {
             PvpTweaksMod.LOGGER.info("[PVP Tweaks] findResources called: namespace={}, prefix={}", namespace, prefix);
@@ -120,7 +120,7 @@ public class PvpTweaksDynamicPack implements ResourcePack {
             // Serve sounds.json if it matches prefix
             if ("sounds.json".startsWith(prefix)) {
                 PvpTweaksMod.LOGGER.info("[PVP Tweaks] Providing sounds.json via findResources");
-                consumer.accept(Identifier.of("pvptweaks", "sounds.json"), buildSoundsJson());
+                consumer.accept(ResourceLocation.fromNamespaceAndPath("pvptweaks", "sounds.json"), buildSoundsJson());
             }
             
             // Discover custom sounds
@@ -135,7 +135,7 @@ public class PvpTweaksDynamicPack implements ResourcePack {
                             String safe = base.replaceAll("[^a-z0-9_]", "_") + ".ogg";
                             String relPath = "sounds/custom/" + safe;
                             if (relPath.startsWith(prefix)) {
-                                Identifier id = Identifier.of("pvptweaks", relPath);
+                                ResourceLocation id = ResourceLocation.fromNamespaceAndPath("pvptweaks", relPath);
                                 PvpTweaksMod.LOGGER.info("[PVP Tweaks] Providing sound resource via findResources: {}", id);
                                 consumer.accept(id, () -> Files.newInputStream(p));
                             }
@@ -158,23 +158,23 @@ public class PvpTweaksDynamicPack implements ResourcePack {
             "models/block/template_fire_up_alt.json"
         }) {
             if (m.startsWith(prefix)) {
-                Identifier id = Identifier.of("minecraft", m);
-                InputSupplier<InputStream> sup = open(type, id);
+                ResourceLocation id = ResourceLocation.fromNamespaceAndPath("minecraft", m);
+                IoSupplier<InputStream> sup = getResource(type, id);
                 if (sup != null) consumer.accept(id, sup);
             }
         }
     }
 
     @Override
-    public Set<String> getNamespaces(ResourceType type) {
-        return type == ResourceType.CLIENT_RESOURCES ? Set.of("minecraft", "pvptweaks") : Set.of();
+    public Set<String> getNamespaces(PackType type) {
+        return type == PackType.CLIENT_RESOURCES ? Set.of("minecraft", "pvptweaks") : Set.of();
     }
 
-    @Override public <T> T parseMetadata(ResourceMetadataSerializer<T> s) throws IOException { return null; }
-    @Override public ResourcePackInfo getInfo() { return INFO; }
+    @Override public <T> T getMetadataSection(MetadataSectionType<T> s) throws IOException { return null; }
+    @Override public PackLocationInfo location() { return INFO; }
     @Override public void close() {}
 
-    private InputSupplier<InputStream> buildSoundsJson() {
+    private IoSupplier<InputStream> buildSoundsJson() {
         Path dir = PvpTweaksConfig.SOUNDS_DIR;
         com.google.gson.JsonObject root = new com.google.gson.JsonObject();
         try {

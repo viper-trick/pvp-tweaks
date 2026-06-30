@@ -1,10 +1,10 @@
 package com.pvptweaks.gui;
 
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.GuiGraphics;
 
 public class RenderUtils {
 
-    public static void drawRoundedRect(DrawContext ctx, int x, int y, int width, int height, int radius, int color) {
+    public static void drawRoundedRect(GuiGraphics ctx, int x, int y, int width, int height, int radius, int color) {
         if (radius <= 0) {
             ctx.fill(x, y, x + width, y + height, color);
             return;
@@ -28,7 +28,7 @@ public class RenderUtils {
         }
     }
 
-    public static void drawRoundedFill(DrawContext ctx, int x, int y, int totalWidth, int height, int radius, int fillWidth, int color) {
+    public static void drawRoundedFill(GuiGraphics ctx, int x, int y, int totalWidth, int height, int radius, int fillWidth, int color) {
         if (fillWidth <= 0 || height <= 0) return;
         fillWidth = Math.min(fillWidth, totalWidth);
         radius = Math.min(radius, height / 2);
@@ -57,18 +57,18 @@ public class RenderUtils {
         }
     }
 
-    public static void drawGradientRect(DrawContext context, int x, int y, int width, int height, int startColor, int endColor) {
+    public static void drawGradientRect(GuiGraphics context, int x, int y, int width, int height, int startColor, int endColor) {
         context.fillGradient(x, y, x + width, y + height, startColor, endColor);
     }
     
-    public static void drawOutline(DrawContext context, int x, int y, int width, int height, int thickness, int color) {
+    public static void drawOutline(GuiGraphics context, int x, int y, int width, int height, int thickness, int color) {
         context.fill(x, y, x + width, y + thickness, color);
         context.fill(x, y + height - thickness, x + width, y + height, color);
         context.fill(x, y, x + thickness, y + height, color);
         context.fill(x + width - thickness, y, x + width, y + height, color);
     }
 
-    public static void drawRoundedOutline(DrawContext ctx, int x, int y, int width, int height, int radius, int thickness, int color) {
+    public static void drawRoundedOutline(GuiGraphics ctx, int x, int y, int width, int height, int radius, int thickness, int color) {
         if (radius <= 0 || radius >= Math.min(width / 2, height / 2)) {
             drawOutline(ctx, x, y, width, height, thickness, color);
             return;

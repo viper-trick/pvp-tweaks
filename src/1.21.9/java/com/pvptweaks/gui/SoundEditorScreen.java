@@ -3,17 +3,16 @@ package com.pvptweaks.gui;
 import com.pvptweaks.PvpTweaksMod;
 import com.pvptweaks.config.PvpTweaksConfig;
 import com.pvptweaks.sound.AudioEditor;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
-
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -25,7 +24,7 @@ public class SoundEditorScreen extends Screen {
 
     private RangeSliderWidget rangeSlider;
     private CustomSliderWidget speedSlider;
-    private TextFieldWidget nameField;
+    private EditBox nameField;
     private String statusMsg = "";
     private double duration = 0.0;
 
@@ -39,7 +38,7 @@ public class SoundEditorScreen extends Screen {
     private boolean firstInit = true;
 
     public SoundEditorScreen(Screen parent, String originalId, String absolutePath) {
-        super(Text.literal("Sound Editor"));
+        super(Component.literal("Sound Editor"));
         this.parent = parent;
         this.originalId = originalId;
         this.absolutePath = absolutePath;
@@ -69,25 +68,25 @@ public class SoundEditorScreen extends Screen {
         int sy = 70;
 
         rangeSlider = new RangeSliderWidget(cx - 150, sy, 300, 24, duration, startVal, endVal);
-        addDrawableChild(rangeSlider);
+        addRenderableWidget(rangeSlider);
 
         speedSlider = new CustomSliderWidget(cx - 150, sy + 35, 275, 20, "Speed", speedVal, 0.1, 3.0, false, v -> speedVal = v);
-        addDrawableChild(speedSlider);
-        addDrawableChild(new ModernButtonWidget(cx + 130, sy + 35, 20, 20, Text.literal("\u21ba"), () -> {
+        addRenderableWidget(speedSlider);
+        addRenderableWidget(new ModernButtonWidget(cx + 130, sy + 35, 20, 20, Component.literal("\u21ba"), () -> {
             speedVal = 1.0;
-            this.clearChildren();
+            this.clearWidgets();
             this.init();
         }));
 
-        nameField = new TextFieldWidget(textRenderer, cx - 150, sy + 65, 300, 20, Text.literal("Name"));
-        nameField.setText(originalId);
-        addDrawableChild(nameField);
+        nameField = new EditBox(font, cx - 150, sy + 65, 300, 20, Component.literal("Name"));
+        nameField.setValue(originalId);
+        addRenderableWidget(nameField);
 
         int by = height - 45;
-        addDrawableChild(new ModernButtonWidget(cx - 150, by - 30, 300, 20, Text.literal("\u25b6 Preview Edits"), () -> previewEdits()));
-        addDrawableChild(new ModernButtonWidget(cx - 150, by, 95, 20, Text.literal("\u2714 Save As"), () -> applyEdits(false)));
-        addDrawableChild(new ModernButtonWidget(cx - 45, by, 95, 20, Text.literal("\ud83d\udbe0 Overwrite"), () -> applyEdits(true)));
-        addDrawableChild(new ModernButtonWidget(cx + 60, by, 90, 20, Text.literal("Cancel"), () -> closeScreen()));
+        addRenderableWidget(new ModernButtonWidget(cx - 150, by - 30, 300, 20, Component.literal("\u25b6 Preview Edits"), () -> previewEdits()));
+        addRenderableWidget(new ModernButtonWidget(cx - 150, by, 95, 20, Component.literal("\u2714 Save As"), () -> applyEdits(false)));
+        addRenderableWidget(new ModernButtonWidget(cx - 45, by, 95, 20, Component.literal("\ud83d\udbe0 Overwrite"), () -> applyEdits(true)));
+        addRenderableWidget(new ModernButtonWidget(cx + 60, by, 90, 20, Component.literal("Cancel"), () -> closeScreen()));
     }
     
     private void closeScreen() {
@@ -95,7 +94,7 @@ public class SoundEditorScreen extends Screen {
             previewClip.stop();
             previewClip.close();
         }
-        client.setScreen(parent);
+        minecraft.setScreen(parent);
     }
 
     private void previewEdits() {
@@ -145,7 +144,7 @@ public class SoundEditorScreen extends Screen {
                 double end = rangeSlider.getEndVal() * duration;
                 double speed = speedVal;
                 
-                String newName = nameField.getText().trim();
+                String newName = nameField.getValue().trim();
                 if (newName.isEmpty()) newName = originalId;
                 if (!newName.endsWith(".ogg")) newName += ".ogg";
 
@@ -166,7 +165,7 @@ public class SoundEditorScreen extends Screen {
 
                 boolean success = AudioEditor.processAudio(backup, output, start, end, speed);
                 if (success) {
-                    net.minecraft.client.MinecraftClient.getInstance().execute(() -> {
+                    net.minecraft.client.Minecraft.getInstance().execute(() -> {
                         if (parent instanceof ModernSoundPickerScreen picker) {
                             if (previewClip != null && previewClip.isOpen()) {
                                 previewClip.stop();
@@ -191,20 +190,20 @@ public class SoundEditorScreen extends Screen {
     }
 
     @Override
-    public void render(DrawContext ctx, int mx, int my, float delta) {
+    public void render(GuiGraphics ctx, int mx, int my, float delta) {
         RenderUtils.drawGradientRect(ctx, 0, 0, width, height, UiPalette.GRADIENT_START, UiPalette.GRADIENT_END);
         RenderUtils.drawOutline(ctx, 20, 20, width - 40, height - 40, 1, UiPalette.BORDER);
         
-        ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("\u00a7lCUSTOM SOUND EDITOR"), width / 2, 30, UiPalette.ACCENT_BLUE);
-        ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("Editing: \u00a7e" + originalId + " \u00a77(Duration: \u00a7a" + String.format("%.2f", duration) + "s\u00a77)"), width / 2, 45, UiPalette.TEXT_SECONDARY);
+        ctx.drawCenteredString(font, Component.literal("\u00a7lCUSTOM SOUND EDITOR"), width / 2, 30, UiPalette.ACCENT_BLUE);
+        ctx.drawCenteredString(font, Component.literal("Editing: \u00a7e" + originalId + " \u00a77(Duration: \u00a7a" + String.format("%.2f", duration) + "s\u00a77)"), width / 2, 45, UiPalette.TEXT_SECONDARY);
 
         if (!statusMsg.isEmpty()) {
-            ctx.drawCenteredTextWithShadow(textRenderer, Text.literal(statusMsg), width / 2, height - 85, 0xFFFFFFFF);
+            ctx.drawCenteredString(font, Component.literal(statusMsg), width / 2, height - 85, 0xFFFFFFFF);
         }
         super.render(ctx, mx, my, delta);
     }
 
-    private static class RangeSliderWidget extends ClickableWidget {
+    private static class RangeSliderWidget extends AbstractWidget {
         private double startVal;
         private double endVal;
         private boolean draggingStart = false;
@@ -212,7 +211,7 @@ public class SoundEditorScreen extends Screen {
         private final double duration;
 
         public RangeSliderWidget(int x, int y, int width, int height, double duration, double startVal, double endVal) {
-            super(x, y, width, height, Text.empty());
+            super(x, y, width, height, Component.empty());
             this.duration = duration;
             this.startVal = startVal;
             this.endVal = endVal;
@@ -222,7 +221,7 @@ public class SoundEditorScreen extends Screen {
         public double getEndVal() { return endVal; }
 
         @Override
-        public void renderWidget(DrawContext ctx, int mx, int my, float delta) {
+        public void renderWidget(GuiGraphics ctx, int mx, int my, float delta) {
             RenderUtils.drawRoundedRect(ctx, getX(), getY(), width, height, 4, 0xFF000000);
             
             int sX = getX() + (int)(startVal * width);
@@ -233,11 +232,11 @@ public class SoundEditorScreen extends Screen {
             ctx.fill(eX - 2, getY(), eX + 2, getY() + height, 0xFFFFFFFF);
 
             String msg = String.format("Trim: %.2fs -> %.2fs", startVal * duration, endVal * duration);
-            ctx.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer, Text.literal(msg), getX() + width / 2, getY() + (height - 8) / 2, 0xFFFFFFFF);
+            ctx.drawCenteredString(Minecraft.getInstance().font, Component.literal(msg), getX() + width / 2, getY() + (height - 8) / 2, 0xFFFFFFFF);
         }
 
         @Override
-        public boolean mouseClicked(Click click, boolean doubled) {
+        public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
             if (click.x() >= getX() && click.x() <= getX() + width && click.y() >= getY() && click.y() <= getY() + height) {
                 int sX = getX() + (int)(startVal * width);
                 int eX = getX() + (int)(endVal * width);
@@ -250,14 +249,14 @@ public class SoundEditorScreen extends Screen {
         }
 
         @Override
-        public boolean mouseReleased(Click click) {
+        public boolean mouseReleased(MouseButtonEvent click) {
             draggingStart = false;
             draggingEnd = false;
             return super.mouseReleased(click);
         }
 
         @Override
-        public boolean mouseDragged(Click click, double deltaX, double deltaY) {
+        public boolean mouseDragged(MouseButtonEvent click, double deltaX, double deltaY) {
             if (draggingStart || draggingEnd) {
                 updateValuesFromMouse(click.x());
                 return true;
@@ -266,12 +265,12 @@ public class SoundEditorScreen extends Screen {
         }
 
         private void updateValuesFromMouse(double mx) {
-            double val = MathHelper.clamp((mx - getX()) / (double) width, 0.0, 1.0);
+            double val = Mth.clamp((mx - getX()) / (double) width, 0.0, 1.0);
             if (draggingStart) startVal = Math.min(val, endVal - 0.01);
             else if (draggingEnd) endVal = Math.max(val, startVal + 0.01);
         }
         
         @Override
-        protected void appendClickableNarrations(net.minecraft.client.gui.screen.narration.NarrationMessageBuilder builder) {}
+        protected void updateWidgetNarration(net.minecraft.client.gui.narration.NarrationElementOutput builder) {}
     }
 }

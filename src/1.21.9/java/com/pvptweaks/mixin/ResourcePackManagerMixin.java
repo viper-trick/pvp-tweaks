@@ -1,53 +1,51 @@
 package com.pvptweaks.mixin;
 
 import com.pvptweaks.resources.PvpTweaksDynamicPack;
-import net.minecraft.resource.ResourcePackManager;
-import net.minecraft.resource.ResourcePackProfile;
-import net.minecraft.resource.ResourcePackSource;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.function.Consumer;
+import net.minecraft.server.packs.repository.PackRepository;
 
-@Mixin(ResourcePackManager.class)
+@Mixin(PackRepository.class)
 public class ResourcePackManagerMixin {
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void pvptweaks$addProvider(net.minecraft.resource.ResourcePackProvider[] providers, CallbackInfo ci) {
+    private void pvptweaks$addProvider(net.minecraft.server.packs.repository.RepositorySource[] providers, CallbackInfo ci) {
         // No-op for now, better to use the providers field if we can
     }
 
-    @Inject(method = "providePackProfiles", at = @At("RETURN"), cancellable = true)
-    private void pvptweaks$injectDynamicPack(org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<java.util.Map<String, net.minecraft.resource.ResourcePackProfile>> cir) {
-        java.util.Map<String, net.minecraft.resource.ResourcePackProfile> original = cir.getReturnValue();
-        java.util.Map<String, net.minecraft.resource.ResourcePackProfile> mutable = new java.util.HashMap<>(original);
+    @Inject(method = "discoverAvailable", at = @At("RETURN"), cancellable = true)
+    private void pvptweaks$injectDynamicPack(org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<java.util.Map<String, net.minecraft.server.packs.repository.Pack>> cir) {
+        java.util.Map<String, net.minecraft.server.packs.repository.Pack> original = cir.getReturnValue();
+        java.util.Map<String, net.minecraft.server.packs.repository.Pack> mutable = new java.util.HashMap<>(original);
 
-        net.minecraft.resource.ResourcePackInfo info = new net.minecraft.resource.ResourcePackInfo(
+        net.minecraft.server.packs.PackLocationInfo info = new net.minecraft.server.packs.PackLocationInfo(
             "pvptweaks:dynamic",
-            net.minecraft.text.Text.literal("PVP Tweaks Dynamic"),
-            net.minecraft.resource.ResourcePackSource.BUILTIN,
+            net.minecraft.network.chat.Component.literal("PVP Tweaks Dynamic"),
+            net.minecraft.server.packs.repository.PackSource.BUILT_IN,
             java.util.Optional.empty()
         );
-        net.minecraft.resource.ResourcePackPosition pos = new net.minecraft.resource.ResourcePackPosition(
+        net.minecraft.server.packs.PackSelectionConfig pos = new net.minecraft.server.packs.PackSelectionConfig(
             true, // required
-            net.minecraft.resource.ResourcePackProfile.InsertionPosition.BOTTOM,
+            net.minecraft.server.packs.repository.Pack.Position.BOTTOM,
             true  // fixedPosition
         );
-        net.minecraft.resource.ResourcePackProfile.PackFactory factory = new net.minecraft.resource.ResourcePackProfile.PackFactory() {
-            @Override public net.minecraft.resource.ResourcePack open(net.minecraft.resource.ResourcePackInfo info) {
+        net.minecraft.server.packs.repository.Pack.ResourcesSupplier factory = new net.minecraft.server.packs.repository.Pack.ResourcesSupplier() {
+            @Override public net.minecraft.server.packs.PackResources openPrimary(net.minecraft.server.packs.PackLocationInfo info) {
                 return new com.pvptweaks.resources.PvpTweaksDynamicPack();
             }
-            @Override public net.minecraft.resource.ResourcePack openWithOverlays(net.minecraft.resource.ResourcePackInfo info, net.minecraft.resource.ResourcePackProfile.Metadata metadata) {
-                return open(info);
+            @Override public net.minecraft.server.packs.PackResources openFull(net.minecraft.server.packs.PackLocationInfo info, net.minecraft.server.packs.repository.Pack.Metadata metadata) {
+                return openPrimary(info);
             }
         };
         
-        net.minecraft.resource.ResourcePackProfile profile = net.minecraft.resource.ResourcePackProfile.create(
+        net.minecraft.server.packs.repository.Pack profile = net.minecraft.server.packs.repository.Pack.readMetaAndCreate(
             info,
             factory,
-            net.minecraft.resource.ResourceType.CLIENT_RESOURCES,
+            net.minecraft.server.packs.PackType.CLIENT_RESOURCES,
             pos
         );
 

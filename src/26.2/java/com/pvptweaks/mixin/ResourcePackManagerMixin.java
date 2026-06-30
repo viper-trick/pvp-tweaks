@@ -1,53 +1,53 @@
 package com.pvptweaks.mixin;
 
 import com.pvptweaks.resources.PvpTweaksDynamicPack;
-import net.minecraft.resource.ResourcePackManager;
-import net.minecraft.resource.ResourcePackProfile;
-import net.minecraft.resource.ResourcePackSource;
+import net.minecraft.server.packs.repository.PackRepository;
+import net.minecraft.server.packs.repository.Pack;
+import net.minecraft.server.packs.PackSelectionConfig;
+import net.minecraft.server.packs.PackLocationInfo;
+import net.minecraft.server.packs.repository.PackSource;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.PackResources;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.function.Consumer;
+import java.util.Map;
 
-@Mixin(ResourcePackManager.class)
+@Mixin(PackRepository.class)
 public class ResourcePackManagerMixin {
 
-    @Inject(method = "<init>", at = @At("RETURN"))
-    private void pvptweaks$addProvider(net.minecraft.resource.ResourcePackProvider[] providers, CallbackInfo ci) {
-        // No-op for now, better to use the providers field if we can
-    }
-
     @Inject(method = "providePackProfiles", at = @At("RETURN"), cancellable = true)
-    private void pvptweaks$injectDynamicPack(org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<java.util.Map<String, net.minecraft.resource.ResourcePackProfile>> cir) {
-        java.util.Map<String, net.minecraft.resource.ResourcePackProfile> original = cir.getReturnValue();
-        java.util.Map<String, net.minecraft.resource.ResourcePackProfile> mutable = new java.util.HashMap<>(original);
+    private void pvptweaks$injectDynamicPack(CallbackInfoReturnable<Map<String, Pack>> cir) {
+        Map<String, Pack> original = cir.getReturnValue();
+        Map<String, Pack> mutable = new java.util.HashMap<>(original);
 
-        net.minecraft.resource.ResourcePackInfo info = new net.minecraft.resource.ResourcePackInfo(
+        PackLocationInfo info = new PackLocationInfo(
             "pvptweaks:dynamic",
-            net.minecraft.text.Text.literal("PVP Tweaks Dynamic"),
-            net.minecraft.resource.ResourcePackSource.BUILTIN,
+            net.minecraft.network.chat.Component.literal("PVP Tweaks Dynamic"),
+            PackSource.BUILT_IN,
             java.util.Optional.empty()
         );
-        net.minecraft.resource.ResourcePackPosition pos = new net.minecraft.resource.ResourcePackPosition(
-            true, // required
-            net.minecraft.resource.ResourcePackProfile.InsertionPosition.BOTTOM,
-            true  // fixedPosition
+        PackSelectionConfig pos = new PackSelectionConfig(
+            true,
+            Pack.Position.BOTTOM,
+            true
         );
-        net.minecraft.resource.ResourcePackProfile.PackFactory factory = new net.minecraft.resource.ResourcePackProfile.PackFactory() {
-            @Override public net.minecraft.resource.ResourcePack open(net.minecraft.resource.ResourcePackInfo info) {
+
+        Pack.ResourcesSupplier factory = new Pack.ResourcesSupplier() {
+            @Override public PackResources openPrimary(PackLocationInfo info) {
                 return new com.pvptweaks.resources.PvpTweaksDynamicPack();
             }
-            @Override public net.minecraft.resource.ResourcePack openWithOverlays(net.minecraft.resource.ResourcePackInfo info, net.minecraft.resource.ResourcePackProfile.Metadata metadata) {
-                return open(info);
+            @Override public PackResources openFull(PackLocationInfo info, Pack.Metadata metadata) {
+                return openPrimary(info);
             }
         };
-        
-        net.minecraft.resource.ResourcePackProfile profile = net.minecraft.resource.ResourcePackProfile.create(
+
+        Pack profile = Pack.readMetaAndCreate(
             info,
             factory,
-            net.minecraft.resource.ResourceType.CLIENT_RESOURCES,
+            PackType.CLIENT_RESOURCES,
             pos
         );
 

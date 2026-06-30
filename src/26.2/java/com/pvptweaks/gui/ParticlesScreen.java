@@ -1,10 +1,10 @@
 package com.pvptweaks.gui;
 
 import com.pvptweaks.config.PvpTweaksConfig;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
 public class ParticlesScreen extends Screen {
@@ -12,7 +12,7 @@ public class ParticlesScreen extends Screen {
     private static final int PANEL_W = 220;
 
     public ParticlesScreen(Screen parent) {
-        super(Text.literal("Particles"));
+        super(Component.literal("Particles"));
         this.parent = parent;
     }
 
@@ -23,8 +23,8 @@ public class ParticlesScreen extends Screen {
         int y = 45;
         int spacing = 26;
 
-        addDrawableChild(new ModernButtonWidget(x, y, 180, 20,
-            Text.literal("Crit Particles: " + (cfg.showHitParticles ? "ON" : "OFF")), () -> {
+        addRenderableWidget(new ModernButtonWidget(x, y, 180, 20,
+            Component.literal("Crit Particles: " + (cfg.showHitParticles ? "ON" : "OFF")), () -> {
             cfg.showHitParticles = !cfg.showHitParticles;
             refresh();
         }));
@@ -66,47 +66,47 @@ public class ParticlesScreen extends Screen {
             v -> cfg.windChargeParticlePct = v.intValue());
         y += spacing;
 
-        addDrawableChild(new ModernButtonWidget(this.width - PANEL_W + 20, height - 35, 60, 20,
-            Text.literal("Done"), () -> {
+        addRenderableWidget(new ModernButtonWidget(this.width - PANEL_W + 20, height - 35, 60, 20,
+            Component.literal("Done"), () -> {
             PvpTweaksConfig.save();
-            client.setScreen(parent);
+            minecraft.setScreenAndShow(parent);
         }));
     }
 
     private void addSlider(int x, int y, String label, double val, double min, double max, double defVal, java.util.function.Consumer<Double> setter) {
-        addDrawableChild(new CustomSliderWidget(x, y, 115, 20, label, val, min, max, true, setter));
-        addDrawableChild(new ModernButtonWidget(x + 120, y, 20, 20, Text.literal("\u21ba"), () -> {
+        addRenderableWidget(new CustomSliderWidget(x, y, 115, 20, label, val, min, max, true, setter));
+        addRenderableWidget(new ModernButtonWidget(x + 120, y, 20, 20, Component.literal("\u21ba"), () -> {
             setter.accept(defVal);
             refresh();
         }));
     }
 
     private void refresh() {
-        this.clearChildren();
+        this.clearWidgets();
         this.init();
     }
 
     @Override
-    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void extractBackground(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
     }
 
     @Override
-    public void render(DrawContext ctx, int mx, int my, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor ctx, int mx, int my, float delta) {
         RenderUtils.drawGradientRect(ctx, width - PANEL_W, 0, PANEL_W, height, 0xCC101010, 0xCC050505);
         RenderUtils.drawOutline(ctx, width - PANEL_W - 1, 0, 1, height, 1, UiPalette.BORDER);
-        ctx.drawTextWithShadow(textRenderer, Text.literal("\u00a7lPARTICLES"), width - PANEL_W + 20, 15, UiPalette.ACCENT_BLUE);
-        super.render(ctx, mx, my, delta);
+        ctx.text(font, Component.literal("\u00a7lPARTICLES"), width - PANEL_W + 20, 15, UiPalette.ACCENT_BLUE);
+        super.extractRenderState(ctx, mx, my, delta);
     }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
+    public boolean keyPressed(KeyEvent input) {
         if (input.key() == GLFW.GLFW_KEY_H || input.key() == GLFW.GLFW_KEY_ESCAPE) {
             PvpTweaksConfig.save();
-            client.setScreen(parent);
+            minecraft.setScreenAndShow(parent);
             return true;
         }
         return super.keyPressed(input);
     }
 
-    @Override public boolean shouldPause() { return false; }
+    @Override public boolean isPauseScreen() { return false; }
 }

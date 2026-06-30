@@ -1,23 +1,24 @@
 package com.pvptweaks.mixin;
 
 import com.pvptweaks.config.PvpTweaksConfig;
-import net.minecraft.client.render.item.HeldItemRenderer;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.client.renderer.ItemInHandRenderer;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import org.joml.Quaternionf;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.llamalad7.mixinextras.sugar.Local;
 
-@Mixin(HeldItemRenderer.class)
+@Mixin(ItemInHandRenderer.class)
 public class ShieldRendererMixin {
 
     @Inject(method = "method_3233", remap = false, at = @At("HEAD"), require = 0)
     private void pvptweaks$shieldOffset(
             CallbackInfo ci,
-            @Local(argsOnly = true) MatrixStack matrices,
+            @Local(argsOnly = true) PoseStack matrices,
             @Local(argsOnly = true) ItemStack item) {
 
         if (matrices == null || item == null || item.isEmpty()) return;
@@ -32,13 +33,13 @@ public class ShieldRendererMixin {
             matrices.translate(ox, oy, oz);
         }
         if (cfg.shieldRotX != 0) {
-            matrices.multiply(net.minecraft.util.math.RotationAxis.POSITIVE_X.rotationDegrees(cfg.shieldRotX));
+            matrices.mulPose(new Quaternionf().rotationX(cfg.shieldRotX * (float)Math.PI / 180f));
         }
         if (cfg.shieldRotY != 0) {
-            matrices.multiply(net.minecraft.util.math.RotationAxis.POSITIVE_Y.rotationDegrees(cfg.shieldRotY));
+            matrices.mulPose(new Quaternionf().rotationY(cfg.shieldRotY * (float)Math.PI / 180f));
         }
         if (cfg.shieldRotZ != 0) {
-            matrices.multiply(net.minecraft.util.math.RotationAxis.POSITIVE_Z.rotationDegrees(cfg.shieldRotZ));
+            matrices.mulPose(new Quaternionf().rotationZ(cfg.shieldRotZ * (float)Math.PI / 180f));
         }
     }
 }

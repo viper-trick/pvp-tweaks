@@ -1,8 +1,8 @@
 package com.pvptweaks.mixin;
 
 import com.pvptweaks.config.PvpTweaksConfig;
-import net.minecraft.client.gui.hud.InGameOverlayRenderer;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.renderer.ScreenEffectRenderer;
+import com.mojang.blaze3d.vertex.PoseStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
-@Mixin(InGameOverlayRenderer.class)
+@Mixin(ScreenEffectRenderer.class)
 public class InGameOverlayRendererMixin {
 
     @Inject(method = "method_70938", remap = false,
@@ -28,7 +28,7 @@ public class InGameOverlayRendererMixin {
         remap   = false,
         at = @At(
             value  = "INVOKE",
-            target = "Lnet/minecraft/client/util/math/MatrixStack;scale(FFF)V"
+            target = "Lnet/minecraft/client/util/math/PoseStack;scale(FFF)V"
         ),
         require = 0
     )

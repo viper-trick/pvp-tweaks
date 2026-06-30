@@ -2,11 +2,11 @@ package com.pvptweaks.gui;
 
 import com.pvptweaks.PvpTweaksMod;
 import com.pvptweaks.config.PvpTweaksConfig;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.network.chat.Component;
 
 import java.io.InputStream;
 import java.net.URI;
@@ -17,13 +17,13 @@ import java.util.List;
 
 public class AddSoundScreen extends Screen {
     private final Screen parent;
-    private TextFieldWidget pathField;
+    private EditBox pathField;
     private String statusMsg = "";
     private long statusTime = 0;
     private volatile boolean importing = false;
 
     public AddSoundScreen(Screen parent) {
-        super(Text.literal("Import Sound"));
+        super(Component.literal("Import Sound"));
         this.parent = parent;
     }
 
@@ -33,52 +33,52 @@ public class AddSoundScreen extends Screen {
         int panelY = height / 2 - 90;
 
         // Path / URL input
-        pathField = new TextFieldWidget(textRenderer, cx - 155, panelY + 30, 310, 20,
-                Text.literal("Drag & drop file, or paste path / URL"));
+        pathField = new EditBox(font, cx - 155, panelY + 30, 310, 20,
+                Component.literal("Drag & drop file, or paste path / URL"));
         pathField.setMaxLength(1024);
-        addSelectableChild(pathField);
+        addWidget(pathField);
 
         int row1 = panelY + 58;
         // Choose from Files (large, prominent)
-        addDrawableChild(new ModernButtonWidget(cx - 155, row1, 310, 24,
-                Text.literal("\uD83D\uDCC2 Choose from Files"), this::openFilePicker));
+        addRenderableWidget(new ModernButtonWidget(cx - 155, row1, 310, 24,
+                Component.literal("\uD83D\uDCC2 Choose from Files"), this::openFilePicker));
 
         int row2 = row1 + 32;
-        addDrawableChild(new ModernButtonWidget(cx - 155, row2, 150, 20,
-                Text.literal("\uD83D\uDCCB Paste Clipboard"), () -> {
-            String clip = client.keyboard.getClipboard();
+        addRenderableWidget(new ModernButtonWidget(cx - 155, row2, 150, 20,
+                Component.literal("\uD83D\uDCCB Paste Clipboard"), () -> {
+            String clip = minecraft.keyboardHandler.getClipboard();
             if (clip != null && !clip.isEmpty()) {
-                pathField.setText(clip.trim());
-                setStatus("\u00a7eReady. Click Import & Save.");
+                pathField.setValue(clip.trim());
+                setStatus("\u00a7eReady. MouseButtonEvent Import & Save.");
             }
         }));
 
-        addDrawableChild(new ModernButtonWidget(cx + 5, row2, 150, 20,
-                Text.literal("\uD83D\uDCC1 Open Sounds Folder"), () -> {
+        addRenderableWidget(new ModernButtonWidget(cx + 5, row2, 150, 20,
+                Component.literal("\uD83D\uDCC1 Open Sounds Folder"), () -> {
             try { Files.createDirectories(PvpTweaksConfig.SOUNDS_DIR); } catch (Exception ignored) {}
-            net.minecraft.util.Util.getOperatingSystem().open(PvpTweaksConfig.SOUNDS_DIR.toFile());
+            try { java.awt.Desktop.getDesktop().browse(PvpTweaksConfig.SOUNDS_DIR.toUri()); } catch (Exception ignored) {}
         }));
 
         int row3 = row2 + 28;
         // Import & Save — the main action
-        addDrawableChild(new ModernButtonWidget(cx - 155, row3, 310, 24,
-                Text.literal("\u00a7a\u2714 Import & Save"), () -> {
-            String input = pathField.getText().trim();
+        addRenderableWidget(new ModernButtonWidget(cx - 155, row3, 310, 24,
+                Component.literal("\u00a7a\u2714 Import & Save"), () -> {
+            String input = pathField.getValue().trim();
             if (input.isEmpty()) { setStatus("\u00a7cNo path entered!"); return; }
             importAndSave(input);
         }));
 
         int row4 = row3 + 32;
-        addDrawableChild(new ModernButtonWidget(cx - 75, row4, 150, 20,
-                Text.literal("\u2716 Cancel"), () -> client.setScreen(parent)));
+        addRenderableWidget(new ModernButtonWidget(cx - 75, row4, 150, 20,
+                Component.literal("\u2716 Cancel"), () -> minecraft.setScreenAndShow(parent)));
     }
 
     /** Vanilla drag-and-drop (may be blocked in Flatpak — Browse button is the fallback). */
     @Override
-    public void onFilesDropped(List<Path> paths) {
+    public void onFilesDrop(List<Path> paths) {
         if (!paths.isEmpty()) {
-            pathField.setText(paths.get(0).toAbsolutePath().toString());
-            setStatus("\u00a7eFile dropped. Click Import & Save.");
+            pathField.setValue(paths.get(0).toAbsolutePath().toString());
+            setStatus("\u00a7eFile dropped. MouseButtonEvent Import & Save.");
         }
     }
 
@@ -127,10 +127,10 @@ public class AddSoundScreen extends Screen {
             }
 
             final String result = picked;
-            MinecraftClient.getInstance().execute(() -> {
+            Minecraft.getInstance().execute(() -> {
                 if (result != null && !result.isEmpty()) {
-                    pathField.setText(result);
-                    setStatus("\u00a7eSelected. Click Import & Save.");
+                    pathField.setValue(result);
+                    setStatus("\u00a7eSelected. MouseButtonEvent Import & Save.");
                 } else {
                     setStatus("\u00a77No file selected. You can paste a path manually.");
                 }
@@ -218,7 +218,7 @@ public class AddSoundScreen extends Screen {
                 PvpTweaksMod.LOGGER.info("[PVP Tweaks] Imported sound to {}", dest);
                 final String absPath = dest.toAbsolutePath().toString();
 
-                MinecraftClient.getInstance().execute(() -> {
+                Minecraft.getInstance().execute(() -> {
                     // Ask the parent picker to select + register + save this file
                     if (parent instanceof ModernSoundPickerScreen m) {
                         m.importAndApply(absPath);
@@ -226,7 +226,7 @@ public class AddSoundScreen extends Screen {
                         s.importAndApply(absPath);
                     } else {
                         setStatus("\u00a7aImported! Go to Custom tab and select the file.");
-                        client.setScreen(parent);
+                        minecraft.setScreenAndShow(parent);
                     }
                 });
             } catch (Exception e) {
@@ -238,14 +238,14 @@ public class AddSoundScreen extends Screen {
     }
 
     private void setStatus(String msg) {
-        MinecraftClient.getInstance().execute(() -> {
+        Minecraft.getInstance().execute(() -> {
             this.statusMsg = msg;
             this.statusTime = System.currentTimeMillis();
         });
     }
 
     @Override
-    public void render(DrawContext ctx, int mx, int my, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor ctx, int mx, int my, float delta) {
         int cx = width / 2;
         int panelX = cx - 175, panelY = height / 2 - 95, panelW = 350, panelH = 240;
 
@@ -253,21 +253,20 @@ public class AddSoundScreen extends Screen {
         RenderUtils.drawRoundedRect(ctx, panelX, panelY, panelW, panelH, 6, 0xFF1A1A2E);
         RenderUtils.drawOutline(ctx, panelX, panelY, panelW, panelH, 1, UiPalette.BORDER);
 
-        ctx.drawCenteredTextWithShadow(textRenderer,
-                Text.literal("\u00a7b\u00a7lImport Custom Sound"), cx, panelY + 10, 0xFFFFFF);
-        ctx.drawTextWithShadow(textRenderer,
-                Text.literal("\u00a77Path / URL:"), cx - 155, panelY + 15, 0xAAAAAA);
+        ctx.centeredText(font,
+                Component.literal("\u00a7b\u00a7lImport Custom Sound"), cx, panelY + 10, 0xFFFFFF);
+        ctx.text(font,
+                Component.literal("\u00a77Path / URL:"), cx - 155, panelY + 15, 0xAAAAAA);
 
-        ctx.drawText(textRenderer,
-                Text.literal("\u00a7e\u25bc Drag & drop a file here, or use the buttons below"),
-                cx - 155, panelY + 22, 0xFFFF00, true);
+        ctx.text(font,
+                Component.literal("\u00a7e\u25bc Drag & drop a file here, or use the buttons below"),
+                cx - 155, panelY + 22, 0xFFFF00);
 
-        pathField.render(ctx, mx, my, delta);
-        super.render(ctx, mx, my, delta);
+        super.extractRenderState(ctx, mx, my, delta);
 
         if (!statusMsg.isEmpty() && System.currentTimeMillis() - statusTime < 5000) {
-            ctx.drawCenteredTextWithShadow(textRenderer,
-                    Text.literal(statusMsg), cx, height / 2 + 105, 0xFFFFFF);
+            ctx.centeredText(font,
+                    Component.literal(statusMsg), cx, height / 2 + 105, 0xFFFFFF);
         }
     }
 }

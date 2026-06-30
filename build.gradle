@@ -27,9 +27,42 @@ subprojects {
         archivesName = rootProject.archives_base_name
     }
 
+    def mcVer = project.findProperty('minecraft_version') ?: '1.21.4'
+    def sharedDir
+    if (mcVer.startsWith('26.')) {
+        sharedDir = "${rootProject.projectDir}/src/group-26x/java"
+    } else {
+        def parts = mcVer.split('\\.') as List
+        def patch = parts.size() > 2 ? Integer.parseInt(parts[2]) : 0
+        // Group: 1.21.11 uses Identifier/newer API; 1.21.4-10 uses ResourceLocation/older API
+        if (patch >= 11) {
+            sharedDir = "${rootProject.projectDir}/src/group-1.21.9-11/java"
+        } else {
+            sharedDir = "${rootProject.projectDir}/src/group-1.21.4-8/java"
+        }
+    }
+
+    def projJava = file("$projectDir/java")
+    def hasOverrides = projJava.exists() && !fileTree(projJava).matching { include "**/*.java" }.isEmpty()
+    def mergedJava = file("${buildDir}/mergedJava")
+
+    tasks.register('mergeSharedJava') {
+        onlyIf { hasOverrides }
+        doLast {
+            delete mergedJava
+            copy { from file(sharedDir) into mergedJava }
+            copy { from projJava into mergedJava }
+        }
+    }
+
     sourceSets {
         main {
-            java.srcDirs = ["$projectDir/java"]
+            if (hasOverrides) {
+                java.srcDirs = [mergedJava]
+                tasks.named('compileJava').configure { dependsOn 'mergeSharedJava' }
+            } else {
+                java.srcDirs = [projJava, file(sharedDir)]
+            }
             resources.srcDirs = ["$projectDir/resources"]
         }
     }
@@ -41,7 +74,7 @@ subprojects {
     }
 
     dependencies {
-        def impl = { dep -> add("modImplementation", dep) }
+        def impl = { dep -> add(isUnobfuscated ? "implementation" : "modImplementation", dep) }
 
         minecraft "com.mojang:minecraft:${project.minecraft_version}"
 
@@ -59,7 +92,9 @@ subprojects {
             impl "com.terraformersmc:modmenu:${project.modmenu_version}"
         }
         implementation 'javazoom:jlayer:1.0.1'
-        include 'javazoom:jlayer:1.0.1'
+        if (!isUnobfuscated) {
+            include 'javazoom:jlayer:1.0.1'
+        }
     }
 
     processResources {

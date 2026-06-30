@@ -1,19 +1,19 @@
 package com.pvptweaks.mixin;
 
-import net.minecraft.client.sound.SoundManager;
-import net.minecraft.client.sound.WeightedSoundSet;
-import net.minecraft.resource.Resource;
-import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.Map;
+import net.minecraft.client.sounds.SoundManager;
+import net.minecraft.client.sounds.WeighedSoundEvents;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
 
 @Mixin(SoundManager.class)
 public interface SoundManagerAccessor {
-    @Accessor("sounds")
-    Map<Identifier, WeightedSoundSet> getSounds();
+    @Accessor("registry")
+    Map<ResourceLocation, WeighedSoundEvents> getSounds();
 
-    @Accessor("soundResources")
-    Map<Identifier, Resource> getSoundResources();
+    @Accessor("soundCache")
+    Map<ResourceLocation, Resource> getSoundResources();
 }

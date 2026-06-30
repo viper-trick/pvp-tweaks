@@ -1,13 +1,13 @@
 package com.pvptweaks.gui;
 
 import com.pvptweaks.config.PvpTweaksConfig;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.GuiGraphics;
 
 public final class CrosshairRenderer {
 
     private CrosshairRenderer() {}
 
-    public static void drawNative(DrawContext ctx, int cx, int cy, PvpTweaksConfig cfg, float pixelScale) {
+    public static void drawNative(GuiGraphics ctx, int cx, int cy, PvpTweaksConfig cfg, float pixelScale) {
         int color = argb(cfg.crosshairAlpha, cfg.crosshairRed, cfg.crosshairGreen, cfg.crosshairBlue);
         int outline = argb(cfg.crosshairAlpha, 0, 0, 0);
 
@@ -91,7 +91,7 @@ public final class CrosshairRenderer {
         }
     }
 
-    private static void fillRectF(DrawContext ctx, float x, float y, float w, float h, int color) {
+    private static void fillRectF(GuiGraphics ctx, float x, float y, float w, float h, int color) {
         if (w <= 0.0f || h <= 0.0f) return;
 
         float x2 = x + w;

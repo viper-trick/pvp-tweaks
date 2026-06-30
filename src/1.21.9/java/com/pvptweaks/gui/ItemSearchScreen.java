@@ -1,22 +1,21 @@
 package com.pvptweaks.gui;
 
 import com.pvptweaks.config.PvpTweaksConfig;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.registry.Registries;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 
 public class ItemSearchScreen extends Screen {
 
     private final Screen originalParent;
-    private TextFieldWidget searchField;
+    private EditBox searchField;
     private List<String> allItems;
     private List<String> filtered = new ArrayList<>();
     
@@ -27,42 +26,42 @@ public class ItemSearchScreen extends Screen {
     private final boolean forBackgrounds;
 
     public ItemSearchScreen(Screen parent, boolean forBackgrounds) {
-        super(Text.literal(forBackgrounds ? "Add Custom Background Item" : "Add Custom Item"));
+        super(Component.literal(forBackgrounds ? "Add Custom Background Item" : "Add Custom Item"));
         this.originalParent = parent;
         this.forBackgrounds = forBackgrounds;
     }
 
     @Override
     protected void init() {
-        allItems = Registries.ITEM.stream()
-            .map(b -> Registries.ITEM.getId(b).toString())
+        allItems = BuiltInRegistries.ITEM.stream()
+            .map(b -> BuiltInRegistries.ITEM.getKey(b).toString())
             .sorted()
             .collect(Collectors.toList());
         filtered = new ArrayList<>(allItems);
 
-        searchField = new TextFieldWidget(textRenderer, width / 2 - 150, 45, 300, 16, Text.empty());
-        searchField.setPlaceholder(Text.literal("Search items (e.g. netherite_sword)..."));
-        searchField.setChangedListener(q -> {
+        searchField = new EditBox(font, width / 2 - 150, 45, 300, 16, Component.empty());
+        searchField.setHint(Component.literal("Search items (e.g. netherite_sword)..."));
+        searchField.setResponder(q -> {
             String low = q.toLowerCase();
             filtered = allItems.stream()
                 .filter(id -> id.contains(low))
                 .collect(Collectors.toList());
             scrollOffset = 0;
         });
-        addDrawableChild(searchField);
+        addRenderableWidget(searchField);
 
-        addDrawableChild(new ModernButtonWidget(width / 2 - 50, height - 30, 100, 20, Text.literal("Done"), () -> client.setScreen(originalParent)));
+        addRenderableWidget(new ModernButtonWidget(width / 2 - 50, height - 30, 100, 20, Component.literal("Done"), () -> minecraft.setScreen(originalParent)));
     }
 
     @Override
     public boolean mouseScrolled(double mx, double my, double hx, double vy) {
         int maxRows = (height - LIST_Y - 40) / ROW_H;
-        scrollOffset = (int) MathHelper.clamp(scrollOffset - (int)vy, 0, Math.max(0, filtered.size() - maxRows));
+        scrollOffset = (int) Mth.clamp(scrollOffset - (int)vy, 0, Math.max(0, filtered.size() - maxRows));
         return true;
     }
 
     @Override
-    public boolean mouseClicked(Click click, boolean doubled) {
+    public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
         int maxRows = (height - LIST_Y - 40) / ROW_H;
         if (click.x() >= width / 2 + 100 && click.x() <= width / 2 + 145 && click.y() >= LIST_Y && click.y() < LIST_Y + maxRows * ROW_H) {
             int i = (int)((click.y() - LIST_Y) / ROW_H) + scrollOffset;
@@ -87,12 +86,12 @@ public class ItemSearchScreen extends Screen {
     }
 
     @Override
-    public void render(DrawContext ctx, int mx, int my, float delta) {
+    public void render(GuiGraphics ctx, int mx, int my, float delta) {
         RenderUtils.drawGradientRect(ctx, 0, 0, width, height, UiPalette.GRADIENT_START, UiPalette.GRADIENT_END);
         RenderUtils.drawOutline(ctx, 20, 20, width - 40, height - 40, 1, UiPalette.BORDER);
         
-        ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("\u00a7lADD CUSTOM ITEM"), width / 2, 15, UiPalette.ACCENT_BLUE);
-        ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("Click the + button to add an item to " + (forBackgrounds ? "Item Backgrounds" : "Item Sizes")), width / 2, 30, UiPalette.TEXT_SECONDARY);
+        ctx.drawCenteredString(font, Component.literal("\u00a7lADD CUSTOM ITEM"), width / 2, 15, UiPalette.ACCENT_BLUE);
+        ctx.drawCenteredString(font, Component.literal("Click the + button to add an item to " + (forBackgrounds ? "Item Backgrounds" : "Item Sizes")), width / 2, 30, UiPalette.TEXT_SECONDARY);
 
         int maxRows = (height - LIST_Y - 40) / ROW_H;
         RenderUtils.drawRoundedRect(ctx, width / 2 - 150, LIST_Y, 300, maxRows * ROW_H, 4, 0x50000000);
@@ -113,18 +112,18 @@ public class ItemSearchScreen extends Screen {
             }
             
             boolean added = forBackgrounds ? cfg.customItemBackgrounds.containsKey(id) : cfg.customItemScales.containsKey(id);
-            ctx.drawTextWithShadow(textRenderer, Text.literal(id), width / 2 - 145, y + (ROW_H - 8) / 2, added ? UiPalette.ACCENT_BLUE : UiPalette.TEXT_PRIMARY);
+            ctx.drawString(font, Component.literal(id), width / 2 - 145, y + (ROW_H - 8) / 2, added ? UiPalette.ACCENT_BLUE : UiPalette.TEXT_PRIMARY);
             
             if (added) {
-                ctx.drawTextWithShadow(textRenderer, Text.literal("\u2714"), width / 2 + 120, y + (ROW_H - 8) / 2, 0xFF55FF55);
+                ctx.drawString(font, Component.literal("\u2714"), width / 2 + 120, y + (ROW_H - 8) / 2, 0xFF55FF55);
             } else {
                 int btnColor = plusHovered ? UiPalette.ACCENT_BLUE : 0xFFFFFFFF;
                 RenderUtils.drawRoundedRect(ctx, width / 2 + 115, y + 2, 25, ROW_H - 4, 3, plusHovered ? 0x4000A3FF : 0x20FFFFFF);
-                ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("+"), width / 2 + 127, y + (ROW_H - 8) / 2, btnColor);
+                ctx.drawCenteredString(font, Component.literal("+"), width / 2 + 127, y + (ROW_H - 8) / 2, btnColor);
             }
         }
 
-        ctx.drawTextWithShadow(textRenderer, Text.literal("\u00a78" + filtered.size() + " items found"), width / 2 - 150, height - 45, UiPalette.TEXT_SECONDARY);
+        ctx.drawString(font, Component.literal("\u00a78" + filtered.size() + " items found"), width / 2 - 150, height - 45, UiPalette.TEXT_SECONDARY);
         super.render(ctx, mx, my, delta);
     }
 }

@@ -4,10 +4,10 @@ import com.pvptweaks.ExplosionTracker;
 import com.pvptweaks.PvpTweaksMod;
 import com.pvptweaks.config.PvpTweaksConfig;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.particle.ParticleManager;
-import net.minecraft.particle.ParticleEffect;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.particle.ParticleEngine;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -15,21 +15,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.HashSet;
 import java.util.Set;
 
-@Mixin(ParticleManager.class)
+@Mixin(ParticleEngine.class)
 public class ParticleManagerMixin {
 
     private static final Set<String> seen = new HashSet<>();
 
     @Inject(
-        method = "addParticle(Lnet/minecraft/particle/ParticleEffect;DDDDDD)Lnet/minecraft/client/particle/Particle;",
+        method = "addParticle(Lnet/minecraft/particle/ParticleOptions;DDDDDD)Lnet/minecraft/client/particle/Particle;",
         at = @At("HEAD"), cancellable = true
     )
-    private <T extends ParticleEffect> void pvptweaks$filter(
+    private <T extends ParticleOptions> void pvptweaks$filter(
             T params, double x, double y, double z,
             double vx, double vy, double vz,
             CallbackInfoReturnable<Particle> cir) {
 
-        Identifier pid = Registries.PARTICLE_TYPE.getId(params.getType());
+        Identifier pid = BuiltInRegistries.PARTICLE_TYPE.getKey(params.getType());
         if (pid == null) return;
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         String p = pid.getPath();

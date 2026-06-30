@@ -4,12 +4,12 @@ import com.pvptweaks.ExplosionTracker;
 import com.pvptweaks.PvpTweaksMod;
 import com.pvptweaks.config.PvpTweaksConfig;
 import com.pvptweaks.config.SoundProfile;
-import net.minecraft.client.sound.AbstractSoundInstance;
-import net.minecraft.client.sound.Sound;
-import net.minecraft.client.sound.SoundInstance;
-import net.minecraft.client.sound.SoundManager;
-import net.minecraft.client.sound.WeightedSoundSet;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.resources.sounds.AbstractSoundInstance;
+import net.minecraft.client.resources.sounds.Sound;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.client.sounds.SoundManager;
+import net.minecraft.client.sounds.WeighedSoundEvents;
+import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
@@ -28,10 +28,10 @@ public abstract class SoundRedirectMixin {
     @Unique
     private SoundProfile pvptweaks$matchedProfile;
 
-    @Inject(method = "getSoundSet", at = @At("HEAD"))
-    private void pvptweaks$identifyProfile(SoundManager manager, CallbackInfoReturnable<WeightedSoundSet> cir) {
+    @Inject(method = "resolve", at = @At("HEAD"))
+    private void pvptweaks$identifyProfile(SoundManager manager, CallbackInfoReturnable<WeighedSoundEvents> cir) {
         SoundInstance self = (SoundInstance)(Object) this;
-        Identifier current = self.getId();
+        ResourceLocation current = self.getLocation();
         if (current == null) return;
         String path = current.getPath();
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
@@ -72,11 +72,11 @@ public abstract class SoundRedirectMixin {
             // Clear any stale redirect so the original sound plays when reset to default
             com.pvptweaks.sound.SoundRedirects.remove(current);
         } else {
-            Identifier originalId = self.getId();
+            ResourceLocation originalId = self.getLocation();
 
             if (pvptweaks$matchedProfile.isCustom()) {
                 if (pvptweaks$matchedProfile.customPath == null || pvptweaks$matchedProfile.customPath.isBlank()) return;
-                Identifier customId =
+                ResourceLocation customId =
                     com.pvptweaks.sound.CustomSoundManager.registerCustomSound(pvptweaks$matchedProfile.customPath);
                 if (customId == null) return;
                 com.pvptweaks.sound.SoundRedirects.set(originalId, customId);
@@ -89,7 +89,7 @@ public abstract class SoundRedirectMixin {
                 ? pvptweaks$matchedProfile.presetId
                 : "minecraft:" + pvptweaks$matchedProfile.presetId;
 
-            Identifier newId = Identifier.tryParse(rawId);
+            ResourceLocation newId = ResourceLocation.tryParse(rawId);
             if (newId == null) return;
 
             if ("pvptweaks".equals(newId.getNamespace())) {
@@ -100,9 +100,9 @@ public abstract class SoundRedirectMixin {
         }
     }
 
-    @Inject(method = "getSoundSet", at = @At("RETURN"))
+    @Inject(method = "resolve", at = @At("RETURN"))
     private void pvptweaks$redirectSoundSet(SoundManager manager,
-            CallbackInfoReturnable<WeightedSoundSet> cir) {
+            CallbackInfoReturnable<WeighedSoundEvents> cir) {
 
         if (pvptweaks$matchedProfile == null || pvptweaks$matchedProfile.isDefault()) return;
 
@@ -114,27 +114,27 @@ public abstract class SoundRedirectMixin {
             this.volume = pvptweaks$matchedProfile.volumePct / 100.0f;
         }
 
-        Identifier originalId = ((SoundInstance)(Object) this).getId();
+        ResourceLocation originalId = ((SoundInstance)(Object) this).getLocation();
 
         if (pvptweaks$matchedProfile.isCustom()) {
-            Identifier customId = com.pvptweaks.sound.SoundRedirects.get(originalId);
+            ResourceLocation customId = com.pvptweaks.sound.SoundRedirects.get(originalId);
             if (customId == null) return;
-            WeightedSoundSet customSet = manager.get(customId);
+            WeighedSoundEvents customSet = manager.getSoundEvent(customId);
             if (customSet == null) return;
-            Sound s = customSet.getSound(net.minecraft.util.math.random.Random.create());
+            Sound s = customSet.getSound(net.minecraft.util.RandomSource.create());
             if (s != null) this.sound = s;
             return;
         }
 
         if (!pvptweaks$matchedProfile.isPreset() || pvptweaks$matchedProfile.presetId.isBlank()) return;
 
-        Identifier newId = com.pvptweaks.sound.SoundRedirects.get(originalId);
+        ResourceLocation newId = com.pvptweaks.sound.SoundRedirects.get(originalId);
         if (newId == null) return;
 
-        WeightedSoundSet newSet = manager.get(newId);
+        WeighedSoundEvents newSet = manager.getSoundEvent(newId);
         if (newSet == null) return;
 
-        Sound newSound = newSet.getSound(net.minecraft.util.math.random.Random.create());
+        Sound newSound = newSet.getSound(net.minecraft.util.RandomSource.create());
         if (newSound != null) this.sound = newSound;
     }
 

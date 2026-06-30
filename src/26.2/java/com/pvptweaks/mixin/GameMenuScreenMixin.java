@@ -1,42 +1,42 @@
 package com.pvptweaks.mixin;
 
 import com.pvptweaks.config.PvpTweaksConfigScreen;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.GameMenuScreen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.PauseScreen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(GameMenuScreen.class)
-public abstract class GameMenuScreenMixin extends net.minecraft.client.gui.screen.Screen {
+@Mixin(PauseScreen.class)
+public abstract class GameMenuScreenMixin extends net.minecraft.client.gui.screens.Screen {
 
-    protected GameMenuScreenMixin() { super(Text.empty()); }
+    protected GameMenuScreenMixin() { super(Component.empty()); }
 
     @Inject(method = "init", at = @At("TAIL"))
     private void pvptweaks$addTopButton(CallbackInfo ci) {
-        if (((GameMenuScreen)(Object)this).shouldShowMenu()) {
+        if (((PauseScreen)(Object)this).showsPauseMenu()) {
             // Place button above the "Game Menu" text (which is at y=40)
-            this.addDrawableChild(ButtonWidget.builder(
-                Text.literal("\u00a7d\u2694 PVP Tweaks"),
+            this.addRenderableWidget(Button.builder(
+                Component.literal("\u00a7d\u2694 PVP Tweaks"),
                 b -> {
                     if (com.pvptweaks.config.PvpTweaksConfig.get().useLegacyMenu) {
                         if (!net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("cloth-config")) {
-                            MinecraftClient.getInstance().setScreen(new com.pvptweaks.gui.ClothConfigRequiredScreen(this));
+                            Minecraft.getInstance().setScreenAndShow(new com.pvptweaks.gui.ClothConfigRequiredScreen(this));
                         } else {
-                            MinecraftClient.getInstance().setScreen(
+                            Minecraft.getInstance().setScreenAndShow(
                                 com.pvptweaks.integration.ClothConfigScreenHelper.buildScreen(this)
                             );
                         }
                     } else {
-                        MinecraftClient.getInstance().setScreen(
+                        Minecraft.getInstance().setScreenAndShow(
                             new com.pvptweaks.gui.PvpTweaksHubScreen(this)
                         );
                     }
                 }
-            ).dimensions(this.width / 2 - 102, 12, 204, 20).build());
+            ).bounds(this.width / 2 - 102, 12, 204, 20).build());
         }
     }
 }

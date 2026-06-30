@@ -1,44 +1,44 @@
 package com.pvptweaks.mixin;
 
 import com.pvptweaks.config.PvpTweaksConfig;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.hud.InGameHud;
-import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.text.Text;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(InGameHud.class)
+@Mixin(Gui.class)
 public class HotbarLabelsMixin {
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;renderMainHud(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/client/render/RenderTickCounter;)V", shift = At.Shift.AFTER), require = 0)
-    private void pvptweaks$hotbarLabels(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
-        MinecraftClient client = MinecraftClient.getInstance();
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;renderHotbarAndDecorations(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/client/DeltaTracker;)V", shift = At.Shift.AFTER), require = 0)
+    private void pvptweaks$hotbarLabels(GuiGraphics context, DeltaTracker tickCounter, CallbackInfo ci) {
+        Minecraft client = Minecraft.getInstance();
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         String mode = cfg.hotbarSlotLabelMode;
         if ("off".equals(mode)) return;
 
-        int centerX = context.getScaledWindowWidth() / 2;
+        int centerX = context.guiWidth() / 2;
         // Shifted inside the hotbar slot box to avoid XP bar overlap
-        int slotY = context.getScaledWindowHeight() - 21;
-        TextRenderer textRenderer = client.textRenderer;
+        int slotY = context.guiHeight() - 21;
+        Font textRenderer = client.font;
 
         for (int slot = 0; slot < 9; slot++) {
             int slotX = centerX - 90 + slot * 20 + 10;
-            Text label;
+            Component label;
             if ("numbers".equals(mode)) {
-                label = Text.literal(String.valueOf(slot + 1));
+                label = Component.literal(String.valueOf(slot + 1));
             } else {
-                String keyStr = client.options.hotbarKeys[slot].getBoundKeyLocalizedText().getString();
-                label = Text.literal(shortenKeyName(keyStr));
+                String keyStr = client.options.keyHotbarSlots[slot].getTranslatedKeyMessage().getString();
+                label = Component.literal(shortenKeyName(keyStr));
             }
 
-            int textWidth = textRenderer.getWidth(label);
-            context.drawText(textRenderer, label, slotX - textWidth / 2, slotY, 0xFFFFFFFF, true);
+            int textWidth = textRenderer.width(label);
+            context.drawString(textRenderer, label, slotX - textWidth / 2, slotY, 0xFFFFFFFF, true);
         }
     }
 

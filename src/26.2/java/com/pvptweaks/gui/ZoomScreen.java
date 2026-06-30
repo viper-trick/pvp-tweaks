@@ -3,11 +3,11 @@ package com.pvptweaks.gui;
 import com.pvptweaks.PvpTweaksClient;
 import com.pvptweaks.PvpTweaksMod;
 import com.pvptweaks.config.PvpTweaksConfig;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
 public class ZoomScreen extends Screen {
@@ -15,7 +15,7 @@ public class ZoomScreen extends Screen {
     private boolean listeningForKeybind = false;
 
     public ZoomScreen(Screen parent) {
-        super(Text.literal("Zoom Settings"));
+        super(Component.literal("Zoom Settings"));
         this.parent = parent;
     }
 
@@ -36,7 +36,7 @@ public class ZoomScreen extends Screen {
             modeLabel = "Zoom Manager: " + (zoomifyMode ? "Zoomify (Zoom)" : "pvp tweaks (default)");
         }
 
-        addDrawableChild(new ModernButtonWidget(cx - 100, y, 200, 20, Text.literal(modeLabel), () -> {
+        addRenderableWidget(new ModernButtonWidget(cx - 100, y, 200, 20, Component.literal(modeLabel), () -> {
             if (zoomifyInstalled) {
                 cfg.zoomManagementMode = zoomifyMode ? "pvp-tweaks" : "zoomify";
                 // When switching TO pvp-tweaks mode, ensure zoom is enabled
@@ -52,55 +52,55 @@ public class ZoomScreen extends Screen {
         // ── Zoomify not installed indicator ──────────────────────────────
         if (!zoomifyInstalled) {
             ModernButtonWidget btn = new ModernButtonWidget(cx - 100, y, 200, 20,
-                    Text.literal("\u00a78Zoomify (Zoom) (not installed)"), () -> {});
+                    Component.literal("\u00a78Zoomify (Zoom) (not installed)"), () -> {});
             btn.active = false;
-            addDrawableChild(btn);
+            addRenderableWidget(btn);
             y += 28;
         }
 
         // ── ZOOMIFY MODE: show Zoomify controls only ─────────────────────
         if (zoomifyMode) {
-            addDrawableChild(new ModernButtonWidget(cx - 100, y, 200, 20,
-                    Text.literal("\u00a7bOpen Zoomify Settings..."), () -> openZoomifySettings()));
+            addRenderableWidget(new ModernButtonWidget(cx - 100, y, 200, 20,
+                    Component.literal("\u00a7bOpen Zoomify Settings..."), () -> openZoomifySettings()));
             y += 28;
 
             // pvp tweaks zoom is completely disabled - show a grayed button
             ModernButtonWidget disabledZoom = new ModernButtonWidget(cx - 100, y, 200, 20,
-                    Text.literal("\u00a78PvP Tweaks Zoom: DISABLED"), () -> {});
+                    Component.literal("\u00a78PvP Tweaks Zoom: DISABLED"), () -> {});
             disabledZoom.active = false;
-            addDrawableChild(disabledZoom);
+            addRenderableWidget(disabledZoom);
             y += 35;
 
         } else {
             // ── PVP TWEAKS MODE: show full pvp-tweaks zoom controls ──────
-            addDrawableChild(new ModernButtonWidget(cx - 100, y, 200, 20,
-                    Text.literal("Zoom Enabled: " + (cfg.zoomEnabled ? "ON" : "OFF")), () -> {
+            addRenderableWidget(new ModernButtonWidget(cx - 100, y, 200, 20,
+                    Component.literal("Zoom Enabled: " + (cfg.zoomEnabled ? "ON" : "OFF")), () -> {
                 cfg.zoomEnabled = !cfg.zoomEnabled;
                 PvpTweaksConfig.save();
                 refresh();
             }));
             y += 28;
 
-            String keyName = PvpTweaksClient.zoomKeyBinding.getBoundKeyLocalizedText().getString();
-            Text btnText = listeningForKeybind
-                    ? Text.literal("> \u00a7e???\u00a7r <")
-                    : Text.literal("Zoom Key: " + keyName);
-            addDrawableChild(new ModernButtonWidget(cx - 100, y, 200, 20, btnText, () -> {
+            String keyName = PvpTweaksClient.zoomKeyBinding.getTranslatedKeyMessage().getString();
+            Component btnText = listeningForKeybind
+                    ? Component.literal("> \u00a7e???\u00a7r <")
+                    : Component.literal("Zoom Key: " + keyName);
+            addRenderableWidget(new ModernButtonWidget(cx - 100, y, 200, 20, btnText, () -> {
                 listeningForKeybind = true;
                 refresh();
             }));
             y += 28;
 
-            addDrawableChild(new ModernButtonWidget(cx - 100, y, 200, 20,
-                    Text.literal("Zoom Mode: " + (cfg.zoomToggle ? "TOGGLE" : "HOLD")), () -> {
+            addRenderableWidget(new ModernButtonWidget(cx - 100, y, 200, 20,
+                    Component.literal("Zoom Mode: " + (cfg.zoomToggle ? "TOGGLE" : "HOLD")), () -> {
                 cfg.zoomToggle = !cfg.zoomToggle;
                 PvpTweaksConfig.save();
                 refresh();
             }));
             y += 28;
 
-            addDrawableChild(new ModernButtonWidget(cx - 100, y, 200, 20,
-                    Text.literal("Smooth Camera: " + (cfg.zoomSmoothCamera ? "ON" : "OFF")), () -> {
+            addRenderableWidget(new ModernButtonWidget(cx - 100, y, 200, 20,
+                    Component.literal("Smooth Camera: " + (cfg.zoomSmoothCamera ? "ON" : "OFF")), () -> {
                 cfg.zoomSmoothCamera = !cfg.zoomSmoothCamera;
                 PvpTweaksConfig.save();
                 refresh();
@@ -109,40 +109,40 @@ public class ZoomScreen extends Screen {
 
             // If Zoomify is also installed in pvp-tweaks mode, offer its settings
             if (zoomifyInstalled) {
-                addDrawableChild(new ModernButtonWidget(cx - 100, y, 200, 20,
-                        Text.literal("\u00a77Open Zoomify Settings..."), () -> openZoomifySettings()));
+                addRenderableWidget(new ModernButtonWidget(cx - 100, y, 200, 20,
+                        Component.literal("\u00a77Open Zoomify Settings..."), () -> openZoomifySettings()));
                 y += 28;
             }
         }
 
         // ── Back button ──────────────────────────────────────────────────
-        addDrawableChild(new ModernButtonWidget(cx - 100, y, 200, 20, Text.literal("Back"), () -> {
-            client.setScreen(parent);
+        addRenderableWidget(new ModernButtonWidget(cx - 100, y, 200, 20, Component.literal("Back"), () -> {
+            minecraft.setScreenAndShow(parent);
         }));
     }
     private void openZoomifySettings() {
         // Close the GUI and send /zoomify chat command to open Zoomify's settings
-        client.setScreen(null);
-        if (client.player != null) {
-            client.player.networkHandler.sendChatCommand("zoomify");
+        minecraft.setScreenAndShow(null);
+        if (minecraft.player != null) {
+            minecraft.player.connection.sendCommand("zoomify");
         }
     }
 
     private void refresh() {
-        this.clearChildren();
+        this.clearWidgets();
         this.init();
     }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
+    public boolean keyPressed(KeyEvent input) {
         if (listeningForKeybind) {
             if (input.key() == GLFW.GLFW_KEY_ESCAPE) {
-                PvpTweaksClient.zoomKeyBinding.setBoundKey(InputUtil.UNKNOWN_KEY);
+                PvpTweaksClient.zoomKeyBinding.setKey(InputConstants.UNKNOWN);
             } else {
-                PvpTweaksClient.zoomKeyBinding.setBoundKey(InputUtil.fromKeyCode(input));
+                PvpTweaksClient.zoomKeyBinding.setKey(InputConstants.getKey(input));
             }
-            net.minecraft.client.option.KeyBinding.updateKeysByCode();
-            client.options.write();
+            net.minecraft.client.KeyMapping.resetMapping();
+            minecraft.options.save();
             listeningForKeybind = false;
             refresh();
             return true;
@@ -151,26 +151,26 @@ public class ZoomScreen extends Screen {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
 
         boolean zoomifyInstalled = net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("zoomify");
         boolean zoomifyMode = "zoomify".equals(PvpTweaksConfig.get().zoomManagementMode) && zoomifyInstalled;
 
-        context.drawCenteredTextWithShadow(textRenderer,
-                Text.literal("\u00a7lZoom Settings"), width / 2, 20, 0xFFFFFF);
+        context.text(font,
+                Component.literal("\u00a7lZoom Settings"), width / 2, 20, 0xFFFFFF);
 
         if (zoomifyMode) {
-            context.drawCenteredTextWithShadow(textRenderer,
-                    Text.literal("\u00a77Zoomify is managing zoom. PvP Tweaks zoom is OFF."),
+            context.text(font,
+                    Component.literal("\u00a77Zoomify is managing zoom. PvP Tweaks zoom is OFF."),
                     width / 2, 38, 0xAAAAAA);
         } else {
-            context.drawCenteredTextWithShadow(textRenderer,
-                    Text.literal("\u00a77Scroll wheel while zooming changes zoom level."),
+            context.text(font,
+                    Component.literal("\u00a77Scroll wheel while zooming changes zoom level."),
                     width / 2, 38, 0xAAAAAA);
             if (zoomifyInstalled) {
-                context.drawCenteredTextWithShadow(textRenderer,
-                        Text.literal("\u00a76Tip: Disable zoom in Zoomify settings to avoid FOV conflicts."),
+                context.text(font,
+                        Component.literal("\u00a76Tip: Disable zoom in Zoomify settings to avoid FOV conflicts."),
                         width / 2, 50, 0xAAAAAA);
             }
         }

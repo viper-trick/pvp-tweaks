@@ -1,10 +1,16 @@
 package com.pvptweaks.mixin;
 
+import com.mojang.blaze3d.audio.SoundBuffer;
 import com.pvptweaks.sound.WavAudioStream;
-import net.minecraft.client.sound.*;
-import net.minecraft.resource.ResourceFactory;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Util;
+import net.minecraft.Util;
+import net.minecraft.client.sounds.*;
+import net.minecraft.client.sounds.AudioStream;
+import net.minecraft.client.sounds.FiniteAudioStream;
+import net.minecraft.client.sounds.JOrbisAudioStream;
+import net.minecraft.client.sounds.LoopingAudioStream;
+import net.minecraft.client.sounds.SoundBufferLibrary;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceProvider;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -17,21 +23,21 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
-@Mixin(SoundLoader.class)
+@Mixin(SoundBufferLibrary.class)
 public abstract class SoundLoaderMixin {
 
-    @Shadow @Final private ResourceFactory resourceFactory;
-    @Shadow @Final private Map<Identifier, CompletableFuture<StaticSound>> loadedSounds;
+    @Shadow @Final private ResourceProvider resourceManager;
+    @Shadow @Final private Map<ResourceLocation, CompletableFuture<SoundBuffer>> cache;
 
     /**
      * @author Antigravity
      * @reason Support WAV files transparently with caching
      */
     @Overwrite
-    public CompletableFuture<StaticSound> loadStatic(Identifier id) {
-        return this.loadedSounds.computeIfAbsent(id, id2 -> CompletableFuture.supplyAsync(() -> {
+    public CompletableFuture<SoundBuffer> getCompleteBuffer(ResourceLocation id) {
+        return this.cache.computeIfAbsent(id, id2 -> CompletableFuture.supplyAsync(() -> {
             try {
-                InputStream inputStream = this.resourceFactory.open(id2);
+                InputStream inputStream = this.resourceManager.open(id2);
                 try {
                     BufferedInputStream bis = new BufferedInputStream(inputStream);
                     bis.mark(16);
@@ -39,15 +45,15 @@ public abstract class SoundLoaderMixin {
                     int read = bis.read(magic);
                     bis.reset();
 
-                    NonRepeatingAudioStream stream;
+                    FiniteAudioStream stream;
                     if (read >= 4 && magic[0] == 'R' && magic[1] == 'I' && magic[2] == 'F' && magic[3] == 'F') {
                         stream = new WavAudioStream(bis);
                     } else {
-                        stream = new OggAudioStream(bis);
+                        stream = new JOrbisAudioStream(bis);
                     }
 
                     try {
-                        StaticSound staticSound = new StaticSound(stream.readAll(), stream.getFormat());
+                        SoundBuffer staticSound = new SoundBuffer(stream.readAll(), stream.getFormat());
                         stream.close();
                         return staticSound;
                     } catch (Throwable t) {
@@ -60,7 +66,7 @@ public abstract class SoundLoaderMixin {
             } catch (IOException e) {
                 throw new CompletionException(e);
             }
-        }, Util.getDownloadWorkerExecutor()));
+        }, Util.nonCriticalIoPool()));
     }
 
     /**
@@ -68,10 +74,10 @@ public abstract class SoundLoaderMixin {
      * @reason Support WAV files transparently
      */
     @Overwrite
-    public CompletableFuture<AudioStream> loadStreamed(Identifier id, boolean repeatInstantly) {
+    public CompletableFuture<AudioStream> getStream(ResourceLocation id, boolean repeatInstantly) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                InputStream inputStream = this.resourceFactory.open(id);
+                InputStream inputStream = this.resourceManager.open(id);
                 BufferedInputStream bis = new BufferedInputStream(inputStream);
                 bis.mark(16);
                 byte[] magic = new byte[4];
@@ -79,13 +85,13 @@ public abstract class SoundLoaderMixin {
                 bis.reset();
 
                 if (read >= 4 && magic[0] == 'R' && magic[1] == 'I' && magic[2] == 'F' && magic[3] == 'F') {
-                    return (AudioStream)(repeatInstantly ? new RepeatingAudioStream(WavAudioStream::new, bis) : new WavAudioStream(bis));
+                    return (AudioStream)(repeatInstantly ? new LoopingAudioStream(WavAudioStream::new, bis) : new WavAudioStream(bis));
                 } else {
-                    return (AudioStream)(repeatInstantly ? new RepeatingAudioStream(OggAudioStream::new, bis) : new OggAudioStream(bis));
+                    return (AudioStream)(repeatInstantly ? new LoopingAudioStream(JOrbisAudioStream::new, bis) : new JOrbisAudioStream(bis));
                 }
             } catch (IOException e) {
                 throw new CompletionException(e);
             }
-        }, Util.getDownloadWorkerExecutor());
+        }, Util.nonCriticalIoPool());
     }
 }

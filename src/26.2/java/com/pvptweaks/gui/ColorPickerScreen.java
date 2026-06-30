@@ -1,20 +1,20 @@
 package com.pvptweaks.gui;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.network.chat.Component;
 import java.util.function.Consumer;
 
 public class ColorPickerScreen extends Screen {
     private final Screen parent;
     private final Consumer<Integer> onSave;
     private final int initialColor;
-    private TextFieldWidget hexField;
+    private EditBox hexField;
     private String errorMsg = "";
 
     public ColorPickerScreen(Screen parent, int initialColor, Consumer<Integer> onSave) {
-        super(Text.literal("Color Picker"));
+        super(Component.literal("Color Picker"));
         this.parent = parent;
         this.initialColor = initialColor;
         this.onSave = onSave;
@@ -49,10 +49,10 @@ public class ColorPickerScreen extends Screen {
             int px = startX + (i % 5) * (buttonSize + gap);
             int py = startY + (i / 5) * (buttonSize + gap);
             
-            addDrawableChild(new ModernButtonWidget(px, py, buttonSize, buttonSize, Text.literal(""), () -> {
+            var btn = new ModernButtonWidget(px, py, buttonSize, buttonSize, Component.literal(""), () -> {
                 int currentAlpha = 0x80;
                 try {
-                    String hex = hexField.getText();
+                    String hex = hexField.getValue();
                     if (hex.length() == 8) {
                         currentAlpha = Integer.parseInt(hex.substring(0, 2), 16);
                     }
@@ -61,16 +61,17 @@ public class ColorPickerScreen extends Screen {
                 int newColor = (colorVal & 0x00FFFFFF) | (currentAlpha << 24);
                 String newHex = Integer.toHexString(newColor).toUpperCase();
                 while (newHex.length() < 8) newHex = "0" + newHex;
-                hexField.setText(newHex);
+                hexField.setValue(newHex);
             }) {
                 @Override
-                public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
+                public void extractWidgetRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
                     RenderUtils.drawRoundedRect(context, this.getX(), this.getY(), this.width, this.height, 2, colorVal);
                     if (this.isHovered()) {
-                        RenderUtils.drawOutline(context, this.getX() - 1, this.getY() - 1, this.width + 2, this.height + 2, 1, 0xFFFFFFFF);
+                        RenderUtils.drawOutline((GuiGraphicsExtractor)(Object)context, this.getX() - 1, this.getY() - 1, this.width + 2, this.height + 2, 1, 0xFFFFFFFF);
                     }
                 }
-            });
+            };
+            addRenderableWidget(btn);
         }
         
         // Add Opacity presets
@@ -80,10 +81,10 @@ public class ColorPickerScreen extends Screen {
         for (int i = 0; i < 4; i++) {
             final int alpha = opVals[i];
             int py = startY + i * 20;
-            addDrawableChild(new ModernButtonWidget(opX, py, 35, 18, Text.literal(opLabels[i]), () -> {
+            addRenderableWidget(new ModernButtonWidget(opX, py, 35, 18, Component.literal(opLabels[i]), () -> {
                 int currentColor = 0xFFFFFFFF;
                 try {
-                    String hex = hexField.getText();
+                    String hex = hexField.getValue();
                     if (hex.length() == 6) hex = "FF" + hex;
                     if (hex.length() == 8) currentColor = (int) Long.parseLong(hex, 16);
                 } catch (Exception ignored) {}
@@ -91,28 +92,28 @@ public class ColorPickerScreen extends Screen {
                 int newColor = (currentColor & 0x00FFFFFF) | (alpha << 24);
                 String newHex = Integer.toHexString(newColor).toUpperCase();
                 while (newHex.length() < 8) newHex = "0" + newHex;
-                hexField.setText(newHex);
+                hexField.setValue(newHex);
             }));
         }
         
         // hexField position
         int yField = startY + 55 + 20;
-        hexField = new TextFieldWidget(textRenderer, cx - 50, yField, 100, 20, Text.literal("Hex Code"));
+        hexField = new EditBox(font, cx - 50, yField, 100, 20, Component.literal("Hex Code"));
         String initHex = Integer.toHexString(initialColor).toUpperCase();
         while (initHex.length() < 8) initHex = "0" + initHex;
-        hexField.setText(initHex);
+        hexField.setValue(initHex);
         hexField.setMaxLength(8);
-        addSelectableChild(hexField);
+        addWidget(hexField);
         
         // Cancel & Save Buttons
         int yButtons = yField + 30;
-        addDrawableChild(new ModernButtonWidget(cx - 50, yButtons, 45, 20, Text.literal("Cancel"), () -> {
-            client.setScreen(parent);
+        addRenderableWidget(new ModernButtonWidget(cx - 50, yButtons, 45, 20, Component.literal("Cancel"), () -> {
+            minecraft.setScreenAndShow(parent);
         }));
 
-        addDrawableChild(new ModernButtonWidget(cx + 5, yButtons, 45, 20, Text.literal("\u00a7aSave"), () -> {
+        addRenderableWidget(new ModernButtonWidget(cx + 5, yButtons, 45, 20, Component.literal("\u00a7aSave"), () -> {
             try {
-                String hex = hexField.getText();
+                String hex = hexField.getValue();
                 if (hex.length() == 6) hex = "FF" + hex;
                 int color = (int) Long.parseLong(hex, 16);
                 onSave.accept(color);
@@ -123,16 +124,16 @@ public class ColorPickerScreen extends Screen {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
         
         int cx = width / 2;
-        context.drawCenteredTextWithShadow(textRenderer, Text.literal("\u00a7lColor Picker"), cx, height / 2 - 100, 0xFFFFFF);
+        context.text(font, Component.literal("\u00a7lColor Picker"), cx, height / 2 - 100, 0xFFFFFF);
         
         // Preview box aligned with hex field
         int yField = height / 2 - 80 + 55 + 20;
         try {
-            String hex = hexField.getText();
+            String hex = hexField.getValue();
             if (hex.length() == 6) hex = "FF" + hex;
             int color = (int) Long.parseLong(hex, 16);
             RenderUtils.drawRoundedRect(context, cx + 60, yField, 20, 20, 2, color);
@@ -141,9 +142,9 @@ public class ColorPickerScreen extends Screen {
         } catch (Exception ignored) {}
 
         if (!errorMsg.isEmpty()) {
-            context.drawCenteredTextWithShadow(textRenderer, Text.literal("\u00a7c" + errorMsg), cx, yField + 60, 0xFFFFFF);
+            context.text(font, Component.literal("\u00a7c" + errorMsg), cx, yField + 60, 0xFFFFFF);
         }
 
-        hexField.render(context, mouseX, mouseY, delta);
+        hexField.extractRenderState(context, mouseX, mouseY, delta);
     }
 }

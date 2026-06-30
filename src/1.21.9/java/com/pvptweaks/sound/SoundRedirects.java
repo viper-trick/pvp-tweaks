@@ -1,22 +1,21 @@
 package com.pvptweaks.sound;
 
-import net.minecraft.util.Identifier;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import net.minecraft.resources.ResourceLocation;
 
 public class SoundRedirects {
-    private static final Map<Identifier, Identifier> REDIRECTS = new ConcurrentHashMap<>();
+    private static final Map<ResourceLocation, ResourceLocation> REDIRECTS = new ConcurrentHashMap<>();
 
-    public static void set(Identifier original, Identifier replacement) {
+    public static void set(ResourceLocation original, ResourceLocation replacement) {
         REDIRECTS.put(original, replacement);
     }
 
-    public static Identifier get(Identifier original) {
+    public static ResourceLocation get(ResourceLocation original) {
         return REDIRECTS.get(original);
     }
 
-    public static void remove(Identifier original) {
+    public static void remove(ResourceLocation original) {
         REDIRECTS.remove(original);
     }
 

@@ -2,18 +2,17 @@ package com.pvptweaks.gui;
 
 import com.pvptweaks.config.PvpTweaksConfig;
 import com.pvptweaks.config.PvpTweaksProfiles;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.client.input.KeyInput;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 
 public class PvpTweaksHubScreen extends Screen {
     private final Screen parent;
@@ -27,14 +26,14 @@ public class PvpTweaksHubScreen extends Screen {
     private static boolean fireChanged = false;
     private static String lastCategoryName = "Home";
     private int contentHeight = 300;
-    private final java.util.IdentityHashMap<ClickableWidget, String> tooltips = new java.util.IdentityHashMap<>();
+    private final java.util.IdentityHashMap<AbstractWidget, String> tooltips = new java.util.IdentityHashMap<>();
 
     public PvpTweaksHubScreen(Screen parent) {
         this(parent, lastCategoryName);
     }
 
     public PvpTweaksHubScreen(Screen parent, String initialCategory) {
-        super(Text.literal("PVP Tweaks Hub"));
+        super(Component.literal("PVP Tweaks Hub"));
         this.parent = parent;
         
         categories.add(new Category("Home", "\u2605"));
@@ -63,18 +62,18 @@ public class PvpTweaksHubScreen extends Screen {
     }
 
     private void refreshCategoryWidgets() {
-        this.clearChildren();
+        this.clearWidgets();
         tooltips.clear();
         
         addTooltipped(this.width - 65, 12, 55, 20, "Done",
             "Save configuration and close", () -> {
             PvpTweaksConfig.save();
             if (fireChanged) {
-                if (client.worldRenderer != null) client.worldRenderer.reload();
-                client.reloadResources();
+                if (minecraft.levelRenderer != null) minecraft.levelRenderer.allChanged();
+                minecraft.reloadResourcePacks();
                 fireChanged = false;
             }
-            this.client.setScreen(parent);
+            this.minecraft.setScreen(parent);
         });
 
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
@@ -89,10 +88,10 @@ public class PvpTweaksHubScreen extends Screen {
                 "Apply competitive PVP settings preset", () -> { PvpTweaksProfiles.applyCompetitive(); refreshCategoryWidgets(); });
             y += spacing;
             
-            String keyName = com.pvptweaks.PvpTweaksClient.openMenuKeyBinding.getBoundKeyLocalizedText().getString();
-            Text btnText = listeningForKeybind ? Text.literal("> \u00a7e???\u00a7r <") : Text.literal("Menu Key: " + keyName);
+            String keyName = com.pvptweaks.PvpTweaksClient.openMenuKeyBinding.getTranslatedKeyMessage().getString();
+            Component btnText = listeningForKeybind ? Component.literal("> \u00a7e???\u00a7r <") : Component.literal("Menu Key: " + keyName);
             String keyTip = listeningForKeybind ? "Press a key to bind, Escape to unbind" : "Click to rebind the menu key";
-            var keyBtn = addDrawableChild(new ModernButtonWidget(x, y, 180, 20, btnText, () -> {
+            var keyBtn = addRenderableWidget(new ModernButtonWidget(x, y, 180, 20, btnText, () -> {
                 listeningForKeybind = true;
                 refreshCategoryWidgets();
             }));
@@ -142,7 +141,7 @@ public class PvpTweaksHubScreen extends Screen {
             addTooltipped(x1, y, 180, 20, "\ud83d\udd0d Search Items...",
                 "Search and customize scale for individual items", () -> {
                 PvpTweaksConfig.save();
-                client.setScreen(new com.pvptweaks.gui.ItemSearchScreen(this, false));
+                minecraft.setScreen(new com.pvptweaks.gui.ItemSearchScreen(this, false));
             });
             
             y = firstItemRow;
@@ -157,7 +156,7 @@ public class PvpTweaksHubScreen extends Screen {
             for (String id : customs) {
                 String label = id.contains(":") ? id.substring(id.lastIndexOf(':') + 1) : id;
                 addSlider(x2, y, label, cfg.customItemScales.get(id), 25, 300, 100, v -> cfg.customItemScales.put(id, v.intValue()), "Custom item scale (25-300%)");
-                var delBtn = addDrawableChild(new ModernButtonWidget(x2 + 185, y - 10, 20, 20, Text.literal("\u2716"), () -> { cfg.customItemScales.remove(id); refreshCategoryWidgets(); }));
+                var delBtn = addRenderableWidget(new ModernButtonWidget(x2 + 185, y - 10, 20, 20, Component.literal("\u2716"), () -> { cfg.customItemScales.remove(id); refreshCategoryWidgets(); }));
                 tooltips.put(delBtn, "Remove this custom item entry");
                 y += spacing;
             }
@@ -180,41 +179,41 @@ public class PvpTweaksHubScreen extends Screen {
                 addTooltipped(x1, y, 180, 20, "\u00a7aSave Fire",
                     "Apply fire changes immediately", () -> {
                     PvpTweaksConfig.save();
-                    if (client.worldRenderer != null) client.worldRenderer.reload();
-                    client.reloadResources();
+                    if (minecraft.levelRenderer != null) minecraft.levelRenderer.allChanged();
+                    minecraft.reloadResourcePacks();
                     fireChanged = false;
                     refreshCategoryWidgets();
                 }); y += spacing;
             }
             addSlider(x1, y, "Fire Overlay", cfg.fireOverlayScalePct, 0, 200, 100, v -> { cfg.fireOverlayScalePct = v.intValue(); fireChanged = true; }, "Scale of the fire overlay effect (0-200%)"); y += spacing;
             addTooltipped(x1, y, 180, 20, "\ud83d\udca1 Fullbright...",
-                "Open fullbright and gamma settings screen", () -> client.setScreen(new FullbrightScreen(this))); y += spacing;
+                "Open fullbright and gamma settings screen", () -> minecraft.setScreen(new FullbrightScreen(this))); y += spacing;
             addTooltipped(x1, y, 180, 20, "Pumpkin Blur: " + (cfg.disablePumpkinBlur ? "HIDDEN" : "SHOWN"),
                 "Toggle pumpkin overlay effect", () -> { cfg.disablePumpkinBlur = !cfg.disablePumpkinBlur; refreshCategoryWidgets(); }); y += spacing;
             addTooltipped(x1, y, 180, 20, "\u2728 Particles...",
-                "Configure particle effects (crit, totem, crystal, explosions)", () -> client.setScreen(new ParticlesScreen(this))); y += spacing;
+                "Configure particle effects (crit, totem, crystal, explosions)", () -> minecraft.setScreen(new ParticlesScreen(this))); y += spacing;
             addTooltipped(x1, y, 180, 20, "\u2756 Shield Adjuster...",
-                "Configure shield rendering and position", () -> client.setScreen(new ShieldConfigScreen(this))); y += spacing;
+                "Configure shield rendering and position", () -> minecraft.setScreen(new ShieldConfigScreen(this))); y += spacing;
             addTooltipped(x1, y, 180, 20, "\ud83d\udd0e Zoom Settings...",
-                "Configure zoom controls and speed", () -> client.setScreen(new ZoomScreen(this)));
+                "Configure zoom controls and speed", () -> minecraft.setScreen(new ZoomScreen(this)));
             int leftColEndVisuals = y;
 
             y = startY + 5;
             addTooltipped(x2, y, 180, 20, "\ud83c\udf3f Plants Control...",
-                "Adjust plant and tall grass rendering", () -> client.setScreen(new com.pvptweaks.gui.PlantsControlScreen(this))); y += spacing;
+                "Adjust plant and tall grass rendering", () -> minecraft.setScreen(new com.pvptweaks.gui.PlantsControlScreen(this))); y += spacing;
             addSlider(x2, y, "Totem Anim Size", cfg.totemPopAnimScalePct, 0, 200, 100, v -> cfg.totemPopAnimScalePct = v.intValue(), "Size of totem pop animation (0-200%)"); y += spacing;
             addSlider(x2, y, "Crystal Entity Size", cfg.endCrystalScalePct, 25, 300, 100, v -> cfg.endCrystalScalePct = v.intValue(), "Scale of end crystal entities (25-300%)"); y += spacing;
             this.contentHeight = Math.max(leftColEndVisuals, y) + (int)contentScroll;
         } else if (activeCategory.name.equals("HUD")) {
             y += 10;
             addTooltipped(x, y, 180, 20, "\u26a1 CPS...",
-                "Open CPS HUD settings", () -> client.setScreen(new CpsScreen(this))); y += spacing;
+                "Open CPS HUD settings", () -> minecraft.setScreen(new CpsScreen(this))); y += spacing;
             addTooltipped(x, y, 180, 20, "\u2764 Durability HUD...",
-                "Open durability HUD settings", () -> client.setScreen(new DurabilityScreen(this))); y += spacing;
+                "Open durability HUD settings", () -> minecraft.setScreen(new DurabilityScreen(this))); y += spacing;
             addTooltipped(x, y, 180, 20, "\ud83d\udd0d Item Background...",
-                "Configure item background rendering in inventory", () -> client.setScreen(new ItemBackgroundScreen(this))); y += spacing;
+                "Configure item background rendering in inventory", () -> minecraft.setScreen(new ItemBackgroundScreen(this))); y += spacing;
             addTooltipped(x, y, 180, 20, "\u271c Crosshair...",
-                "Open crosshair customization screen", () -> client.setScreen(new CrosshairAdjusterScreen(this))); y += spacing;
+                "Open crosshair customization screen", () -> minecraft.setScreen(new CrosshairAdjusterScreen(this))); y += spacing;
             String[] lbModes = {"keybinds", "numbers", "off"};
             String[] lbLabels = {"\u00a7eKeybinds", "\u00a7eNumbers", "\u00a77Off"};
             int lbIdx = java.util.Arrays.asList(lbModes).indexOf(cfg.hotbarSlotLabelMode);
@@ -231,19 +230,19 @@ public class PvpTweaksHubScreen extends Screen {
             y += 10;
             addSlider(x, y, "Hit Vol", cfg.hitVolumePct, 0, 200, 100, v -> cfg.hitVolumePct = v.intValue(), "Volume of hit sounds (0-200%)"); y += spacing;
             addTooltipped(x, y, 200, 20, "\ud83d\udca5 Explosions...",
-                "Configure explosion sound settings", () -> client.setScreen(new SoundSubCategoryScreen(this, "Explosions")));
+                "Configure explosion sound settings", () -> minecraft.setScreen(new SoundSubCategoryScreen(this, "Explosions")));
             y += spacing;
             addTooltipped(x, y, 200, 20, "\u2694 Combat...",
-                "Configure combat sound settings", () -> client.setScreen(new SoundSubCategoryScreen(this, "Combat")));
+                "Configure combat sound settings", () -> minecraft.setScreen(new SoundSubCategoryScreen(this, "Combat")));
             y += spacing;
             addTooltipped(x, y, 200, 20, "\ud83c\udfb6 Misc...",
-                "Configure miscellaneous sound settings", () -> client.setScreen(new SoundSubCategoryScreen(this, "Misc")));
+                "Configure miscellaneous sound settings", () -> minecraft.setScreen(new SoundSubCategoryScreen(this, "Misc")));
             y += spacing;
             addTooltipped(x, y, 200, 20, "\ud83c\udfb5 Custom...",
-                "Add and configure custom sounds for any game event", () -> client.setScreen(new SoundSubCategoryScreen(this, "Custom")));
+                "Add and configure custom sounds for any game event", () -> minecraft.setScreen(new SoundSubCategoryScreen(this, "Custom")));
             y += spacing;
             addTooltipped(x, y, 200, 20, "\ud83d\udd14 Durability Alert...",
-                "Configure the durability low alert sound", () -> client.setScreen(new ModernSoundPickerScreen(this, cfg.soundDurabilityLow, "Durability Low", PvpTweaksConfig::save)));
+                "Configure the durability low alert sound", () -> minecraft.setScreen(new ModernSoundPickerScreen(this, cfg.soundDurabilityLow, "Durability Low", PvpTweaksConfig::save)));
             this.contentHeight = y + (int)contentScroll;
         } else if (activeCategory.name.equals("Optimization")) {
             y += 10;
@@ -255,15 +254,15 @@ public class PvpTweaksHubScreen extends Screen {
         } else if (activeCategory.name.equals("Profiles")) {
             y += 10;
             addTooltipped(x, y, 160, 20, "\u00a7a+ Create Profile",
-                "Save current settings as a new profile", () -> client.setScreen(new ProfileNameScreen(this, null, name -> { PvpTweaksProfiles.save(name); client.execute(() -> client.setScreen(new PvpTweaksHubScreen(parent, "Profiles"))); })));
+                "Save current settings as a new profile", () -> minecraft.setScreen(new ProfileNameScreen(this, null, name -> { PvpTweaksProfiles.save(name); minecraft.execute(() -> minecraft.setScreen(new PvpTweaksHubScreen(parent, "Profiles"))); })));
             y += spacing;
             List<String> profiles = PvpTweaksProfiles.list();
             for (String p : profiles) {
                 if (y > height - 70) break;
                 final String pn = p;
-                var loadBtn = addDrawableChild(new ModernButtonWidget(x, y, 120, 20, Text.literal(pn), () -> { if (PvpTweaksProfiles.load(pn)) refreshCategoryWidgets(); }));
+                var loadBtn = addRenderableWidget(new ModernButtonWidget(x, y, 120, 20, Component.literal(pn), () -> { if (PvpTweaksProfiles.load(pn)) refreshCategoryWidgets(); }));
                 tooltips.put(loadBtn, "Load this profile");
-                var delBtn = addDrawableChild(new ModernButtonWidget(x + 125, y, 35, 20, Text.literal("\u00a7c\u2716"), () -> { PvpTweaksProfiles.delete(pn); refreshCategoryWidgets(); }));
+                var delBtn = addRenderableWidget(new ModernButtonWidget(x + 125, y, 35, 20, Component.literal("\u00a7c\u2716"), () -> { PvpTweaksProfiles.delete(pn); refreshCategoryWidgets(); }));
                 tooltips.put(delBtn, "Delete this profile");
                 y += spacing;
             }
@@ -281,7 +280,7 @@ public class PvpTweaksHubScreen extends Screen {
                 "Import keybindings from clipboard", () -> handleImport(false, true)); y2 += (int)(spacing * 1.5);
             addTooltipped(x2, y2, 160, 20, "\ud83d\udcc1 Profiles Folder",
                 "Open the profiles folder in file manager", () -> {
-                try { net.minecraft.util.Util.getOperatingSystem().open(PvpTweaksProfiles.PROFILES_DIR.toFile()); } catch (Exception ignored) {}
+                try { net.minecraft.Util.getPlatform().openFile(PvpTweaksProfiles.PROFILES_DIR.toFile()); } catch (Exception ignored) {}
             });
         } else if (activeCategory.name.equals("Info")) {
             int lx = sidebarWidth + 25;
@@ -290,15 +289,15 @@ public class PvpTweaksHubScreen extends Screen {
 
             addTooltipped(lx, ly, 300, 20, "\u00a79GitHub: \u00a77github.com/viper-trick/pvp-tweaks",
                 "Open the GitHub repository", () -> {
-                try { net.minecraft.util.Util.getOperatingSystem().open(new java.net.URI("https://github.com/viper-trick/pvp-tweaks")); } catch (Exception ignored) {}
+                try { net.minecraft.Util.getPlatform().openUri(new java.net.URI("https://github.com/viper-trick/pvp-tweaks")); } catch (Exception ignored) {}
             }); ly += 26;
             addTooltipped(lx, ly, 300, 20, "\u00a79Issues: \u00a77github.com/viper-trick/pvp-tweaks/issues",
                 "Report bugs or request features", () -> {
-                try { net.minecraft.util.Util.getOperatingSystem().open(new java.net.URI("https://github.com/viper-trick/pvp-tweaks/issues")); } catch (Exception ignored) {}
+                try { net.minecraft.Util.getPlatform().openUri(new java.net.URI("https://github.com/viper-trick/pvp-tweaks/issues")); } catch (Exception ignored) {}
             }); ly += 26;
             addTooltipped(lx, ly, 300, 20, "\u00a79Modrinth: \u00a77modrinth.com/mod/pvptweak",
                 "View the mod on Modrinth", () -> {
-                try { net.minecraft.util.Util.getOperatingSystem().open(new java.net.URI("https://modrinth.com/mod/pvptweak")); } catch (Exception ignored) {}
+                try { net.minecraft.Util.getPlatform().openUri(new java.net.URI("https://modrinth.com/mod/pvptweak")); } catch (Exception ignored) {}
             });
 
             this.contentHeight = 550;
@@ -306,16 +305,16 @@ public class PvpTweaksHubScreen extends Screen {
     }
 
     private ModernButtonWidget addTooltipped(int x, int y, int w, int h, String label, String tip, Runnable action) {
-        var btn = addDrawableChild(new ModernButtonWidget(x, y, w, h, Text.literal(label), action));
+        var btn = addRenderableWidget(new ModernButtonWidget(x, y, w, h, Component.literal(label), action));
         tooltips.put(btn, tip);
         return btn;
     }
 
     private void addSlider(int x, int y, String label, double val, double min, double max, double defVal, java.util.function.Consumer<Double> setter, String tip) {
         if (y < 40 || y > height - 10) return;
-        var slider = addDrawableChild(new CustomSliderWidget(x, y, 155, 20, label, val, min, max, true, setter));
+        var slider = addRenderableWidget(new CustomSliderWidget(x, y, 155, 20, label, val, min, max, true, setter));
         tooltips.put(slider, tip);
-        var resetBtn = addDrawableChild(new ModernButtonWidget(x + 160, y, 20, 20, Text.literal("\u21ba"), () -> {
+        var resetBtn = addRenderableWidget(new ModernButtonWidget(x + 160, y, 20, 20, Component.literal("\u21ba"), () -> {
             setter.accept(defVal);
             refreshCategoryWidgets();
         }));
@@ -324,7 +323,7 @@ public class PvpTweaksHubScreen extends Screen {
 
     private void addTooltippedSlider(int x, int y, int w, String label, double val, double min, double max, boolean isInt, java.util.function.Consumer<Double> setter, String tip) {
         if (y < 40 || y > height - 10) return;
-        var slider = addDrawableChild(new CustomSliderWidget(x, y, w, 20, label, val, min, max, isInt, setter));
+        var slider = addRenderableWidget(new CustomSliderWidget(x, y, w, 20, label, val, min, max, isInt, setter));
         tooltips.put(slider, tip);
     }
 
@@ -337,23 +336,23 @@ public class PvpTweaksHubScreen extends Screen {
         java.util.function.Consumer<Double> s = forced ? v -> {} : setter;
         CustomSliderWidget slider = new CustomSliderWidget(x, y, 155, 20, label, displayVal, 25, 300, true, s);
         slider.forced = forced;
-        addDrawableChild(slider);
+        addRenderableWidget(slider);
         tooltips.put(slider, forced ? "Currently controlled by Global slider" : tip);
         if ("custom".equals(cfg.itemScaleGlobalMode)) {
-            var linkBtn = addDrawableChild(new ModernButtonWidget(x + 155, y, 20, 20,
-                Text.literal(linked ? "\u26a1" : "\u26aa"), () -> {
+            var linkBtn = addRenderableWidget(new ModernButtonWidget(x + 155, y, 20, 20,
+                Component.literal(linked ? "\u26a1" : "\u26aa"), () -> {
                 if (linked) cfg.itemScaleGlobalLinked.remove(key);
                 else cfg.itemScaleGlobalLinked.add(key);
                 refreshCategoryWidgets();
             }));
             tooltips.put(linkBtn, linked ? "Unlink from Global" : "Link to Global");
-            var resetBtn = addDrawableChild(new ModernButtonWidget(x + 180, y, 20, 20, Text.literal("\u21ba"), () -> {
+            var resetBtn = addRenderableWidget(new ModernButtonWidget(x + 180, y, 20, 20, Component.literal("\u21ba"), () -> {
                 setter.accept((double)100);
                 refreshCategoryWidgets();
             }));
             tooltips.put(resetBtn, "Reset " + label + " to default (100%)");
         } else {
-            var resetBtn = addDrawableChild(new ModernButtonWidget(x + 160, y, 20, 20, Text.literal("\u21ba"), () -> {
+            var resetBtn = addRenderableWidget(new ModernButtonWidget(x + 160, y, 20, 20, Component.literal("\u21ba"), () -> {
                 setter.accept((double)100);
                 refreshCategoryWidgets();
             }));
@@ -361,19 +360,19 @@ public class PvpTweaksHubScreen extends Screen {
         }
     }
 
-    private void promptExport(boolean cfg, boolean keys) { client.setScreen(new ProfileNameScreen(this, null, name -> { try { String json = PvpTweaksProfiles.exportJson(name, cfg, keys); client.keyboard.setClipboard(json); if (client.player != null) client.player.sendMessage(Text.literal("\u00a7a[PVP Tweaks] Profile copied!"), false); } catch (Exception ignored) {} client.execute(() -> client.setScreen(new PvpTweaksHubScreen(parent, "Profiles"))); })); }
-    private void handleImport(boolean cfg, boolean keys) { try { String json = client.keyboard.getClipboard(); boolean ok = PvpTweaksProfiles.importPackage(json, cfg, keys); if (client.player != null) client.player.sendMessage(Text.literal(ok ? "\u00a7a[PVP Tweaks] Imported successfully!" : "\u00a7c[PVP Tweaks] Import failed!"), false); if (ok) refreshCategoryWidgets(); } catch (Exception ignored) {} }
+    private void promptExport(boolean cfg, boolean keys) { minecraft.setScreen(new ProfileNameScreen(this, null, name -> { try { String json = PvpTweaksProfiles.exportJson(name, cfg, keys); minecraft.keyboardHandler.setClipboard(json); if (minecraft.player != null) minecraft.player.displayClientMessage(Component.literal("\u00a7a[PVP Tweaks] Profile copied!"), false); } catch (Exception ignored) {} minecraft.execute(() -> minecraft.setScreen(new PvpTweaksHubScreen(parent, "Profiles"))); })); }
+    private void handleImport(boolean cfg, boolean keys) { try { String json = minecraft.keyboardHandler.getClipboard(); boolean ok = PvpTweaksProfiles.importPackage(json, cfg, keys); if (minecraft.player != null) minecraft.player.displayClientMessage(Component.literal(ok ? "\u00a7a[PVP Tweaks] Imported successfully!" : "\u00a7c[PVP Tweaks] Import failed!"), false); if (ok) refreshCategoryWidgets(); } catch (Exception ignored) {} }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
+    public boolean keyPressed(KeyEvent input) {
         if (listeningForKeybind) {
             if (input.key() == GLFW.GLFW_KEY_ESCAPE) {
-                com.pvptweaks.PvpTweaksClient.openMenuKeyBinding.setBoundKey(net.minecraft.client.util.InputUtil.UNKNOWN_KEY);
+                com.pvptweaks.PvpTweaksClient.openMenuKeyBinding.setKey(com.mojang.blaze3d.platform.InputConstants.UNKNOWN);
             } else {
-                com.pvptweaks.PvpTweaksClient.openMenuKeyBinding.setBoundKey(net.minecraft.client.util.InputUtil.fromKeyCode(input));
+                com.pvptweaks.PvpTweaksClient.openMenuKeyBinding.setKey(com.mojang.blaze3d.platform.InputConstants.getKey(input));
             }
-            net.minecraft.client.option.KeyBinding.updateKeysByCode();
-            client.options.write();
+            net.minecraft.client.KeyMapping.resetMapping();
+            minecraft.options.save();
             listeningForKeybind = false;
             refreshCategoryWidgets();
             return true;
@@ -385,17 +384,17 @@ public class PvpTweaksHubScreen extends Screen {
     public boolean mouseScrolled(double mx, double my, double hx, double vy) {
         if (mx < sidebarWidth) {
             int totalH = categories.size() * 44;
-            sidebarScroll = MathHelper.clamp(sidebarScroll - vy * 15, 0, Math.max(0, totalH - (height - 40)));
+            sidebarScroll = Mth.clamp(sidebarScroll - vy * 15, 0, Math.max(0, totalH - (height - 40)));
             return true;
         } else {
-            contentScroll = MathHelper.clamp(contentScroll - vy * 15, 0, Math.max(0, contentHeight - height + 35));
+            contentScroll = Mth.clamp(contentScroll - vy * 15, 0, Math.max(0, contentHeight - height + 35));
             refreshCategoryWidgets();
             return true;
         }
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         RenderUtils.drawGradientRect(context, 0, 0, this.width, this.height, UiPalette.GRADIENT_START, UiPalette.GRADIENT_END);
         RenderUtils.drawGradientRect(context, 0, 0, sidebarWidth, this.height, 0x50000000, 0x20000000);
         RenderUtils.drawOutline(context, sidebarWidth - 1, 0, 1, this.height, 1, UiPalette.BORDER);
@@ -409,64 +408,64 @@ public class PvpTweaksHubScreen extends Screen {
             int color = selected ? UiPalette.ACCENT_BLUE : (hovered ? UiPalette.TEXT_PRIMARY : UiPalette.TEXT_SECONDARY);
             if (selected) { RenderUtils.drawRoundedRect(context, 8, y, sidebarWidth - 16, 36, 6, 0x4000A3FF); RenderUtils.drawRoundedOutline(context, 8, y, sidebarWidth - 16, 36, 6, 1, UiPalette.ACCENT_BLUE); }
             else if (hovered) RenderUtils.drawRoundedRect(context, 8, y, sidebarWidth - 16, 36, 6, 0x20FFFFFF);
-            context.drawCenteredTextWithShadow(textRenderer, cat.icon, sidebarWidth / 2, y + 6, color);
-            context.drawCenteredTextWithShadow(textRenderer, cat.name, sidebarWidth / 2, y + 20, color);
+            context.drawCenteredString(font, cat.icon, sidebarWidth / 2, y + 6, color);
+            context.drawCenteredString(font, cat.name, sidebarWidth / 2, y + 20, color);
             y += 44;
         }
         context.disableScissor();
 
-        context.drawTextWithShadow(textRenderer, Text.literal("\u00a7lPVP TWEAKS"), sidebarWidth + 20, 18, UiPalette.ACCENT_BLUE);
-        context.drawTextWithShadow(textRenderer, Text.literal(" / " + activeCategory.name.toUpperCase()), sidebarWidth + 20 + textRenderer.getWidth("PVP TWEAKS "), 18, UiPalette.TEXT_SECONDARY);
+        context.drawString(font, Component.literal("\u00a7lPVP TWEAKS"), sidebarWidth + 20, 18, UiPalette.ACCENT_BLUE);
+        context.drawString(font, Component.literal(" / " + activeCategory.name.toUpperCase()), sidebarWidth + 20 + font.width("PVP TWEAKS "), 18, UiPalette.TEXT_SECONDARY);
         RenderUtils.drawOutline(context, sidebarWidth + 20, 32, width - sidebarWidth - 45, 1, 1, 0x30FFFFFF);
         
         if (activeCategory.name.equals("Optimization")) {
             int textX = sidebarWidth + 20;
             int textY = 65 + 10 + 44 + 44 - (int)contentScroll;
             if (textY > 40 && textY < height - 15) {
-                context.drawTextWithShadow(textRenderer, Text.literal("\u00a7e\u26a0 Experimental Features"), textX, textY, 0xFFFFB300);
-                context.drawTextWithShadow(textRenderer, Text.literal("\u00a77Optimizers are disabled by default as they modify"), textX, textY + 15, 0xFFAAAAAA);
-                context.drawTextWithShadow(textRenderer, Text.literal("\u00a77entity interactions and may be disallowed by some"), textX, textY + 27, 0xFFAAAAAA);
-                context.drawTextWithShadow(textRenderer, Text.literal("\u00a77multiplayer servers. Toggle with caution."), textX, textY + 39, 0xFFAAAAAA);
+                context.drawString(font, Component.literal("\u00a7e\u26a0 Experimental Features"), textX, textY, 0xFFFFB300);
+                context.drawString(font, Component.literal("\u00a77Optimizers are disabled by default as they modify"), textX, textY + 15, 0xFFAAAAAA);
+                context.drawString(font, Component.literal("\u00a77entity interactions and may be disallowed by some"), textX, textY + 27, 0xFFAAAAAA);
+                context.drawString(font, Component.literal("\u00a77multiplayer servers. Toggle with caution."), textX, textY + 39, 0xFFAAAAAA);
             }
         } else if (activeCategory.name.equals("Info")) {
             int textX = sidebarWidth + 25;
             int iy = 65 - (int)contentScroll;
             int lh = 12;
 
-            context.drawTextWithShadow(textRenderer, Text.literal("\u00a7l\u2139 ABOUT PVP TWEAKS"), textX, iy, UiPalette.ACCENT_BLUE);
+            context.drawString(font, Component.literal("\u00a7l\u2139 ABOUT PVP TWEAKS"), textX, iy, UiPalette.ACCENT_BLUE);
             iy += 22;
 
-            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77Version: \u00a7f1.9.1"), textX, iy, 0xFFAAAAAA);
+            context.drawString(font, Component.literal("\u00a77Version: \u00a7f1.9.1"), textX, iy, 0xFFAAAAAA);
             iy += lh + 2;
-            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77Author: \u00a7fviper-trick"), textX, iy, 0xFFAAAAAA);
+            context.drawString(font, Component.literal("\u00a77Author: \u00a7fviper-trick"), textX, iy, 0xFFAAAAAA);
             iy += lh + 2;
 
-            context.drawTextWithShadow(textRenderer, Text.literal("\u00a7lDescription"), textX, iy, UiPalette.ACCENT_BLUE);
+            context.drawString(font, Component.literal("\u00a7lDescription"), textX, iy, UiPalette.ACCENT_BLUE);
             iy += 16;
-            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77A comprehensive PVP optimization and visual customization mod"), textX, iy, 0xFFAAAAAA);
+            context.drawString(font, Component.literal("\u00a77A comprehensive PVP optimization and visual customization mod"), textX, iy, 0xFFAAAAAA);
             iy += lh;
-            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77for Minecraft 1.21+. Features item scaling, crosshair"), textX, iy, 0xFFAAAAAA);
+            context.drawString(font, Component.literal("\u00a77for Minecraft 1.21+. Features item scaling, crosshair"), textX, iy, 0xFFAAAAAA);
             iy += lh;
-            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77editor, shield adjuster, CPS counter, durability HUD,"), textX, iy, 0xFFAAAAAA);
+            context.drawString(font, Component.literal("\u00a77editor, shield adjuster, CPS counter, durability HUD,"), textX, iy, 0xFFAAAAAA);
             iy += lh;
-            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77fire presets, fullbright, particle controls, optimizers,"), textX, iy, 0xFFAAAAAA);
+            context.drawString(font, Component.literal("\u00a77fire presets, fullbright, particle controls, optimizers,"), textX, iy, 0xFFAAAAAA);
             iy += lh;
-            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77explosion sounds, zoom, and more."), textX, iy, 0xFFAAAAAA);
+            context.drawString(font, Component.literal("\u00a77explosion sounds, zoom, and more."), textX, iy, 0xFFAAAAAA);
             iy += lh + 10;
 
             iy += 78;
 
-            context.drawTextWithShadow(textRenderer, Text.literal("\u00a7lContact"), textX, iy, UiPalette.ACCENT_BLUE);
+            context.drawString(font, Component.literal("\u00a7lContact"), textX, iy, UiPalette.ACCENT_BLUE);
             iy += 16;
-            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77Email: \u00a7fyag.fvt@gmail.com"), textX, iy, 0xFFAAAAAA);
+            context.drawString(font, Component.literal("\u00a77Email: \u00a7fyag.fvt@gmail.com"), textX, iy, 0xFFAAAAAA);
             iy += lh + 2;
-            context.drawTextWithShadow(textRenderer, Text.literal("\u00a77Discord: \u00a7fvipertrick"), textX, iy, 0xFFAAAAAA);
+            context.drawString(font, Component.literal("\u00a77Discord: \u00a7fvipertrick"), textX, iy, 0xFFAAAAAA);
         }
 
         super.render(context, mouseX, mouseY, delta);
 
-        ClickableWidget hovered = null;
-        for (ClickableWidget cw : tooltips.keySet()) {
+        AbstractWidget hovered = null;
+        for (AbstractWidget cw : tooltips.keySet()) {
             if (cw.isHovered()) {
                 hovered = cw;
                 break;
@@ -477,15 +476,15 @@ public class PvpTweaksHubScreen extends Screen {
         }
     }
 
-    private void renderTooltip(DrawContext ctx, String text, int mx, int my) {
-        int tw = textRenderer.getWidth(text);
+    private void renderTooltip(GuiGraphics ctx, String text, int mx, int my) {
+        int tw = font.width(text);
         int tx = Math.max(3, Math.min(mx - tw / 2, width - tw - 3));
         int ty = Math.max(3, my - 22);
-        ctx.fill(tx - 2, ty - 2, tx + tw + 2, ty + textRenderer.fontHeight + 2, 0xC0202020);
-        ctx.drawTextWithShadow(textRenderer, Text.literal(text), tx, ty, 0xFFFFFFFF);
+        ctx.fill(tx - 2, ty - 2, tx + tw + 2, ty + font.lineHeight + 2, 0xC0202020);
+        ctx.drawString(font, Component.literal(text), tx, ty, 0xFFFFFFFF);
     }
 
-    @Override public boolean mouseClicked(Click click, boolean doubled) {
+    @Override public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
         if (click.x() < sidebarWidth) {
             int y = 40 - (int)sidebarScroll;
             for (Category cat : categories) {
@@ -502,6 +501,6 @@ public class PvpTweaksHubScreen extends Screen {
         return super.mouseClicked(click, doubled);
     }
 
-    @Override public void close() { this.client.setScreen(parent); }
+    @Override public void onClose() { this.minecraft.setScreen(parent); }
     private static class Category { String name, icon; Category(String name, String icon) { this.name = name; this.icon = icon; } }
 }

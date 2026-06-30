@@ -1,9 +1,9 @@
 package com.pvptweaks.mixin;
 
 import com.pvptweaks.config.PvpTweaksConfig;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.hud.InGameHud;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -16,16 +16,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * We inject at the head of this method and cancel it if the texture being
  * rendered is the pumpkin blur texture and the config option is enabled.
  */
-@Mixin(InGameHud.class)
+@Mixin(Gui.class)
 public class PumpkinBlurMixin {
 
     @Inject(
-        method = "renderOverlay",
+        method = "renderTextureOverlay",
         at = @At("HEAD"),
         cancellable = true,
         require = 0
     )
-    private void pvptweaks$onRenderOverlay(DrawContext context, Identifier texture, float opacity, CallbackInfo ci) {
+    private void pvptweaks$onRenderOverlay(GuiGraphics context, ResourceLocation texture, float opacity, CallbackInfo ci) {
         if (PvpTweaksConfig.get().disablePumpkinBlur && texture != null) {
             String path = texture.getPath();
             // Typically "textures/misc/pumpkinblur.png"

@@ -2,8 +2,8 @@ package com.pvptweaks.zoom;
 
 import com.pvptweaks.PvpTweaksClient;
 import com.pvptweaks.config.PvpTweaksConfig;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.InputUtil;
+import net.minecraft.client.Minecraft;
+import com.mojang.blaze3d.platform.InputConstants;
 
 public class ZoomManager {
     public static float currentZoomProgress = 1.0f;
@@ -16,19 +16,19 @@ public class ZoomManager {
             return false;
         }
         
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.currentScreen != null) return false;
+        Minecraft client = Minecraft.getInstance();
+        if (client.gui.screen() != null) return false;
 
         if (cfg.zoomToggle) {
             return isZoomToggled;
         } else {
-            return PvpTweaksClient.zoomKeyBinding.isPressed();
+            return PvpTweaksClient.zoomKeyBinding.isDown();
         }
     }
 
     public static void updateToggleState() {
         if (PvpTweaksConfig.get().zoomToggle) {
-            while (PvpTweaksClient.zoomKeyBinding.wasPressed()) {
+            while (PvpTweaksClient.zoomKeyBinding.consumeClick()) {
                 isZoomToggled = !isZoomToggled;
             }
         } else {

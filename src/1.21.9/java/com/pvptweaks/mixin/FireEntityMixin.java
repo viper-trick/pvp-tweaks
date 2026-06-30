@@ -1,23 +1,23 @@
 package com.pvptweaks.mixin;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.pvptweaks.config.PvpTweaksConfig;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.command.FireCommandRenderer;
-import net.minecraft.client.render.entity.state.EntityRenderState;
-import net.minecraft.client.texture.AtlasManager;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.client.renderer.feature.FlameFeatureRenderer;
+import net.minecraft.client.resources.model.AtlasManager;
 import org.joml.Quaternionf;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(FireCommandRenderer.class)
+@Mixin(FlameFeatureRenderer.class)
 public class FireEntityMixin {
 
     @Inject(method = "method_73005", remap = false, at = @At("HEAD"))
     private void pvptweaks$scaleFire(
-            MatrixStack.Entry matricesEntry, VertexConsumerProvider vertexConsumers,
+            PoseStack.Pose matricesEntry, MultiBufferSource vertexConsumers,
             EntityRenderState renderState, Quaternionf rotation, AtlasManager atlasManager,
             CallbackInfo ci) {
         

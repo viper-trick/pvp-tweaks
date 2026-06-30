@@ -4,24 +4,22 @@ import com.pvptweaks.PvpTweaksMod;
 import com.pvptweaks.config.PvpTweaksConfig;
 import com.pvptweaks.config.SoundProfile;
 import com.pvptweaks.sound.CustomSoundManager;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.registry.Registries;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 
 public class ModernSoundPickerScreen extends Screen {
     private final Screen parent;
@@ -30,13 +28,13 @@ public class ModernSoundPickerScreen extends Screen {
     private final Runnable onSave;
     
     private SoundListWidget list;
-    private TextFieldWidget searchField;
+    private EditBox searchField;
     private int tab = 0; 
     private float waveAnim = 0;
     private boolean isPlaying = false;
 
     public ModernSoundPickerScreen(Screen parent, SoundProfile profile, String label, Runnable onSave) {
-        super(Text.literal("Sound Picker"));
+        super(Component.literal("Sound Picker"));
         this.parent = parent;
         this.profile = profile;
         this.label = label;
@@ -47,55 +45,55 @@ public class ModernSoundPickerScreen extends Screen {
     protected void init() {
         int listT = 88;
         int listB = 52;
-        list = new SoundListWidget(client, width - 40, height - listT - listB, listT, 36);
+        list = new SoundListWidget(minecraft, width - 40, height - listT - listB, listT, 36);
         list.setX(20);
-        addSelectableChild(list);
+        addWidget(list);
         list.refresh(tab);
 
-        searchField = new TextFieldWidget(textRenderer, width / 2 - 100, 60, 200, 16, Text.literal("Search..."));
-        searchField.setChangedListener(list::filter);
-        addSelectableChild(searchField);
+        searchField = new EditBox(font, width / 2 - 100, 60, 200, 16, Component.literal("Search..."));
+        searchField.setResponder(list::filter);
+        addWidget(searchField);
 
         selectActiveSound();
 
         int tabW = 70;
         int tabX = width / 2 - 115;
-        addDrawableChild(new ModernButtonWidget(tabX, 34, tabW, 20, Text.literal("Presets"), () -> switchTab(0)));
-        addDrawableChild(new ModernButtonWidget(tabX + 80, 34, tabW, 20, Text.literal("Registry"), () -> switchTab(1)));
-        addDrawableChild(new ModernButtonWidget(tabX + 160, 34, tabW, 20, Text.literal("Custom"), () -> switchTab(2)));
+        addRenderableWidget(new ModernButtonWidget(tabX, 34, tabW, 20, Component.literal("Presets"), () -> switchTab(0)));
+        addRenderableWidget(new ModernButtonWidget(tabX + 80, 34, tabW, 20, Component.literal("Registry"), () -> switchTab(1)));
+        addRenderableWidget(new ModernButtonWidget(tabX + 160, 34, tabW, 20, Component.literal("Custom"), () -> switchTab(2)));
 
         int btnY = height - 36;
-        addDrawableChild(new ModernButtonWidget(20, btnY, 70, 20, Text.literal("Default"), () -> {
+        addRenderableWidget(new ModernButtonWidget(20, btnY, 70, 20, Component.literal("Default"), () -> {
             profile.mode = "default";
             onSave.run();
-            close();
+            onClose();
         }));
 
-        addDrawableChild(new ModernButtonWidget(width / 2 - 120, btnY, 75, 20, Text.literal("\u25b6 Preview"), () -> {
-            SoundEntry selected = list.getSelectedOrNull();
+        addRenderableWidget(new ModernButtonWidget(width / 2 - 120, btnY, 75, 20, Component.literal("\u25b6 Preview"), () -> {
+            SoundEntry selected = list.getSelected();
             if (selected != null) previewSound(selected.id);
         }));
 
-        addDrawableChild(new ModernButtonWidget(width / 2 - 40, btnY, 75, 20, Text.literal("\u00a7a+ Add"), () -> {
-            client.setScreen(new AddSoundScreen(this));
+        addRenderableWidget(new ModernButtonWidget(width / 2 - 40, btnY, 75, 20, Component.literal("\u00a7a+ Add"), () -> {
+            minecraft.setScreen(new AddSoundScreen(this));
         }));
 
-        addDrawableChild(new ModernButtonWidget(width / 2 + 40, btnY, 75, 20, Text.literal("\u2699 Edit"), () -> {
-            SoundEntry selected = list.getSelectedOrNull();
+        addRenderableWidget(new ModernButtonWidget(width / 2 + 40, btnY, 75, 20, Component.literal("\u2699 Edit"), () -> {
+            SoundEntry selected = list.getSelected();
             if (selected != null && tab == 2) {
-                client.setScreen(new SoundEditorScreen(this, selected.name, selected.id));
+                minecraft.setScreen(new SoundEditorScreen(this, selected.name, selected.id));
             }
         }));
 
-        addDrawableChild(new ModernButtonWidget(width / 2 + 120, btnY, 75, 20, Text.literal("\u2714 Apply"), () -> {
-            SoundEntry selected = list.getSelectedOrNull();
+        addRenderableWidget(new ModernButtonWidget(width / 2 + 120, btnY, 75, 20, Component.literal("\u2714 Apply"), () -> {
+            SoundEntry selected = list.getSelected();
             if (selected != null) saveEntry(selected);
         }));
 
-        addDrawableChild(new ModernButtonWidget(width / 2 - 200, btnY, 70, 20, Text.literal("§cRemove"), () -> {
-            SoundEntry selected = list.getSelectedOrNull();
+        addRenderableWidget(new ModernButtonWidget(width / 2 - 200, btnY, 70, 20, Component.literal("§cRemove"), () -> {
+            SoundEntry selected = list.getSelected();
             if (selected != null && tab == 2) {
-                client.setScreen(new ConfirmRemoveScreen(this, () -> {
+                minecraft.setScreen(new ConfirmRemoveScreen(this, () -> {
                     try {
                         Files.deleteIfExists(Path.of(selected.id));
                         String base = selected.id.replaceFirst("\\.(ogg|mp3|wav)$", "");
@@ -106,12 +104,12 @@ public class ModernSoundPickerScreen extends Screen {
                 }));
             }
         }));
-        addDrawableChild(new ModernButtonWidget(width - 90, btnY, 70, 20, Text.literal("Cancel"), this::close));
+        addRenderableWidget(new ModernButtonWidget(width - 90, btnY, 70, 20, Component.literal("Cancel"), this::onClose));
     }
 
     private void openSoundsFolder() {
         try {
-            net.minecraft.util.Util.getOperatingSystem().open(PvpTweaksConfig.SOUNDS_DIR.toFile());
+            net.minecraft.Util.getPlatform().openFile(PvpTweaksConfig.SOUNDS_DIR.toFile());
         } catch (Exception e) {
             PvpTweaksMod.LOGGER.error("Failed to open sounds folder", e);
         }
@@ -120,7 +118,7 @@ public class ModernSoundPickerScreen extends Screen {
     private void switchTab(int t) {
         this.tab = t;
         list.refresh(t);
-        searchField.setText("");
+        searchField.setValue("");
         selectActiveSound();
     }
 
@@ -140,7 +138,7 @@ public class ModernSoundPickerScreen extends Screen {
 
     private void saveEntry(SoundEntry entry) {
         if (tab == 2) {
-            Identifier customId = CustomSoundManager.registerCustomSound(entry.id);
+            ResourceLocation customId = CustomSoundManager.registerCustomSound(entry.id);
             if (customId != null) {
                 profile.mode = "preset";
                 profile.presetId = customId.toString();
@@ -150,14 +148,14 @@ public class ModernSoundPickerScreen extends Screen {
             profile.presetId = entry.id;
         }
         onSave.run();
-        close();
+        onClose();
     }
 
     private void previewSound(String idStr) {
         try {
-            Identifier id = tab == 2 ? CustomSoundManager.registerCustomSound(idStr) : (idStr.contains(":") ? Identifier.of(idStr) : Identifier.ofVanilla(idStr));
+            ResourceLocation id = tab == 2 ? CustomSoundManager.registerCustomSound(idStr) : (idStr.contains(":") ? ResourceLocation.parse(idStr) : ResourceLocation.withDefaultNamespace(idStr));
             if (id == null) return;
-            client.getSoundManager().play(PositionedSoundInstance.master(SoundEvent.of(id), 1.0f));
+            minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(id), 1.0f));
             isPlaying = true;
             waveAnim = 0;
         } catch (Exception e) {
@@ -166,13 +164,13 @@ public class ModernSoundPickerScreen extends Screen {
     }
 
     @Override
-    public void render(DrawContext ctx, int mx, int my, float delta) {
+    public void render(GuiGraphics ctx, int mx, int my, float delta) {
         RenderUtils.drawGradientRect(ctx, 0, 0, width, height, UiPalette.GRADIENT_START, UiPalette.GRADIENT_END);
         RenderUtils.drawOutline(ctx, 10, 10, width - 20, height - 20, 1, UiPalette.BORDER);
         super.render(ctx, mx, my, delta);
         list.render(ctx, mx, my, delta);
         searchField.render(ctx, mx, my, delta);
-        ctx.drawTextWithShadow(textRenderer, Text.literal("\u00a7l" + label), 20, 16, UiPalette.ACCENT_BLUE);
+        ctx.drawString(font, Component.literal("\u00a7l" + label), 20, 16, UiPalette.ACCENT_BLUE);
         if (isPlaying) {
             waveAnim += delta * 0.2f;
             drawSoundWave(ctx, width - 50, 25);
@@ -180,7 +178,7 @@ public class ModernSoundPickerScreen extends Screen {
         }
     }
 
-    private void drawSoundWave(DrawContext ctx, int x, int y) {
+    private void drawSoundWave(GuiGraphics ctx, int x, int y) {
         for (int i = 0; i < 5; i++) {
             float h = (float) Math.abs(Math.sin(waveAnim + i * 0.5)) * 10;
             ctx.fill(x + i * 4, (int)(y - h/2), x + i * 4 + 2, (int)(y + h/2), UiPalette.ACCENT_BLUE);
@@ -208,18 +206,18 @@ public class ModernSoundPickerScreen extends Screen {
 
     public void selectAndSaveSound(String path) { importAndApply(path); }
 
-    @Override public void close() { client.setScreen(parent); }
+    @Override public void onClose() { minecraft.setScreen(parent); }
 
-    class SoundListWidget extends AlwaysSelectedEntryListWidget<SoundEntry> {
+    class SoundListWidget extends ObjectSelectionList<SoundEntry> {
         private final List<SoundEntry> all = new ArrayList<>();
-        public SoundListWidget(MinecraftClient mc, int width, int height, int top, int entryH) { super(mc, width, height, top, entryH); }
-        @Override protected void drawScrollbar(DrawContext context, int mouseX, int mouseY) {}
+        public SoundListWidget(Minecraft mc, int width, int height, int top, int entryH) { super(mc, width, height, top, entryH); }
+        @Override protected void renderScrollbar(GuiGraphics context, int mouseX, int mouseY) {}
         public void scrollToEntry(SoundEntry entry) {
             int idx = children().indexOf(entry);
             if (idx >= 0) {
                 int entryHeight = 36;
                 int visibleHeight = getHeight();
-                setScrollY(Math.max(0, idx * entryHeight - (visibleHeight / 2.0) + (entryHeight / 2.0)));
+                setScrollAmount(Math.max(0, idx * entryHeight - (visibleHeight / 2.0) + (entryHeight / 2.0)));
             }
         }
         public void refresh(int tab) {
@@ -228,7 +226,7 @@ public class ModernSoundPickerScreen extends Screen {
                 String[][] presets = {{"Explosion", "minecraft:entity.generic.explode"}, {"Anvil", "minecraft:block.anvil.land"}, {"Totem", "minecraft:item.totem.use"}};
                 for (String[] p : presets) all.add(new SoundEntry(p[0], p[1]));
             } else if (tab == 1) {
-                Registries.SOUND_EVENT.getIds().stream().map(Identifier::toString).sorted().forEach(id -> all.add(new SoundEntry(id, id)));
+                BuiltInRegistries.SOUND_EVENT.keySet().stream().map(ResourceLocation::toString).sorted().forEach(id -> all.add(new SoundEntry(id, id)));
             } else {
                 try {
                     Path dir = PvpTweaksConfig.SOUNDS_DIR;
@@ -249,22 +247,22 @@ public class ModernSoundPickerScreen extends Screen {
         }
     }
 
-    class SoundEntry extends AlwaysSelectedEntryListWidget.Entry<SoundEntry> {
+    class SoundEntry extends ObjectSelectionList.Entry<SoundEntry> {
         final String name, id;
         private final long createdAt = System.currentTimeMillis();
         SoundEntry(String name, String id) { this.name = name; this.id = id; }
         @Override
-        public void render(DrawContext ctx, int mx, int my, boolean hovered, float delta) {
+        public void renderContent(GuiGraphics ctx, int mx, int my, boolean hovered, float delta) {
             int x = this.getX(); int y = this.getY();
-            boolean selected = list.getSelectedOrNull() == this;
+            boolean selected = list.getSelected() == this;
             if (selected) RenderUtils.drawRoundedRect(ctx, x, y, list.getRowWidth(), 32, 4, 0x4000A3FF);
             int availWidth = list.getRowWidth() - 10;
             drawMarqueeText(ctx, name, x + 5, y + 5, availWidth, selected ? UiPalette.ACCENT_BLUE : UiPalette.TEXT_PRIMARY, selected);
             drawMarqueeText(ctx, id, x + 5, y + 18, availWidth, 0xFF666666, selected);
         }
-        private void drawMarqueeText(DrawContext ctx, String text, int tx, int ty, int availWidth, int color, boolean selected) {
-            int textWidth = textRenderer.getWidth(text);
-            ctx.enableScissor(tx, ty, tx + availWidth, ty + textRenderer.fontHeight);
+        private void drawMarqueeText(GuiGraphics ctx, String text, int tx, int ty, int availWidth, int color, boolean selected) {
+            int textWidth = font.width(text);
+            ctx.enableScissor(tx, ty, tx + availWidth, ty + font.lineHeight);
             int offset = 0;
             if (selected && textWidth > availWidth) {
                 long elapsed = System.currentTimeMillis() - createdAt;
@@ -278,45 +276,45 @@ public class ModernSoundPickerScreen extends Screen {
                     offset = -(int)(prog * (textWidth - availWidth));
                 }
             }
-            ctx.drawTextWithShadow(textRenderer, Text.literal(text), tx + offset, ty, color);
+            ctx.drawString(font, Component.literal(text), tx + offset, ty, color);
             ctx.disableScissor();
         }
-        @Override public boolean mouseClicked(Click click, boolean doubled) {
+        @Override public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
             list.setSelected(this);
             if (doubled && !id.equals("invalid")) previewSound(id);
             return true;
         }
-        @Override public Text getNarration() { return Text.literal(name); }
+        @Override public Component getNarration() { return Component.literal(name); }
     }
     class ConfirmRemoveScreen extends Screen {
         private final Screen parent;
         private final Runnable onConfirm;
 
         ConfirmRemoveScreen(Screen parent, Runnable onConfirm) {
-            super(Text.literal("Confirm"));
+            super(Component.literal("Confirm"));
             this.parent = parent;
             this.onConfirm = onConfirm;
         }
 
         @Override
         protected void init() {
-            addDrawableChild(new ModernButtonWidget(width / 2 - 80, height / 2 - 15, 70, 20, Text.literal("§aYes"), () -> {
+            addRenderableWidget(new ModernButtonWidget(width / 2 - 80, height / 2 - 15, 70, 20, Component.literal("§aYes"), () -> {
                 onConfirm.run();
-                client.setScreen(parent);
+                minecraft.setScreen(parent);
             }));
-            addDrawableChild(new ModernButtonWidget(width / 2 + 10, height / 2 - 15, 70, 20, Text.literal("Cancel"), () -> {
-                client.setScreen(parent);
+            addRenderableWidget(new ModernButtonWidget(width / 2 + 10, height / 2 - 15, 70, 20, Component.literal("Cancel"), () -> {
+                minecraft.setScreen(parent);
             }));
         }
 
         @Override
-        public void render(DrawContext ctx, int mx, int my, float delta) {
+        public void render(GuiGraphics ctx, int mx, int my, float delta) {
             RenderUtils.drawGradientRect(ctx, 0, 0, width, height, 0xCC000000, 0xCC000000);
             RenderUtils.drawOutline(ctx, width / 2 - 100, height / 2 - 40, 200, 60, 1, UiPalette.BORDER);
-            ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("Remove?"), width / 2, height / 2 - 30, 0xFFFFFFFF);
+            ctx.drawCenteredString(font, Component.literal("Remove?"), width / 2, height / 2 - 30, 0xFFFFFFFF);
             super.render(ctx, mx, my, delta);
         }
 
-        @Override public void close() { client.setScreen(parent); }
+        @Override public void onClose() { minecraft.setScreen(parent); }
     }
 }

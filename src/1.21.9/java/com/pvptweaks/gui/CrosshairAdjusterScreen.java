@@ -1,33 +1,33 @@
 package com.pvptweaks.gui;
 
 import com.pvptweaks.config.PvpTweaksConfig;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.text.Text;
-import net.minecraft.client.input.KeyInput;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
 public class CrosshairAdjusterScreen extends Screen {
 
     private final Screen parent;
     private static final String[] STYLE_NAMES = { "Cross", "Dot", "T-Shape", "X-Cross" };
-    private TextFieldWidget codeField;
+    private EditBox codeField;
     private String importStatus = "";
-    private final java.util.IdentityHashMap<ClickableWidget, String> tooltips = new java.util.IdentityHashMap<>();
+    private final java.util.IdentityHashMap<AbstractWidget, String> tooltips = new java.util.IdentityHashMap<>();
 
     public CrosshairAdjusterScreen(Screen parent) {
-        super(Text.literal("Crosshair Adjuster"));
+        super(Component.literal("Crosshair Adjuster"));
         this.parent = parent;
     }
 
     @Override
     protected void init() {
-        String existingText = (codeField != null) ? codeField.getText() : "";
+        String existingText = (codeField != null) ? codeField.getValue() : "";
         boolean wasFocused = (codeField != null) && codeField.isFocused();
 
-        this.clearChildren();
+        this.clearWidgets();
         tooltips.clear();
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
 
@@ -116,21 +116,21 @@ public class CrosshairAdjusterScreen extends Screen {
 
         // ── IMPORT/EXPORT ──
         int bottomY = 210;
-        codeField = new TextFieldWidget(textRenderer, cx - 120, bottomY + 2, 195, 18, Text.literal(""));
+        codeField = new EditBox(font, cx - 120, bottomY + 2, 195, 18, Component.literal(""));
         codeField.setMaxLength(200);
-        codeField.setPlaceholder(Text.literal("PVP1;size;gap;thick;outline;r;g;b;a;style;dot;split"));
-        codeField.setText(existingText);
+        codeField.setHint(Component.literal("PVP1;size;gap;thick;outline;r;g;b;a;style;dot;split"));
+        codeField.setValue(existingText);
         if (wasFocused) {
             codeField.setFocused(true);
         }
-        addDrawableChild(codeField);
+        addRenderableWidget(codeField);
 
         int btnY = bottomY + 24;
         addTooltipped(cx - 120, btnY, 100, btnH,
             "⬇ Import",
             "Parse PVP format from the text field above",
             () -> {
-                String raw = codeField.getText().trim();
+                String raw = codeField.getValue().trim();
                 if (raw.isEmpty()) { importStatus = "§cNothing to import"; return; }
                 boolean ok = importPvpFormat(raw, cfg);
                 importStatus = ok ? "§aImported!" : "§cInvalid format";
@@ -142,7 +142,7 @@ public class CrosshairAdjusterScreen extends Screen {
             "Copy current settings as a PVP format string",
             () -> {
                 String code = exportPvpFormat(cfg);
-                client.keyboard.setClipboard(code);
+                minecraft.keyboardHandler.setClipboard(code);
                 importStatus = "§aCopied to clipboard!";
             });
 
@@ -175,21 +175,21 @@ public class CrosshairAdjusterScreen extends Screen {
         addTooltipped(cx - 105, bY, 100, btnH,
             "Save & Close",
             "Save crosshair config to disk and close",
-            () -> { PvpTweaksConfig.save(); client.setScreen(parent); });
+            () -> { PvpTweaksConfig.save(); minecraft.setScreen(parent); });
         addTooltipped(cx + 5, bY, 100, btnH,
             "Cancel",
             "Close without saving changes",
-            () -> client.setScreen(parent));
+            () -> minecraft.setScreen(parent));
     }
 
     private void addTooltipped(int x, int y, int w, int h, String label, String tip, Runnable action) {
-        var btn = addDrawableChild(new ModernButtonWidget(x, y, w, h, Text.literal(label), action));
+        var btn = addRenderableWidget(new ModernButtonWidget(x, y, w, h, Component.literal(label), action));
         tooltips.put(btn, tip);
     }
 
     private void addSlider(int x, int y, int w, String label, double val, double min, double max,
                            boolean isInt, java.util.function.Consumer<Double> setter, String tip) {
-        var slider = addDrawableChild(new CustomSliderWidget(x, y, w, 20, label, val, min, max, isInt, setter));
+        var slider = addRenderableWidget(new CustomSliderWidget(x, y, w, 20, label, val, min, max, isInt, setter));
         tooltips.put(slider, tip);
     }
 
@@ -229,31 +229,31 @@ public class CrosshairAdjusterScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
+    public boolean keyPressed(KeyEvent input) {
         if (input.key() == GLFW.GLFW_KEY_ESCAPE) {
             if (codeField != null && codeField.isFocused()) {
                 codeField.setFocused(false);
                 return true;
             }
-            client.setScreen(parent);
+            minecraft.setScreen(parent);
             return true;
         }
         return super.keyPressed(input);
     }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         RenderUtils.drawGradientRect(ctx, 0, 0, this.width, this.height,
             UiPalette.GRADIENT_START, UiPalette.GRADIENT_END);
 
-        ctx.drawCenteredTextWithShadow(textRenderer,
-            Text.literal("§lCrosshair Adjuster"), this.width / 2, 10, 0xFFFFFFFF);
+        ctx.drawCenteredString(font,
+            Component.literal("§lCrosshair Adjuster"), this.width / 2, 10, 0xFFFFFFFF);
 
         RenderUtils.drawOutline(ctx, this.width / 2 - 1, 30, 1, this.height - 60, 1, 0x30FFFFFF);
 
         if (!importStatus.isEmpty()) {
-            ctx.drawCenteredTextWithShadow(textRenderer,
-                Text.literal(importStatus), this.width / 2, this.height - 46, 0xFFFFFFFF);
+            ctx.drawCenteredString(font,
+                Component.literal(importStatus), this.width / 2, this.height - 46, 0xFFFFFFFF);
         }
 
         int prevW = 60, prevH = 60;
@@ -265,14 +265,14 @@ public class CrosshairAdjusterScreen extends Screen {
         super.render(ctx, mouseX, mouseY, delta);
 
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
-        float s = (float) this.client.getWindow().getScaleFactor();
-        ctx.getMatrices().pushMatrix();
-        ctx.getMatrices().scale(1.0f / s, 1.0f / s);
+        float s = (float) this.minecraft.getWindow().getGuiScale();
+        ctx.pose().pushMatrix();
+        ctx.pose().scale(1.0f / s, 1.0f / s);
         int cx = Math.round((px + prevW / 2.0f) * s);
         int cy = Math.round((py + prevH / 2.0f) * s);
-        float pixelScale = (float) client.getWindow().getFramebufferHeight() / 1080.0f;
+        float pixelScale = (float) minecraft.getWindow().getHeight() / 1080.0f;
         CrosshairRenderer.drawNative(ctx, cx, cy, cfg, pixelScale);
-        ctx.getMatrices().popMatrix();
+        ctx.pose().popMatrix();
 
         int swatchColor = (cfg.crosshairAlpha << 24) | (cfg.crosshairRed << 16) |
                           (cfg.crosshairGreen << 8) | cfg.crosshairBlue;
@@ -280,8 +280,8 @@ public class CrosshairAdjusterScreen extends Screen {
         ctx.fill(px + prevW - 9, py + 3, px + prevW - 3, py + 9, swatchColor);
 
         // ── TOOLTIP ON HOVER ──
-        ClickableWidget hovered = null;
-        for (ClickableWidget cw : tooltips.keySet()) {
+        AbstractWidget hovered = null;
+        for (AbstractWidget cw : tooltips.keySet()) {
             if (cw.isHovered()) {
                 hovered = cw;
                 break;
@@ -292,14 +292,14 @@ public class CrosshairAdjusterScreen extends Screen {
         }
     }
 
-    private void renderTooltip(DrawContext ctx, String text, int mx, int my) {
-        int tw = textRenderer.getWidth(text);
+    private void renderTooltip(GuiGraphics ctx, String text, int mx, int my) {
+        int tw = font.width(text);
         int tx = Math.max(3, Math.min(mx - tw / 2, width - tw - 3));
         int ty = Math.max(3, my - 22);
-        ctx.fill(tx - 2, ty - 2, tx + tw + 2, ty + textRenderer.fontHeight + 2, 0xC0202020);
-        ctx.drawTextWithShadow(textRenderer, Text.literal(text), tx, ty, 0xFFFFFFFF);
+        ctx.fill(tx - 2, ty - 2, tx + tw + 2, ty + font.lineHeight + 2, 0xC0202020);
+        ctx.drawString(font, Component.literal(text), tx, ty, 0xFFFFFFFF);
     }
 
     @Override
-    public void close() { client.setScreen(parent); }
+    public void onClose() { minecraft.setScreen(parent); }
 }

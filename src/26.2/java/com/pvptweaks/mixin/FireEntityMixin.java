@@ -1,33 +1,28 @@
 package com.pvptweaks.mixin;
 
 import com.pvptweaks.config.PvpTweaksConfig;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.command.FireCommandRenderer;
-import net.minecraft.client.render.entity.state.EntityRenderState;
-import net.minecraft.client.texture.AtlasManager;
-import net.minecraft.client.util.math.MatrixStack;
-import org.joml.Quaternionf;
+import net.minecraft.client.renderer.feature.FlameFeatureRenderer;
+import net.minecraft.client.renderer.feature.FeatureFrameContext;
+import com.mojang.blaze3d.vertex.PoseStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(FireCommandRenderer.class)
+import java.util.List;
+
+@Mixin(FlameFeatureRenderer.class)
 public class FireEntityMixin {
 
-    @Inject(method = "method_73005", remap = false, at = @At("HEAD"))
-    private void pvptweaks$scaleFire(
-            MatrixStack.Entry matricesEntry, VertexConsumerProvider vertexConsumers,
-            EntityRenderState renderState, Quaternionf rotation, AtlasManager atlasManager,
-            CallbackInfo ci) {
-        
+    @Inject(method = "buildGroup", at = @At("RETURN"))
+    private void pvptweaks$scaleFire(FeatureFrameContext context, List<FlameFeatureRenderer.Submit> submits, CallbackInfo ci) {
         float scale = PvpTweaksConfig.get().getFireEntityScale();
         if (scale != 1.0f) {
-            // Apply scale to the matrices entry.
-            // FireCommandRenderer uses the entry directly, so we scale it.
-            // Note: matricesEntry is the entry being used for vertex calls.
-            // Scaling here affects all subsequent vertices in this draw call.
-            matricesEntry.scale(scale, scale, scale);
+            submits.replaceAll(submit -> {
+                PoseStack.Pose scaledPose = submit.pose().copy();
+                scaledPose.scale(scale, scale, scale);
+                return new FlameFeatureRenderer.Submit(scaledPose, submit.entityRenderState(), submit.rotation());
+            });
         }
     }
 }

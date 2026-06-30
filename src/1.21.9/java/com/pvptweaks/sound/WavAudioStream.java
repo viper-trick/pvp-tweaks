@@ -1,16 +1,16 @@
 package com.pvptweaks.sound;
 
-import net.minecraft.client.sound.BufferedAudioStream;
 import it.unimi.dsi.fastutil.floats.FloatConsumer;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
+import net.minecraft.client.sounds.FloatSampleSource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public class WavAudioStream implements BufferedAudioStream {
+public class WavAudioStream implements FloatSampleSource {
     private final AudioInputStream ais;
     private final AudioFormat format;
     private final byte[] buffer = new byte[8192];
@@ -30,7 +30,7 @@ public class WavAudioStream implements BufferedAudioStream {
     }
 
     @Override
-    public boolean read(FloatConsumer consumer) throws IOException {
+    public boolean readChunk(FloatConsumer consumer) throws IOException {
         int read = ais.read(buffer);
         if (read <= 0) return false;
 
@@ -53,7 +53,7 @@ public class WavAudioStream implements BufferedAudioStream {
     @Override
     public ByteBuffer read(int size) throws IOException {
         // Use default implementation from BufferedAudioStream
-        return BufferedAudioStream.super.read(size);
+        return FloatSampleSource.super.read(size);
     }
 
     @Override

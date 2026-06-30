@@ -1,5 +1,5 @@
 package com.pvptweaks;
-import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.KeyMapping;
 public class TestKeyBinding {
-    KeyBinding k = new KeyBinding("test", 0, null);
+    KeyMapping k = new KeyMapping("test", 0, null);
 }

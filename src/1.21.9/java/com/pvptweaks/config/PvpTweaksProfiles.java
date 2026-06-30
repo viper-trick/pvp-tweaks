@@ -2,12 +2,11 @@ package com.pvptweaks.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.mojang.blaze3d.platform.InputConstants;
 import com.pvptweaks.PvpTweaksMod;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
-
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
@@ -46,11 +45,11 @@ public class PvpTweaksProfiles {
     /** Capture all current game keybinds. */
     public static Map<String, String> getCurrentKeybinds() {
         Map<String, String> keys = new HashMap<>();
-        MinecraftClient mc = MinecraftClient.getInstance();
+        Minecraft mc = Minecraft.getInstance();
         if (mc == null) return keys;
 
-        for (KeyBinding kb : mc.options.allKeys) {
-            keys.put(kb.getId(), kb.getBoundKeyTranslationKey());
+        for (KeyMapping kb : mc.options.keyMappings) {
+            keys.put(kb.getName(), kb.saveString());
         }
         return keys;
     }
@@ -58,17 +57,17 @@ public class PvpTweaksProfiles {
     /** Apply keybinds to Minecraft options. */
     public static void applyKeybinds(Map<String, String> keybinds) {
         if (keybinds == null || keybinds.isEmpty()) return;
-        MinecraftClient mc = MinecraftClient.getInstance();
+        Minecraft mc = Minecraft.getInstance();
         if (mc == null) return;
 
-        for (KeyBinding kb : mc.options.allKeys) {
-            String bound = keybinds.get(kb.getId());
+        for (KeyMapping kb : mc.options.keyMappings) {
+            String bound = keybinds.get(kb.getName());
             if (bound != null) {
-                kb.setBoundKey(InputUtil.fromTranslationKey(bound));
+                kb.setKey(InputConstants.getKey(bound));
             }
         }
-        KeyBinding.updateKeysByCode();
-        mc.options.write();
+        KeyMapping.resetMapping();
+        mc.options.save();
     }
 
     /** Save the current config and keybinds as a named profile. */

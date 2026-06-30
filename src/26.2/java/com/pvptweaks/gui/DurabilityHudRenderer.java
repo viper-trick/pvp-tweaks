@@ -2,16 +2,16 @@ package com.pvptweaks.gui;
 
 import com.pvptweaks.config.PvpTweaksConfig;
 import com.pvptweaks.config.SoundProfile;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.item.ItemStack;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.resources.Identifier;
 
-import net.minecraft.client.sound.PositionedSoundInstance;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -28,28 +28,28 @@ public class DurabilityHudRenderer {
     /** True once we've played the sound; reset when ALL previously-low items recover. */
     private static boolean alertPlayed = false;
 
-    public static void render(DrawContext context, RenderTickCounter tickCounter) {
+    public static void extractRenderState(GuiGraphicsExtractor context, DeltaTracker tickCounter) {
         if (sampleActive) return;
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         if (!cfg.durabilityHudEnabled) return;
 
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player == null || client.options.hudHidden) return;
+        Minecraft client = Minecraft.getInstance();
+        if (client.player == null || client.gui.hud.isHidden()) return;
 
         List<ItemStack> items = new ArrayList<>();
         if (cfg.durabilityHudShowArmor) {
             EquipmentSlot[] slots = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
             for (EquipmentSlot slot : slots) {
-                ItemStack stack = client.player.getEquippedStack(slot);
+                ItemStack stack = client.player.getItemBySlot(slot);
                 if (stack != null && !stack.isEmpty()) items.add(stack);
             }
         }
         if (cfg.durabilityHudShowMainHand) {
-            ItemStack stack = client.player.getMainHandStack();
+            ItemStack stack = client.player.getMainHandItem();
             if (stack != null && !stack.isEmpty()) items.add(stack);
         }
         if (cfg.durabilityHudShowOffHand) {
-            ItemStack stack = client.player.getOffHandStack();
+            ItemStack stack = client.player.getOffhandItem();
             if (stack != null && !stack.isEmpty()) items.add(stack);
         }
 
@@ -58,7 +58,7 @@ public class DurabilityHudRenderer {
         // ── Durability alert sound-once logic ────────────────────────────────
         Set<String> currentlyLow = new HashSet<>();
         for (ItemStack stack : items) {
-            boolean low = stack.isDamageable() && stack.getDamage() > (stack.getMaxDamage() * 0.9);
+            boolean low = stack.isDamageableItem() && stack.getDamageValue() > (stack.getMaxDamage() * 0.9);
             if (low) currentlyLow.add(stack.getItem().toString());
         }
 
@@ -76,8 +76,8 @@ public class DurabilityHudRenderer {
         previouslyLow.addAll(currentlyLow);
         // ─────────────────────────────────────────────────────────────────────
 
-        int width = client.getWindow().getScaledWidth();
-        int height = client.getWindow().getScaledHeight();
+        int width = client.getWindow().getGuiScaledWidth();
+        int height = client.getWindow().getGuiScaledHeight();
 
         int x = (int) (width * (cfg.durabilityHudX / 100.0f));
         int y = (int) (height * (cfg.durabilityHudY / 100.0f));
@@ -99,7 +99,7 @@ public class DurabilityHudRenderer {
             }
 
             // Low durability check
-            boolean low = stack.isDamageable() && stack.getDamage() > (stack.getMaxDamage() * 0.9);
+            boolean low = stack.isDamageableItem() && stack.getDamageValue() > (stack.getMaxDamage() * 0.9);
             boolean blink = cfg.durabilityHudLowAlert && low && (System.currentTimeMillis() % 1000 < 500);
 
             if (blink) {
@@ -122,14 +122,14 @@ public class DurabilityHudRenderer {
                 }
             }
 
-            context.drawItem(stack, ix, iy);
-            context.drawStackOverlay(client.textRenderer, stack, ix, iy);
+            context.item(stack, ix, iy);
+            context.itemDecorations(client.font, stack, ix, iy);
 
-            if (cfg.durabilityHudShowExact && stack.isDamageable()) {
-                int dur = stack.getMaxDamage() - stack.getDamage();
+            if (cfg.durabilityHudShowExact && stack.isDamageableItem()) {
+                int dur = stack.getMaxDamage() - stack.getDamageValue();
                 String text = String.valueOf(dur);
                 int col = low ? 0xFFFF5555 : 0xFFFFFFFF;
-                int tw = client.textRenderer.getWidth(text);
+                int tw = client.font.width(text);
                 int tx, ty;
                 if ("vertical".equals(cfg.durabilityHudAlign)) {
                     tx = ix + 18;
@@ -138,7 +138,7 @@ public class DurabilityHudRenderer {
                     tx = ix + 8 - tw / 2;
                     ty = iy - 10;
                 }
-                context.drawTextWithShadow(client.textRenderer, text, tx, ty, col);
+                context.text(client.font, text, tx, ty, col);
             }
 
             offset += 20;
@@ -146,29 +146,29 @@ public class DurabilityHudRenderer {
     }
 
     private static void playSound(SoundProfile p) {
-        MinecraftClient mc = MinecraftClient.getInstance();
+        Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
 
         SoundEvent ev = null;
         if (p.isDefault()) {
-            ev = net.minecraft.sound.SoundEvents.UI_BUTTON_CLICK.value();
+            ev = net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK.value();
         } else if (p.isCustom()) {
             Identifier id = com.pvptweaks.sound.CustomSoundManager.registerCustomSound(p.customPath);
-            if (id != null) ev = SoundEvent.of(id);
+            if (id != null) ev = SoundEvent.createVariableRangeEvent(id);
         } else if (p.isPreset()) {
             Identifier id = Identifier.tryParse(p.presetId);
             if (id != null) {
                 if ("pvptweaks".equals(id.getNamespace())) {
                     com.pvptweaks.sound.CustomSoundManager.injectIfMissing(id);
                 }
-                ev = SoundEvent.of(id);
+                ev = SoundEvent.createVariableRangeEvent(id);
             }
         }
 
         if (ev != null) {
-            PositionedSoundInstance inst = PositionedSoundInstance.ui(ev, p.pitchPct / 100f);
+            SimpleSoundInstance inst = SimpleSoundInstance.forUI(ev, p.pitchPct / 100f);
             try {
-                java.lang.reflect.Field f = PositionedSoundInstance.class.getSuperclass().getDeclaredField("volume");
+                java.lang.reflect.Field f = SimpleSoundInstance.class.getSuperclass().getDeclaredField("volume");
                 f.setAccessible(true);
                 f.setFloat(inst, p.volumePct / 100f);
             } catch (Exception ignored) {}

@@ -1,45 +1,45 @@
 package com.pvptweaks.mixin;
 
 import com.pvptweaks.config.PvpTweaksConfig;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.network.ClientPlayerInteractionManager;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.ActionResult;
-import net.minecraft.world.World;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.MultiPlayerGameMode;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.BlockHitResult;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(ClientPlayerInteractionManager.class)
+@Mixin(MultiPlayerGameMode.class)
 public class InteractionManagerMixin {
 
-    @Inject(method = "attackEntity", at = @At("HEAD"))
-    private void pvptweaks$onAttackEntity(PlayerEntity player, Entity target, CallbackInfo ci) {
-        if (PvpTweaksConfig.get().crystalOptimizer && target instanceof EndCrystalEntity) {
+    @Inject(method = "attack", at = @At("HEAD"))
+    private void pvptweaks$onAttackEntity(Player player, Entity target, CallbackInfo ci) {
+        if (PvpTweaksConfig.get().crystalOptimizer && target instanceof EndCrystal) {
             target.discard();
         }
     }
 
-    @Inject(method = "interactBlock", at = @At("HEAD"))
-    private void pvptweaks$onInteractBlock(ClientPlayerEntity player, Hand hand, BlockHitResult hitResult, CallbackInfoReturnable<ActionResult> cir) {
+    @Inject(method = "useItemOn", at = @At("HEAD"))
+    private void pvptweaks$onInteractBlock(LocalPlayer player, InteractionHand hand, BlockHitResult hitResult, CallbackInfoReturnable<InteractionResult> cir) {
         if (PvpTweaksConfig.get().anchorOptimizer) {
             BlockPos pos = hitResult.getBlockPos();
-            World world = MinecraftClient.getInstance().world;
-            if (world != null && world.getBlockState(pos).isOf(Blocks.RESPAWN_ANCHOR)) {
-                if (!player.getStackInHand(hand).isOf(net.minecraft.item.Items.GLOWSTONE)) {
+            Level world = Minecraft.getInstance().level;
+            if (world != null && world.getBlockState(pos).is(Blocks.RESPAWN_ANCHOR)) {
+                if (!player.getItemInHand(hand).is(net.minecraft.world.item.Items.GLOWSTONE)) {
                     // Check if we are in Nether or End (where anchors explode)
-                    if (world.getRegistryKey() == World.NETHER || world.getRegistryKey() == World.END) {
+                    if (world.dimension() == Level.NETHER || world.dimension() == Level.END) {
                         // Replace with a 'fake' block that doesn't block placement (like a Fern)
-                        world.setBlockState(pos, Blocks.FERN.getDefaultState());
+                        world.setBlockAndUpdate(pos, Blocks.FERN.defaultBlockState());
                     }
                 }
             }

@@ -3,8 +3,10 @@ package com.pvptweaks.config;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.item.*;
 
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
@@ -193,7 +195,7 @@ public class PvpTweaksConfig {
     public float getItemScale(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return otherItemScalePct / 100.0f;
         Item item = stack.getItem();
-        String itemPath = net.minecraft.registry.Registries.ITEM.getId(item).toString();
+        String itemPath = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item).toString();
 
         if (customItemScales.containsKey(itemPath)) {
             return customItemScales.get(itemPath) / 100.0f;

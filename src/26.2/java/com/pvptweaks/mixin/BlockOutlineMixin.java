@@ -1,11 +1,11 @@
 package com.pvptweaks.mixin;
 
 import com.pvptweaks.config.PvpTweaksConfig;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.WorldRenderer;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.phys.BlockHitResult;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * Handler intentionally takes only CallbackInfo — Mixin allows this
  * even if the target method has many params.
  */
-@Mixin(WorldRenderer.class)
+@Mixin(LevelRenderer.class)
 public class BlockOutlineMixin {
 
     @Inject(method = "drawBlockOutline", at = @At("HEAD"), cancellable = true)
@@ -27,12 +27,12 @@ public class BlockOutlineMixin {
         if (!cfg.plantsControlEnabled) return;
         if (cfg.outlinePlants == null || cfg.outlinePlants.isEmpty()) return;
 
-        MinecraftClient mc = MinecraftClient.getInstance();
-        if (mc == null || mc.world == null || mc.crosshairTarget == null) return;
-        if (!(mc.crosshairTarget instanceof BlockHitResult bhr)) return;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc == null || mc.level == null || mc.hitResult == null) return;
+        if (!(mc.hitResult instanceof BlockHitResult bhr)) return;
 
-        BlockState state = mc.world.getBlockState(bhr.getBlockPos());
-        String id = Registries.BLOCK.getId(state.getBlock()).toString();
+        BlockState state = mc.level.getBlockState(bhr.getBlockPos());
+        String id = Integer.toString(BuiltInRegistries.BLOCK.getId(state.getBlock()));
         if (cfg.outlinePlants.contains(id)) {
             ci.cancel();
         }

@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class ZoomifyMixin {
 
     @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
-    private void pvptweaks$onTick(net.minecraft.client.MinecraftClient client, CallbackInfo ci) {
+    private void pvptweaks$onTick(net.minecraft.client.Minecraft client, CallbackInfo ci) {
         if (!"zoomify".equals(PvpTweaksConfig.get().zoomManagementMode)) {
             try {
                 Class<?> clazz = Class.forName("dev.isxander.zoomify.Zoomify");
