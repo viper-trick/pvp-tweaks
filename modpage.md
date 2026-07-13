@@ -10,7 +10,7 @@ The mod also adds special features, such as Armor HUD, zoom, custom crosshair, a
    1. Accessing the Config: 
        - In-Game: Press the config keybind to open the PVP Tweaks hub screen.
        - Mod Menu: If installed, go to your Mods list, select PVP Tweaks, and click the Configure button.
-       - Legacy Menu: Enable "Use Legacy Menu" in settings to use the Cloth Config–based screen instead.
+
    2. HUDs: Use the Adjuster buttons inside the config to drag elements on-screen.
    3. Sounds: Open the Sound Picker in any category, search for a sound or import one of your own, adjust pitch, and click save.
    4. Profiles: Save your full setup and share it via clipboard import/export.
@@ -83,7 +83,7 @@ The mod also adds special features, such as Armor HUD, zoom, custom crosshair, a
   Version dependencies:
   Fabric Loader ≥0.18.4 (all versions)
   Fabric API (all versions)
-  Cloth Config (optional — only needed for legacy menu)
+  Cloth Config (optional)
   Mod Menu (optional — adds config button in mods list)
   
 Note:

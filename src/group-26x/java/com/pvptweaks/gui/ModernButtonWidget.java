@@ -10,17 +10,24 @@ import net.minecraft.util.Mth;
 public class ModernButtonWidget extends AbstractWidget {
     private float hoverProgress = 0f;
     private final Runnable onPress;
+    private Runnable onDisabledClick = null;
 
     public ModernButtonWidget(int x, int y, int width, int height, Component message, Runnable onPress) {
         super(x, y, width, height, message);
         this.onPress = onPress;
     }
 
+    public void setOnDisabledClick(Runnable r) { this.onDisabledClick = r; }
+
     @Override
     public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
-        if (this.active && this.visible && click.x() >= this.getX() && click.x() <= this.getX() + this.width && click.y() >= this.getY() && click.y() <= this.getY() + this.height) {
+        if (this.visible && click.x() >= this.getX() && click.x() <= this.getX() + this.width && click.y() >= this.getY() && click.y() <= this.getY() + this.height) {
             this.playDownSound(Minecraft.getInstance().getSoundManager());
-            if (onPress != null) onPress.run();
+            if (this.active) {
+                if (onPress != null) onPress.run();
+            } else if (onDisabledClick != null) {
+                onDisabledClick.run();
+            }
             return true;
         }
         return false;
@@ -29,6 +36,15 @@ public class ModernButtonWidget extends AbstractWidget {
     @Override
     protected void extractWidgetRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         if (!this.visible) return;
+
+        if (!this.active) {
+            RenderUtils.drawRoundedRect(context, this.getX(), this.getY(), this.width, this.height, 8, 0x30000000);
+            RenderUtils.drawRoundedOutline(context, this.getX(), this.getY(), this.width, this.height, 8, 1, 0x20FFFFFF);
+            int textWidth = Minecraft.getInstance().font.width(this.getMessage());
+            context.text(Minecraft.getInstance().font, this.getMessage(),
+                    this.getX() + (this.width - textWidth) / 2, this.getY() + (this.height - 8) / 2, 0xFF888888);
+            return;
+        }
 
         boolean hovered = this.isFocused() || this.isHovered();
         hoverProgress = Mth.lerp(delta * 0.2f, hoverProgress, hovered ? 1.0f : 0.0f);

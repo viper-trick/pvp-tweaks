@@ -66,15 +66,15 @@ public class PvpTweaksHubScreen extends Screen {
         this.clearWidgets();
         tooltips.clear();
         
-        addTooltipped(this.width - 65, 12, 55, 20, "Done",
-            "Save configuration and close", () -> {
+        var doneBtn = addRenderableWidget(new ModernButtonWidget(this.width - 65, 12, 55, 20, Component.literal("Done"), () -> {
             PvpTweaksConfig.save();
             if (fireChanged) {
                 if (minecraft.levelRenderer != null) minecraft.levelRenderer.allChanged();
                 fireChanged = false;
             }
             minecraft.setScreen(parent);
-        });
+        }));
+        tooltips.put(doneBtn, "Save configuration and close");
 
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         int x = sidebarWidth + 25;
@@ -180,7 +180,6 @@ public class PvpTweaksHubScreen extends Screen {
                     "Apply fire changes immediately", () -> {
                     PvpTweaksConfig.save();
                     if (minecraft.levelRenderer != null) minecraft.levelRenderer.allChanged();
-                    minecraft.reloadResourcePacks();
                     fireChanged = false;
                     refreshCategoryWidgets();
                 }); y += spacing;
@@ -305,6 +304,7 @@ public class PvpTweaksHubScreen extends Screen {
     }
 
     private ModernButtonWidget addTooltipped(int x, int y, int w, int h, String label, String tip, Runnable action) {
+        if (y < 40 || y > height) return null;
         var btn = addRenderableWidget(new ModernButtonWidget(x, y, w, h, Component.literal(label), action));
         tooltips.put(btn, tip);
         return btn;

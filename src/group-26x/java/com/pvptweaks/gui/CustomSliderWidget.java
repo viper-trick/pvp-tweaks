@@ -115,7 +115,16 @@ public class CustomSliderWidget extends AbstractSliderButton {
     @Override
     public void extractWidgetRenderState(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float delta) {
         net.minecraft.client.gui.Font tr = net.minecraft.client.Minecraft.getInstance().font;
-        
+
+        if (!this.active) {
+            RenderUtils.drawRoundedRect(ctx, this.getX(), this.getY(), this.width, this.height, 8, 0x30000000);
+            RenderUtils.drawRoundedOutline(ctx, this.getX(), this.getY(), this.width, this.height, 8, 1, 0x20FFFFFF);
+            int textX = this.getX() + (this.width - tr.width(this.getMessage())) / 2;
+            int textY = this.getY() + (this.height - 8) / 2;
+            ctx.text(tr, this.getMessage(), textX, textY, 0xFF888888);
+            return;
+        }
+
         if (forced) {
             RenderUtils.drawRoundedRect(ctx, this.getX(), this.getY(), this.width, this.height, 8, 0x30000000);
             RenderUtils.drawRoundedOutline(ctx, this.getX(), this.getY(), this.width, this.height, 8, 1, 0x20FFFFFF);

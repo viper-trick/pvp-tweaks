@@ -14,7 +14,6 @@ import org.lwjgl.glfw.GLFW;
 @Environment(EnvType.CLIENT)
 public class PvpTweaksClient implements ClientModInitializer {
 
-    private static String lastFirePreset = "";
     /** Gamma saved before fullbright was enabled — restored when disabled. */
     private static double savedGamma = -1.0;
     
@@ -62,14 +61,6 @@ public class PvpTweaksClient implements ClientModInitializer {
             com.pvptweaks.zoom.ZoomManager.updateToggleState();
 
             PvpTweaksConfig cfg = PvpTweaksConfig.get();
-
-            // ── Fire preset reload ────────────────────────────────────────────
-            String current = cfg.firePreset;
-            if (current == null) current = "vanilla";
-            if (!current.equals(lastFirePreset)) {
-                lastFirePreset = current;
-                if (client.levelRenderer != null) client.levelRenderer.allChanged();
-            }
 
             // ── Fullbright ────────────────────────────────────────────────────
             boolean gammaUtilsMode = "gammautils".equals(cfg.fullbrightManagementMode)

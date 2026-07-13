@@ -16,6 +16,8 @@ public class CrosshairAdjusterScreen extends Screen {
     private EditBox codeField;
     private String importStatus = "";
     private final java.util.IdentityHashMap<AbstractWidget, String> tooltips = new java.util.IdentityHashMap<>();
+    private long flashUntil = 0;
+    private ModernButtonWidget customBtn;
 
     public CrosshairAdjusterScreen(Screen parent) {
         super(Component.literal("Crosshair Adjuster"));
@@ -30,89 +32,122 @@ public class CrosshairAdjusterScreen extends Screen {
         this.clearWidgets();
         tooltips.clear();
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
+        boolean customOff = !cfg.customCrosshairEnabled;
 
         int cx = this.width / 2;
         int btnH = 20;
         int sldH = 20;
 
         // ── TOP TOGGLES ROW (Y = 32) ──
-        addTooltipped(cx - 190, 32, 90, btnH,
+        Runnable flashCustom = () -> flashUntil = System.currentTimeMillis() + 600;
+        customBtn = addTooltipped(cx - 190, 32, 90, btnH,
             "Custom: " + (cfg.customCrosshairEnabled ? "§aON" : "§7OFF"),
             "Enable or disable the custom crosshair",
             () -> { cfg.customCrosshairEnabled = !cfg.customCrosshairEnabled; init(); });
 
-        addTooltipped(cx - 95, 32, 90, btnH,
+        var styleBtn = addTooltipped(cx - 95, 32, 90, btnH,
             "Style: §e" + STYLE_NAMES[Math.max(0, Math.min(cfg.crosshairStyle, STYLE_NAMES.length-1))],
             "Switch crosshair shape (Cross / Dot / T / X)",
             () -> { cfg.crosshairStyle = (cfg.crosshairStyle + 1) % STYLE_NAMES.length; init(); });
+        styleBtn.active = !customOff;
+        if (customOff) styleBtn.setOnDisabledClick(flashCustom);
 
-        addTooltipped(cx + 5, 32, 90, btnH,
+        var dotBtn = addTooltipped(cx + 5, 32, 90, btnH,
             "Dot: " + (cfg.crosshairDot ? "§aON" : "§7OFF"),
             "Toggle center dot on or off",
             () -> { cfg.crosshairDot = !cfg.crosshairDot; init(); });
+        dotBtn.active = !customOff;
+        if (customOff) dotBtn.setOnDisabledClick(flashCustom);
 
-        addTooltipped(cx + 100, 32, 90, btnH,
+        var outlineBtn = addTooltipped(cx + 100, 32, 90, btnH,
             "Outline: " + (cfg.crosshairOutline ? "§aON" : "§7OFF"),
             "Toggle black outline around arms",
             () -> { cfg.crosshairOutline = !cfg.crosshairOutline; init(); });
+        outlineBtn.active = !customOff;
+        if (customOff) outlineBtn.setOnDisabledClick(flashCustom);
 
         // ── SLIDERS ──
-        addSlider(cx - 190, 62, 160, "Size", cfg.crosshairSize, 0.0, 10.0, false,
+        var sizeSld = addSlider(cx - 190, 62, 160, "Size", cfg.crosshairSize, 0.0, 10.0, false,
             v -> cfg.crosshairSize = v.floatValue(), "Arm length in pixels (at 1080p)");
-        addTooltipped(cx - 28, 62, 22, sldH, "↺",
+        sizeSld.active = !customOff;
+        var sizeReset = addTooltipped(cx - 28, 62, 22, sldH, "↺",
             "Reset Size to default (3.0)",
             () -> { cfg.crosshairSize = 3.0f; init(); });
+        sizeReset.active = !customOff;
+        if (customOff) sizeReset.setOnDisabledClick(flashCustom);
 
-        addSlider(cx - 190, 86, 160, "Gap", cfg.crosshairGap, -5.0, 5.0, false,
+        var gapSld = addSlider(cx - 190, 86, 160, "Gap", cfg.crosshairGap, -5.0, 5.0, false,
             v -> cfg.crosshairGap = v.floatValue(), "Arm offset from center (negative = overlap)");
-        addTooltipped(cx - 28, 86, 22, sldH, "↺",
+        gapSld.active = !customOff;
+        var gapReset = addTooltipped(cx - 28, 86, 22, sldH, "↺",
             "Reset Gap to default (1.0)",
             () -> { cfg.crosshairGap = 1.0f; init(); });
+        gapReset.active = !customOff;
+        if (customOff) gapReset.setOnDisabledClick(flashCustom);
 
-        addSlider(cx - 190, 110, 160, "Thickness", cfg.crosshairThickness, 0.0, 6.0, false,
+        var thickSld = addSlider(cx - 190, 110, 160, "Thickness", cfg.crosshairThickness, 0.0, 6.0, false,
             v -> cfg.crosshairThickness = v.floatValue(), "Arm width in pixels");
-        addTooltipped(cx - 28, 110, 22, sldH, "↺",
+        thickSld.active = !customOff;
+        var thickReset = addTooltipped(cx - 28, 110, 22, sldH, "↺",
             "Reset Thickness to default (1.0)",
             () -> { cfg.crosshairThickness = 1.0f; init(); });
+        thickReset.active = !customOff;
+        if (customOff) thickReset.setOnDisabledClick(flashCustom);
 
-        addSlider(cx - 190, 134, 160, "Split", cfg.crosshairSplitDistance, 0.0, 10.0, false,
+        var splitSld = addSlider(cx - 190, 134, 160, "Split", cfg.crosshairSplitDistance, 0.0, 10.0, false,
             v -> cfg.crosshairSplitDistance = v.floatValue(), "Extra outward offset for each arm");
-        addTooltipped(cx - 28, 134, 22, sldH, "↺",
+        splitSld.active = !customOff;
+        var splitReset = addTooltipped(cx - 28, 134, 22, sldH, "↺",
             "Reset Split to default (0.0)",
             () -> { cfg.crosshairSplitDistance = 0.0f; init(); });
+        splitReset.active = !customOff;
+        if (customOff) splitReset.setOnDisabledClick(flashCustom);
 
         if (cfg.crosshairOutline) {
-            addSlider(cx - 190, 158, 160, "Outline px", cfg.crosshairOutlineThickness, 0.5, 3.5, false,
+            var outlineSld = addSlider(cx - 190, 158, 160, "Outline px", cfg.crosshairOutlineThickness, 0.5, 3.5, false,
                 v -> cfg.crosshairOutlineThickness = v.floatValue(), "Outline border thickness in pixels");
-            addTooltipped(cx - 28, 158, 22, sldH, "↺",
+            outlineSld.active = !customOff;
+            var outlineReset = addTooltipped(cx - 28, 158, 22, sldH, "↺",
                 "Reset Outline to default (1.0)",
                 () -> { cfg.crosshairOutlineThickness = 1.0f; init(); });
+            outlineReset.active = !customOff;
+            if (customOff) outlineReset.setOnDisabledClick(flashCustom);
         }
 
         // RIGHT Column (Colors)
-        addSlider(cx + 5, 62, 185, "Red", cfg.crosshairRed, 0, 255, true,
+        var redSld = addSlider(cx + 5, 62, 185, "Red", cfg.crosshairRed, 0, 255, true,
             v -> cfg.crosshairRed = v.intValue(), "Red color component (0\u2013255)");
-        addSlider(cx + 5, 86, 185, "Green", cfg.crosshairGreen, 0, 255, true,
+        redSld.active = !customOff;
+        var greenSld = addSlider(cx + 5, 86, 185, "Green", cfg.crosshairGreen, 0, 255, true,
             v -> cfg.crosshairGreen = v.intValue(), "Green color component (0\u2013255)");
-        addSlider(cx + 5, 110, 185, "Blue", cfg.crosshairBlue, 0, 255, true,
+        greenSld.active = !customOff;
+        var blueSld = addSlider(cx + 5, 110, 185, "Blue", cfg.crosshairBlue, 0, 255, true,
             v -> cfg.crosshairBlue = v.intValue(), "Blue color component (0\u2013255)");
-        addSlider(cx + 5, 134, 185, "Alpha", cfg.crosshairAlpha, 0, 255, true,
+        blueSld.active = !customOff;
+        var alphaSld = addSlider(cx + 5, 134, 185, "Alpha", cfg.crosshairAlpha, 0, 255, true,
             v -> cfg.crosshairAlpha = v.intValue(), "Opacity (255 = fully opaque)");
+        alphaSld.active = !customOff;
 
         // ── TOGGLE ROW (Y = 184) ──
         int toggleRowY = 184;
-        addTooltipped(cx - 190, toggleRowY, 75, btnH,
+        var recoilBtn = addTooltipped(cx - 190, toggleRowY, 75, btnH,
             "Recoil: " + (cfg.crosshairFollowRecoil ? "§aON" : "§7OFF"),
             "Crosshair follows weapon recoil pattern",
             () -> { cfg.crosshairFollowRecoil = !cfg.crosshairFollowRecoil; init(); });
-        addTooltipped(cx - 110, toggleRowY, 60, btnH,
+        recoilBtn.active = !customOff;
+        if (customOff) recoilBtn.setOnDisabledClick(flashCustom);
+        var fixGapBtn = addTooltipped(cx - 110, toggleRowY, 60, btnH,
             "FixGap: " + (cfg.crosshairFixedGap ? "§aON" : "§7OFF"),
             "Lock gap to a fixed value regardless of weapon",
             () -> { cfg.crosshairFixedGap = !cfg.crosshairFixedGap; init(); });
-        addTooltipped(cx - 45, toggleRowY, 75, btnH,
+        fixGapBtn.active = !customOff;
+        if (customOff) fixGapBtn.setOnDisabledClick(flashCustom);
+        var wpnGapBtn = addTooltipped(cx - 45, toggleRowY, 75, btnH,
             "WpnGap: " + (cfg.crosshairGapUseWeapon ? "§aON" : "§7OFF"),
             "Adjust gap based on the equipped weapon",
             () -> { cfg.crosshairGapUseWeapon = !cfg.crosshairGapUseWeapon; init(); });
+        wpnGapBtn.active = !customOff;
+        if (customOff) wpnGapBtn.setOnDisabledClick(flashCustom);
 
         // ── IMPORT/EXPORT ──
         int bottomY = 210;
@@ -182,15 +217,17 @@ public class CrosshairAdjusterScreen extends Screen {
             () -> minecraft.setScreen(parent));
     }
 
-    private void addTooltipped(int x, int y, int w, int h, String label, String tip, Runnable action) {
+    private ModernButtonWidget addTooltipped(int x, int y, int w, int h, String label, String tip, Runnable action) {
         var btn = addRenderableWidget(new ModernButtonWidget(x, y, w, h, Component.literal(label), action));
         tooltips.put(btn, tip);
+        return btn;
     }
 
-    private void addSlider(int x, int y, int w, String label, double val, double min, double max,
+    private CustomSliderWidget addSlider(int x, int y, int w, String label, double val, double min, double max,
                            boolean isInt, java.util.function.Consumer<Double> setter, String tip) {
         var slider = addRenderableWidget(new CustomSliderWidget(x, y, w, 20, label, val, min, max, isInt, setter));
         tooltips.put(slider, tip);
+        return slider;
     }
 
     private static boolean importPvpFormat(String text, PvpTweaksConfig cfg) {
@@ -249,8 +286,6 @@ public class CrosshairAdjusterScreen extends Screen {
         ctx.centeredText(font,
             Component.literal("§lCrosshair Adjuster"), this.width / 2, 10, 0xFFFFFFFF);
 
-        RenderUtils.drawOutline(ctx, this.width / 2 - 1, 30, 1, this.height - 60, 1, 0x30FFFFFF);
-
         if (!importStatus.isEmpty()) {
             ctx.centeredText(font,
                 Component.literal(importStatus), this.width / 2, this.height - 46, 0xFFFFFFFF);
@@ -274,6 +309,13 @@ public class CrosshairAdjusterScreen extends Screen {
         float pixelScale = (float) window.getHeight() / 1080.0f;
         CrosshairRenderer.drawNative(ctx, cx, cy, cfg, pixelScale);
         ctx.pose().popMatrix();
+
+        if (flashUntil > System.currentTimeMillis()) {
+            float flashAlpha = Math.min(1f, (flashUntil - System.currentTimeMillis()) / 600f);
+            int flashColor = ((int)(flashAlpha * 160) << 24) | 0xFFFF00;
+            RenderUtils.drawRoundedOutline(ctx, customBtn.getX() - 2, customBtn.getY() - 2,
+                customBtn.getWidth() + 4, customBtn.getHeight() + 4, 10, 3, flashColor);
+        }
 
         int swatchColor = (cfg.crosshairAlpha << 24) | (cfg.crosshairRed << 16) |
                           (cfg.crosshairGreen << 8) | cfg.crosshairBlue;
