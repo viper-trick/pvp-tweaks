@@ -1,3 +1,21 @@
+## 1.9.3
+
+### Added
+- **Fire Block Height controls** — presets (vanilla/full/mid/low/flat/none) now directly control fire block height; renamed from "Entity Fire Height" to "Fire Block Height"
+- **Disabled widget styling** — buttons and sliders render grayed out when inactive
+- **Flash hint on disabled crosshair settings** — clicking a disabled crosshair control briefly highlights the "Custom" toggle
+
+### Changed
+- Fire block height preset changes now only apply via "Save Fire" button or "Done" (no auto-reload on preset cycle)
+- "Save Fire" button now only triggers chunk rebuild (no resource pack reload)
+- Auto-reload tick handler removed (was causing unwanted reloads on preset change)
+- Updated mod version to 1.9.3 across all supported Minecraft versions
+
+### Fixed
+- GUI buttons no longer visible above the title bar when scrolling
+- Crosshair Adjuster: removed the center vertical divider bar
+- Crosshair Adjuster: all settings are locked when Custom is toggled OFF
+
 ## 1.9.1
 
 ### Added

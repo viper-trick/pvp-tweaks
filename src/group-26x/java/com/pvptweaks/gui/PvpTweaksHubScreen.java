@@ -429,7 +429,7 @@ public class PvpTweaksHubScreen extends Screen {
             context.text(font, Component.literal("\u00a7l\u2139 ABOUT PVP TWEAKS"), textX, iy, UiPalette.ACCENT_BLUE);
             iy += 22;
 
-            context.text(font, Component.literal("\u00a77Version: \u00a7f1.9.1"), textX, iy, 0xFFAAAAAA);
+            context.text(font, Component.literal("\u00a77Version: \u00a7f1.9.3"), textX, iy, 0xFFAAAAAA);
             iy += lh + 2;
             context.text(font, Component.literal("\u00a77Author: \u00a7fviper-trick"), textX, iy, 0xFFAAAAAA);
             iy += lh + 2;

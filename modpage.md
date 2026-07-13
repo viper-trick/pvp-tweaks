@@ -43,7 +43,7 @@ The mod also adds special features, such as Armor HUD, zoom, custom crosshair, a
    - Explosion Particles: Per-type sliders to control TNT, Creeper, Bed, Ghast, and Wind Charge particles.
 
   👁 Visuals
-   - Fire Presets: Cycle through Vanilla, Full, Mid, Low, Flat, or None for entity fire height.
+   - Fire Block Height: Cycle through Vanilla, Full, Mid, Low, Flat, or None presets to control the fire block's rendered height.
    - Fire Overlay: Adjust the scale of the fire overlay effect on your screen (0-200%).
    - Fullbright: Dedicated screen with gamma settings for brightening dark areas.
    - Pumpkin Blur: Toggle the pumpkin overlay on/off.

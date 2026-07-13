@@ -66,15 +66,15 @@ public class PvpTweaksHubScreen extends Screen {
         this.clearWidgets();
         tooltips.clear();
         
-        addTooltipped(this.width - 65, 12, 55, 20, "Done",
-            "Save configuration and close", () -> {
+        var doneBtn = addRenderableWidget(new ModernButtonWidget(this.width - 65, 12, 55, 20, Component.literal("Done"), () -> {
             PvpTweaksConfig.save();
             if (fireChanged) {
                 if (minecraft.levelExtractor != null) minecraft.levelExtractor.allChanged();
                 fireChanged = false;
             }
             minecraft.setScreenAndShow(parent);
-        });
+        }));
+        tooltips.put(doneBtn, "Save configuration and close");
 
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         int x = sidebarWidth + 25;
@@ -172,6 +172,7 @@ public class PvpTweaksHubScreen extends Screen {
                 int idx = (java.util.Arrays.asList("vanilla", "full", "mid", "low", "flat", "none").indexOf(cfg.firePreset) + 1) % 6;
                 cfg.firePreset = new String[]{"vanilla", "full", "mid", "low", "flat", "none"}[idx];
                 fireChanged = true;
+                refreshCategoryWidgets();
             }); y += spacing;
 
             if (fireChanged) {
@@ -179,7 +180,6 @@ public class PvpTweaksHubScreen extends Screen {
                     "Apply fire changes immediately", () -> {
                     PvpTweaksConfig.save();
                     if (minecraft.levelExtractor != null) minecraft.levelExtractor.allChanged();
-                    minecraft.reloadResourcePacks();
                     fireChanged = false;
                     refreshCategoryWidgets();
                 }); y += spacing;
@@ -304,6 +304,7 @@ public class PvpTweaksHubScreen extends Screen {
     }
 
     private ModernButtonWidget addTooltipped(int x, int y, int w, int h, String label, String tip, Runnable action) {
+        if (y < 40 || y > height) return null;
         var btn = addRenderableWidget(new ModernButtonWidget(x, y, w, h, Component.literal(label), action));
         tooltips.put(btn, tip);
         return btn;
@@ -428,7 +429,7 @@ public class PvpTweaksHubScreen extends Screen {
             context.text(font, Component.literal("\u00a7l\u2139 ABOUT PVP TWEAKS"), textX, iy, UiPalette.ACCENT_BLUE);
             iy += 22;
 
-            context.text(font, Component.literal("\u00a77Version: \u00a7f1.9.1"), textX, iy, 0xFFAAAAAA);
+            context.text(font, Component.literal("\u00a77Version: \u00a7f1.9.3"), textX, iy, 0xFFAAAAAA);
             iy += lh + 2;
             context.text(font, Component.literal("\u00a77Author: \u00a7fviper-trick"), textX, iy, 0xFFAAAAAA);
             iy += lh + 2;
