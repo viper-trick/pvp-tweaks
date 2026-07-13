@@ -69,7 +69,7 @@ The mod also adds special features, such as Armor HUD, zoom, custom crosshair, a
    - Configurable zoom (smooth or instant) with adjustable FOV and scroll sensitivity.
 
   📁 Profiles & Presets
-   - Built-in "Competitive" preset for one-click high-performance optimization.
+   - Built-in "Competitive" preset
    - Profile System: Save, load, import, and export full config setups via the system clipboard.
    - Keybind import/export: Share your keybinding setup separately.
    - Profiles Folder: One-click button to open your profiles folder in the file manager.
