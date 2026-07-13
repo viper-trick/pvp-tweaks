@@ -4,7 +4,6 @@
   "package": "com.pvptweaks.mixin",
   "plugin": "com.pvptweaks.mixin.PvpTweaksMixinPlugin",
   "compatibilityLevel": "JAVA_21",
-  "refmap": "pvptweaks-refmap.json",
   "mixins": [],
   "client": [
     "SoundInstanceMixin",
@@ -38,8 +37,7 @@
     "DrawContextMixin",
     "ZoomifyMixin",
     "GammaUtilsMixin",
-    "CrosshairMixin",
-    "GameOptionsMixin"
+    "CrosshairMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -15,6 +15,7 @@
     "ExplosionPacketMixin",
     "FireBlockRenderMixin",
     "FireEntityMixin",
+    "FireHeightMixin",
     "FireOverlayMixin",
     "FireRandomTickMixin",
     "InGameOverlayRendererMixin",

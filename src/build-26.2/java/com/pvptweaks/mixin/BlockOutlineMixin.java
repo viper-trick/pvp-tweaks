@@ -21,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(LevelRenderer.class)
 public class BlockOutlineMixin {
 
-    @Inject(method = "drawBlockOutline", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "submitBlockOutline", at = @At("HEAD"), cancellable = true)
     private void pvptweaks$hideOutline(CallbackInfo ci) {
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         if (!cfg.plantsControlEnabled) return;

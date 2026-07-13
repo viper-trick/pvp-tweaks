@@ -70,7 +70,7 @@ public class PvpTweaksHubScreen extends Screen {
             "Save configuration and close", () -> {
             PvpTweaksConfig.save();
             if (fireChanged) {
-                if (minecraft.levelRenderer != null) minecraft.levelRenderer.resetLevelRenderData();
+                if (minecraft.levelExtractor != null) minecraft.levelExtractor.allChanged();
                 fireChanged = false;
             }
             minecraft.setScreenAndShow(parent);
@@ -167,7 +167,7 @@ public class PvpTweaksHubScreen extends Screen {
             int startY = y;
 
             y += 5;
-            addTooltipped(x1, y, 180, 20, "Entity Fire Height: " + cfg.firePreset.toUpperCase(),
+            addTooltipped(x1, y, 180, 20, "Fire Block Height: " + cfg.firePreset.toUpperCase(),
                 "Cycle through fire height presets (vanilla/full/mid/low/flat/none)", () -> {
                 int idx = (java.util.Arrays.asList("vanilla", "full", "mid", "low", "flat", "none").indexOf(cfg.firePreset) + 1) % 6;
                 cfg.firePreset = new String[]{"vanilla", "full", "mid", "low", "flat", "none"}[idx];
@@ -179,7 +179,6 @@ public class PvpTweaksHubScreen extends Screen {
                 addTooltipped(x1, y, 180, 20, "\u00a7aSave Fire",
                     "Apply fire changes immediately", () -> {
                     PvpTweaksConfig.save();
-                    if (minecraft.levelRenderer != null) minecraft.levelRenderer.resetLevelRenderData();
                     minecraft.reloadResourcePacks();
                     fireChanged = false;
                     refreshCategoryWidgets();

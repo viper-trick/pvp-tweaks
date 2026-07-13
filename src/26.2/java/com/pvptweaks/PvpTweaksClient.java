@@ -75,7 +75,7 @@ public class PvpTweaksClient implements ClientModInitializer {
             if (current == null) current = "vanilla";
             if (!current.equals(lastFirePreset)) {
                 lastFirePreset = current;
-                if (client.levelRenderer != null) client.levelRenderer.resetLevelRenderData();
+                if (client.levelExtractor != null) client.levelExtractor.allChanged();
             }
 
             // ── Fullbright ────────────────────────────────────────────────────

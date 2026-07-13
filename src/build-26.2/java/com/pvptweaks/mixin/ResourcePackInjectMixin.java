@@ -16,7 +16,7 @@ import java.util.concurrent.Executor;
 @Mixin(ReloadableResourceManager.class)
 public class ResourcePackInjectMixin {
 
-    @ModifyVariable(method = "createReload", at = @At("HEAD"), argsOnly = true, index = 3)
+    @ModifyVariable(method = "createReload", at = @At("HEAD"), argsOnly = true, index = 3, require = 0)
     private List<PackResources> pvptweaks$injectFirePack(List<PackResources> original) {
         List<PackResources> mutable = new ArrayList<>(original);
         mutable.add(new PvpTweaksDynamicPack());

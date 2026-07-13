@@ -342,7 +342,6 @@ public class PvpTweaksConfig {
         if (NEW_INSTANCE.zoomManagementMode == null) {
             NEW_INSTANCE.zoomManagementMode = net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("zoomify") ? "zoomify" : "pvp-tweaks";
         }
-
         // Load legacy menu config
         if (Files.exists(legacyFile)) {
             try (Reader r = Files.newBufferedReader(legacyFile)) {

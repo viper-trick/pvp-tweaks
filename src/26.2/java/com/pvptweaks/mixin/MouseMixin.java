@@ -1,11 +1,8 @@
 package com.pvptweaks.mixin;
 
-import com.pvptweaks.gui.CpsTracker;
 import com.pvptweaks.zoom.ZoomManager;
-import org.lwjgl.glfw.GLFW;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
-import net.minecraft.client.input.MouseButtonEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -18,13 +15,7 @@ public class MouseMixin {
 
     @Shadow
     @Final
-    private Minecraft client;
-
-    @Shadow
-    private double cursorDeltaX;
-
-    @Shadow
-    private double cursorDeltaY;
+    private Minecraft minecraft;
 
     private boolean pvptweaks$originalSmoothCameraState;
 
@@ -33,18 +24,18 @@ public class MouseMixin {
 
     @Inject(method = "handleAccumulatedMovement", at = @At("HEAD"), require = 0)
     private void pvptweaks$preUpdateMouse(CallbackInfo ci) {
-        if (this.client != null && this.client.options != null) {
-            pvptweaks$originalSmoothCameraState = this.client.options.smoothCamera;
+        if (this.minecraft != null && this.minecraft.options != null) {
+            pvptweaks$originalSmoothCameraState = this.minecraft.options.smoothCamera;
             if (ZoomManager.isZooming()) {
-                this.client.options.smoothCamera = true;
+                this.minecraft.options.smoothCamera = true;
             }
         }
     }
 
     @Inject(method = "handleAccumulatedMovement", at = @At("RETURN"), require = 0)
     private void pvptweaks$postUpdateMouse(CallbackInfo ci) {
-        if (this.client != null && this.client.options != null) {
-            this.client.options.smoothCamera = pvptweaks$originalSmoothCameraState;
+        if (this.minecraft != null && this.minecraft.options != null) {
+            this.minecraft.options.smoothCamera = pvptweaks$originalSmoothCameraState;
         }
     }
 }

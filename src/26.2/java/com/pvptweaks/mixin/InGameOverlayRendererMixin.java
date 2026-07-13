@@ -13,22 +13,17 @@ import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 @Mixin(ScreenEffectRenderer.class)
 public class InGameOverlayRendererMixin {
 
-    @Inject(method = "method_70938", remap = false,
-            at = @At("HEAD"), cancellable = true, require = 0)
-    private void pvptweaks$cancelTotemAnim(CallbackInfo ci) {
+    @Inject(method = "renderItemActivationAnimation", at = @At("HEAD"), cancellable = true, require = 0)
+    private void pvptweaks$cancelTotemAnim(PoseStack poseStack, float alpha, net.minecraft.client.renderer.SubmitNodeCollector submitNodes, CallbackInfo ci) {
         if (PvpTweaksConfig.get().getTotemPopAnimScale() <= 0.0f)
             ci.cancel();
     }
 
-    // method_70939 = renderItemActivationAnimation
-    // scale = MatrixStack.scale(FFF)V  <- Yarn name confirmed
-    // method_70939 uses remap=false, but @At target uses Yarn name "scale" (remap=true by default)
     @ModifyArgs(
-        method  = "method_70939",
-        remap   = false,
+        method = "renderItemActivationAnimation",
         at = @At(
-            value  = "INVOKE",
-            target = "Lnet/minecraft/client/util/math/PoseStack;scale(FFF)V"
+            value = "INVOKE",
+            target = "Lcom/mojang/blaze3d/vertex/PoseStack;scale(FFF)V"
         ),
         require = 0
     )

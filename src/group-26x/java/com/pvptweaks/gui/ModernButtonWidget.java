@@ -40,8 +40,9 @@ public class ModernButtonWidget extends AbstractWidget {
         RenderUtils.drawRoundedOutline(context, this.getX(), this.getY(), this.width, this.height, 8, 1, borderColor);
 
         int textColor = hovered ? UiPalette.ACCENT_BLUE : UiPalette.TEXT_PRIMARY;
-        context.text(Minecraft.getInstance().font, this.getMessage(), 
-                this.getX() + this.width / 2, this.getY() + (this.height - 8) / 2, textColor);
+        int textWidth = Minecraft.getInstance().font.width(this.getMessage());
+        context.text(Minecraft.getInstance().font, this.getMessage(),
+                this.getX() + (this.width - textWidth) / 2, this.getY() + (this.height - 8) / 2, textColor);
     }
 
     @Override

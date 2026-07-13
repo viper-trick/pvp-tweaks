@@ -92,6 +92,8 @@ public class PvpTweaksDynamicPack implements PackResources {
             String preset = PvpTweaksConfig.get().firePreset;
             if (preset == null || preset.equals("vanilla")) return null;
             String res = switch (path) {
+                case "textures/block/fire_0.png" -> "/assets/pvptweaks/textures/block/fire_" + preset + "_0.png";
+                case "textures/block/fire_1.png" -> "/assets/pvptweaks/textures/block/fire_" + preset + "_1.png";
                 case "models/block/template_fire_floor.json"    -> "/assets/pvptweaks/models/fire/" + preset + "/template_fire_floor.json";
                 case "models/block/template_fire_side.json"     -> "/assets/pvptweaks/models/fire/" + preset + "/template_fire_side.json";
                 case "models/block/template_fire_side_alt.json" -> "/assets/pvptweaks/models/fire/" + preset + "/template_fire_side_alt.json";
@@ -103,7 +105,22 @@ public class PvpTweaksDynamicPack implements PackResources {
             final String finalRes = res;
             return () -> {
                 InputStream is = PvpTweaksDynamicPack.class.getResourceAsStream(finalRes);
-                if (is == null) throw new IOException("Missing: " + finalRes);
+                if (is == null) {
+                    PvpTweaksMod.LOGGER.warn("[PVP Tweaks] Missing resource: {}", finalRes);
+                    // Fallback: return 1x1 transparent pixel PNG
+                    byte[] transparentPng = new byte[]{
+                        (byte)0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG signature
+                        0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, // IHDR chunk
+                        0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+                        0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, (byte)0xC4,
+                        0x00, 0x00, 0x00, 0x0D, 0x49, 0x44, 0x41, 0x54, // IDAT chunk
+                        0x78, (byte)0x9C, 0x62, 0x60, 0x00, 0x00, 0x00, 0x02,
+                        0x00, 0x01, (byte)0xE5, 0x27, (byte)0xDE, (byte)0xFC,
+                        0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, // IEND chunk
+                        (byte)0xAE, 0x42, 0x60, (byte)0x82
+                    };
+                    return new ByteArrayInputStream(transparentPng);
+                }
                 return is;
             };
         }
@@ -151,6 +168,8 @@ public class PvpTweaksDynamicPack implements PackResources {
         String preset = PvpTweaksConfig.get().firePreset;
         if (preset == null || preset.equals("vanilla")) return;
         for (String m : new String[]{
+            "textures/block/fire_0.png",
+            "textures/block/fire_1.png",
             "models/block/template_fire_floor.json",
             "models/block/template_fire_side.json",
             "models/block/template_fire_side_alt.json",

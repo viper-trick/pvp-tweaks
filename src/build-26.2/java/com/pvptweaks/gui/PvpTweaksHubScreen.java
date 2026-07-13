@@ -70,7 +70,7 @@ public class PvpTweaksHubScreen extends Screen {
             "Save configuration and close", () -> {
             PvpTweaksConfig.save();
             if (fireChanged) {
-                if (minecraft.levelRenderer != null) minecraft.levelRenderer.resetLevelRenderData();
+                if (minecraft.levelExtractor != null) minecraft.levelExtractor.allChanged();
                 fireChanged = false;
             }
             minecraft.setScreenAndShow(parent);
@@ -88,9 +88,9 @@ public class PvpTweaksHubScreen extends Screen {
                 "Apply competitive PVP settings preset", () -> { PvpTweaksProfiles.applyCompetitive(); refreshCategoryWidgets(); });
             y += spacing;
             
-            String keyName = com.pvptweaks.PvpTweaksClient.openMenuKeyBinding.getName();
+            String keyName = com.pvptweaks.PvpTweaksClient.openMenuKeyBinding.getTranslatedKeyMessage().getString();
             Component btnText = listeningForKeybind ? Component.literal("> \u00a7e???\u00a7r <") : Component.literal("Menu Key: " + keyName);
-            String keyTip = listeningForKeybind ? "Press a key to bind, Escape to unbind" : "MouseButtonEvent to rebind the menu key";
+            String keyTip = listeningForKeybind ? "Press a key to bind, Escape to unbind" : "Click to rebind the menu key";
             var keyBtn = addRenderableWidget(new ModernButtonWidget(x, y, 180, 20, btnText, () -> {
                 listeningForKeybind = true;
                 refreshCategoryWidgets();
@@ -167,19 +167,18 @@ public class PvpTweaksHubScreen extends Screen {
             int startY = y;
 
             y += 5;
-            addTooltipped(x1, y, 180, 20, "Entity Fire Height: " + cfg.firePreset.toUpperCase(),
+            addTooltipped(x1, y, 180, 20, "Fire Block Height: " + cfg.firePreset.toUpperCase(),
                 "Cycle through fire height presets (vanilla/full/mid/low/flat/none)", () -> {
                 int idx = (java.util.Arrays.asList("vanilla", "full", "mid", "low", "flat", "none").indexOf(cfg.firePreset) + 1) % 6;
                 cfg.firePreset = new String[]{"vanilla", "full", "mid", "low", "flat", "none"}[idx];
                 fireChanged = true;
-                refreshCategoryWidgets();
             }); y += spacing;
 
             if (fireChanged) {
                 addTooltipped(x1, y, 180, 20, "\u00a7aSave Fire",
                     "Apply fire changes immediately", () -> {
                     PvpTweaksConfig.save();
-                    if (minecraft.levelRenderer != null) minecraft.levelRenderer.resetLevelRenderData();
+                    if (minecraft.levelExtractor != null) minecraft.levelExtractor.allChanged();
                     minecraft.reloadResourcePacks();
                     fireChanged = false;
                     refreshCategoryWidgets();
@@ -402,8 +401,8 @@ public class PvpTweaksHubScreen extends Screen {
             int color = selected ? UiPalette.ACCENT_BLUE : (hovered ? UiPalette.TEXT_PRIMARY : UiPalette.TEXT_SECONDARY);
             if (selected) { RenderUtils.drawRoundedRect(context, 8, y, sidebarWidth - 16, 36, 6, 0x4000A3FF); RenderUtils.drawRoundedOutline(context, 8, y, sidebarWidth - 16, 36, 6, 1, UiPalette.ACCENT_BLUE); }
             else if (hovered) RenderUtils.drawRoundedRect(context, 8, y, sidebarWidth - 16, 36, 6, 0x20FFFFFF);
-            context.text(font, cat.icon, sidebarWidth / 2, y + 6, color);
-            context.text(font, cat.name, sidebarWidth / 2, y + 20, color);
+            context.text(font, cat.icon, sidebarWidth / 2 - font.width(cat.icon) / 2, y + 6, color);
+            context.text(font, cat.name, sidebarWidth / 2 - font.width(cat.name) / 2, y + 20, color);
             y += 44;
         }
         context.disableScissor();

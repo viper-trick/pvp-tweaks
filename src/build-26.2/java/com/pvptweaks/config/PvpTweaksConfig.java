@@ -162,7 +162,14 @@ public class PvpTweaksConfig {
 
     public float getEndCrystalScale()      { return endCrystalScalePct  / 100.0f; }
     public float getFireOverlayScale()     { return fireOverlayScalePct  / 100.0f; }
-    public float getFireEntityScale()      { return (hideFireOnGround || "none".equals(firePreset)) ? 0.0f : fireEntityScalePct / 100.0f; }
+    public float getFireEntityScale()      {
+        if (hideFireOnGround || "none".equals(firePreset)) return 0.0f;
+        if ("vanilla".equals(firePreset) || "full".equals(firePreset)) return 1.0f;
+        if ("mid".equals(firePreset)) return 0.6f;
+        if ("low".equals(firePreset)) return 0.4f;
+        if ("flat".equals(firePreset)) return 0.2f;
+        return fireEntityScalePct / 100.0f;
+    }
     public float getExplosionMultiplier()  { return explosionVolumePct   / 100.0f; }
     public float getHitMultiplier()        { return hitVolumePct         / 100.0f; }
     public float getCrystalPopMultiplier() { return crystalPopVolumePct  / 100.0f; }
@@ -342,7 +349,6 @@ public class PvpTweaksConfig {
         if (NEW_INSTANCE.zoomManagementMode == null) {
             NEW_INSTANCE.zoomManagementMode = net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("zoomify") ? "zoomify" : "pvp-tweaks";
         }
-
         // Load legacy menu config
         if (Files.exists(legacyFile)) {
             try (Reader r = Files.newBufferedReader(legacyFile)) {

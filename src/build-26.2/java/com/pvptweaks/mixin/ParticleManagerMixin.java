@@ -21,7 +21,7 @@ public class ParticleManagerMixin {
     private static final Set<String> seen = new HashSet<>();
 
     @Inject(
-        method = "addParticle(Lnet/minecraft/particle/ParticleOptions;DDDDDD)Lnet/minecraft/client/particle/Particle;",
+        method = "createParticle",
         at = @At("HEAD"), cancellable = true
     )
     private <T extends ParticleOptions> void pvptweaks$filter(

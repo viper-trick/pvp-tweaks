@@ -102,7 +102,7 @@ public class PlantsControlScreen extends Screen {
                     else cfg.outlinePlants.add(id);
                 }
                 PvpTweaksConfig.save();
-                if (minecraft != null && minecraft.levelRenderer != null) minecraft.levelRenderer.resetLevelRenderData();
+                if (minecraft != null && minecraft.levelExtractor != null) minecraft.levelExtractor.allChanged();
                 statusMsg = "§aSelected " + filtered.size() + " plants";
             }).bounds(4, LIST_Y - 20, 120, 16).build());
 
@@ -114,7 +114,7 @@ public class PlantsControlScreen extends Screen {
                     else cfg.outlinePlants.remove(id);
                 }
                 PvpTweaksConfig.save();
-                if (minecraft != null && minecraft.levelRenderer != null) minecraft.levelRenderer.resetLevelRenderData();
+                if (minecraft != null && minecraft.levelExtractor != null) minecraft.levelExtractor.allChanged();
                 statusMsg = "§7Deselected " + filtered.size() + " plants";
             }).bounds(130, LIST_Y - 20, 120, 16).build());
 
@@ -128,7 +128,7 @@ public class PlantsControlScreen extends Screen {
                 PvpTweaksConfig.save();
                 b.setMessage(Component.literal(cfg.plantsControlEnabled
                     ? "✔ Plants Control: ON" : "✘ Plants Control: OFF"));
-                if (minecraft != null && minecraft.levelRenderer != null) minecraft.levelRenderer.resetLevelRenderData();
+                if (minecraft != null && minecraft.levelExtractor != null) minecraft.levelExtractor.allChanged();
             }
         ).bounds(4, height - 24, 180, 20).build());
 
@@ -168,7 +168,7 @@ public class PlantsControlScreen extends Screen {
         }
         PvpTweaksConfig.save();
         statusMsg = (added ? "§aAdded: " : "§7Removed: ") + blockId;
-        if (minecraft != null && minecraft.levelRenderer != null) minecraft.levelRenderer.resetLevelRenderData();
+        if (minecraft != null && minecraft.levelExtractor != null) minecraft.levelExtractor.allChanged();
     }
 
     private boolean isActive(String blockId) {

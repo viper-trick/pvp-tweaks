@@ -166,7 +166,7 @@ public class PvpTweaksHubScreen extends Screen {
             int startY = y;
 
             y += 5;
-            addTooltipped(x1, y, 180, 20, "Entity Fire Height: " + cfg.firePreset.toUpperCase(),
+            addTooltipped(x1, y, 180, 20, "Fire Block Height: " + cfg.firePreset.toUpperCase(),
                 "Cycle through fire height presets (vanilla/full/mid/low/flat/none)", () -> {
                 int idx = (java.util.Arrays.asList("vanilla", "full", "mid", "low", "flat", "none").indexOf(cfg.firePreset) + 1) % 6;
                 cfg.firePreset = new String[]{"vanilla", "full", "mid", "low", "flat", "none"}[idx];
