@@ -38,6 +38,7 @@
     "DrawContextMixin",
     "ZoomifyMixin",
     "GammaUtilsMixin",
+    "CpsHudMixin",
     "CrosshairMixin"
   ],
   "injectors": {
