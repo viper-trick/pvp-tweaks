@@ -1,35 +1,49 @@
 package com.pvptweaks.mixin;
 
 import com.pvptweaks.config.PvpTweaksConfig;
+import com.pvptweaks.util.ShieldSampleStack;
 import net.minecraft.client.renderer.ItemInHandRenderer;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.HumanoidArm;
-import net.minecraft.client.player.AbstractClientPlayer;
-import org.joml.Quaternionf;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/**
- * In 26.1, shield rendering is done in ItemInHandRenderer.renderArmWithItem.
- * We inject at HEAD to apply shield offset/rotation transforms.
- */
 @Mixin(ItemInHandRenderer.class)
 public class ShieldRendererMixin {
 
-    @Inject(method = "renderArmWithItem", remap = false, at = @At("HEAD"), require = 0)
+    @Shadow private ItemStack offHandItem;
+
+    @Inject(method = "submitHandsWithItems", at = @At("HEAD"))
+    private void pvptweaks$sampleShieldPreRender(
+            float tickDelta,
+            com.mojang.blaze3d.vertex.PoseStack matrices,
+            net.minecraft.client.renderer.SubmitNodeCollector collector,
+            net.minecraft.client.player.LocalPlayer player,
+            int light,
+            CallbackInfo ci) {
+        PvpTweaksConfig cfg = PvpTweaksConfig.get();
+        if (cfg.shieldSampleShield && PvpTweaksConfig.adjusterOpen) {
+            if (offHandItem == null || offHandItem.isEmpty()) {
+                offHandItem = ShieldSampleStack.INSTANCE;
+            }
+        }
+    }
+
+    @Inject(method = "renderItem", at = @At("HEAD"))
     private void pvptweaks$shieldOffset(
-            AbstractClientPlayer player, float armPitch, float pitch, InteractionHand hand,
-            float swingProgress, ItemStack item, float equipProgress, PoseStack matrices,
-            net.minecraft.client.renderer.SubmitNodeCollector submitNodes, int light,
+            net.minecraft.world.entity.LivingEntity entity,
+            ItemStack itemStack,
+            net.minecraft.world.item.ItemDisplayContext displayContext,
+            com.mojang.blaze3d.vertex.PoseStack matrices,
+            net.minecraft.client.renderer.SubmitNodeCollector collector,
+            int light,
             CallbackInfo ci) {
 
-        if (matrices == null || item == null || item.isEmpty()) return;
-        if (item.getItem() != Items.SHIELD) return;
+        if (matrices == null || itemStack == null || itemStack.isEmpty()) return;
+        if (itemStack.getItem() != Items.SHIELD) return;
 
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
 
@@ -40,13 +54,13 @@ public class ShieldRendererMixin {
             matrices.translate(ox, oy, oz);
         }
         if (cfg.shieldRotX != 0) {
-            matrices.mulPose(new Quaternionf().rotationX(cfg.shieldRotX * (float)Math.PI / 180f));
+            matrices.mulPose(com.mojang.math.Axis.XP.rotationDegrees(cfg.shieldRotX));
         }
         if (cfg.shieldRotY != 0) {
-            matrices.mulPose(new Quaternionf().rotationY(cfg.shieldRotY * (float)Math.PI / 180f));
+            matrices.mulPose(com.mojang.math.Axis.YP.rotationDegrees(cfg.shieldRotY));
         }
         if (cfg.shieldRotZ != 0) {
-            matrices.mulPose(new Quaternionf().rotationZ(cfg.shieldRotZ * (float)Math.PI / 180f));
+            matrices.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(cfg.shieldRotZ));
         }
     }
 }

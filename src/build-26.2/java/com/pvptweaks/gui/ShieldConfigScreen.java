@@ -18,6 +18,7 @@ public class ShieldConfigScreen extends Screen {
 
     @Override
     protected void init() {
+        PvpTweaksConfig.adjusterOpen = true;
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         int x = this.width - PANEL_W + 20;
         int y = 45;
@@ -32,6 +33,20 @@ public class ShieldConfigScreen extends Screen {
         addSlider(x, y, "Rot Z", cfg.shieldRotZ, -180, 180, 0, v -> cfg.shieldRotZ = v.intValue()); y += spacing * 1.35;
 
         addSlider(x, y, "Scale", cfg.shieldScalePct, 25, 300, 100, v -> cfg.shieldScalePct = v.intValue());
+        
+        y += 26;
+        addRenderableWidget(new ModernButtonWidget(x, y, 180, 20, Component.literal("Show Sample Shield: " + (cfg.shieldSampleShield ? "ON" : "OFF")), () -> {
+            cfg.shieldSampleShield = !cfg.shieldSampleShield;
+            clearWidgets();
+            init();
+        }));
+        
+        y += 26;
+        addRenderableWidget(new ModernButtonWidget(x, y, 180, 20, Component.literal("Active Pose: " + (cfg.shieldSampleActive ? "ON" : "OFF")), () -> {
+            cfg.shieldSampleActive = !cfg.shieldSampleActive;
+            clearWidgets();
+            init();
+        }));
         
         addRenderableWidget(new ModernButtonWidget(this.width - PANEL_W + 20, height - 35, 50, 20, Component.literal("Vanilla"), () -> {
             cfg.shieldOffsetX = 0; cfg.shieldOffsetY = 0; cfg.shieldOffsetZ = 0;
@@ -89,4 +104,10 @@ public class ShieldConfigScreen extends Screen {
     }
 
     @Override public boolean isPauseScreen() { return false; }
+
+    @Override
+    public void removed() {
+        PvpTweaksConfig.adjusterOpen = false;
+        super.removed();
+    }
 }

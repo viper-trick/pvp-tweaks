@@ -25,6 +25,7 @@ public class PvpTweaksConfig {
     private static PvpTweaksConfig LEGACY_INSTANCE = new PvpTweaksConfig();
 
     public static boolean useLegacyMenu = false;
+    public static boolean adjusterOpen = false;
     public int swordScalePct       = 70;
     public int axeScalePct         = 100;
     public int shieldScalePct      = 70;
@@ -34,6 +35,8 @@ public class PvpTweaksConfig {
     public int shieldRotX        = 0;  // degrees
     public int shieldRotY        = 0;
     public int shieldRotZ        = 0;
+    public boolean shieldSampleShield = false;
+    public boolean shieldSampleActive = false;
     public SoundProfile soundShieldBreak = new SoundProfile();
     public int totemScalePct       = 100;
     public int goldenAppleScalePct = 100;
@@ -57,7 +60,7 @@ public class PvpTweaksConfig {
     public int fireOverlayScalePct = 20;
     public int     fireEntityScalePct  = 30;
     public boolean hideFireOnGround    = false;
-    public String  firePreset           = "flat"; // vanilla | full | mid | low | flat | none
+    public String  firePreset           = "flat"; // vanilla | mid | low | flat | none
     public int     endCrystalScalePct  = 100;
 
     // CPS HUD
@@ -164,7 +167,7 @@ public class PvpTweaksConfig {
     public float getFireOverlayScale()     { return fireOverlayScalePct  / 100.0f; }
     public float getFireEntityScale()      {
         if (hideFireOnGround || "none".equals(firePreset)) return 0.0f;
-        if ("vanilla".equals(firePreset) || "full".equals(firePreset)) return 1.0f;
+        if ("vanilla".equals(firePreset)) return 1.0f;
         if ("mid".equals(firePreset)) return 0.6f;
         if ("low".equals(firePreset)) return 0.4f;
         if ("flat".equals(firePreset)) return 0.2f;
@@ -419,6 +422,8 @@ public class PvpTweaksConfig {
         cfg.shieldRotX = 0;
         cfg.shieldRotY = 0;
         cfg.shieldRotZ = 0;
+        cfg.shieldSampleShield = false;
+        cfg.shieldSampleActive = false;
         cfg.totemScalePct = 100;
         cfg.goldenAppleScalePct = 100;
         cfg.anchorScalePct = 100;

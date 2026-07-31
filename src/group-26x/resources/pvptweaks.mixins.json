@@ -10,6 +10,8 @@
     "SoundInstanceMixin",
     "ParticleManagerMixin",
     "ShieldRendererMixin",
+    "LivingEntityShieldMixin",
+    "PlayerUseItemMixin",
     "TotemPopMixin",
     "EndCrystalEntityRendererMixin",
     "ExplosionPacketMixin",

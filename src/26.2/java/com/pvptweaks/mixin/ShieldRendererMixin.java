@@ -15,6 +15,15 @@ import com.llamalad7.mixinextras.sugar.Local;
 @Mixin(ItemInHandRenderer.class)
 public class ShieldRendererMixin {
 
+    @org.spongepowered.asm.mixin.injection.ModifyVariable(method = "method_3233", at = @org.spongepowered.asm.mixin.injection.At("HEAD"), require = 0)
+    private net.minecraft.world.item.ItemStack pvptweaks$sampleShield(net.minecraft.world.item.ItemStack item) {
+        com.pvptweaks.config.PvpTweaksConfig cfg = com.pvptweaks.config.PvpTweaksConfig.get();
+        if (cfg.shieldSampleShield && (item == null || item.isEmpty())) {
+            return new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.SHIELD);
+        }
+        return item;
+    }
+
     @Inject(method = "method_3233", remap = false, at = @At("HEAD"), require = 0)
     private void pvptweaks$shieldOffset(
             CallbackInfo ci,

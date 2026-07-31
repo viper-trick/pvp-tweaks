@@ -166,9 +166,9 @@ public class PvpTweaksHubScreen extends Screen {
 
             y += 5;
             addTooltipped(x1, y, 180, 20, "Fire Block Height: " + cfg.firePreset.toUpperCase(),
-                "Cycle through fire height presets (vanilla/full/mid/low/flat/none)", () -> {
-                int idx = (java.util.Arrays.asList("vanilla", "full", "mid", "low", "flat", "none").indexOf(cfg.firePreset) + 1) % 6;
-                cfg.firePreset = new String[]{"vanilla", "full", "mid", "low", "flat", "none"}[idx];
+                "Cycle through fire height presets (vanilla/mid/low/flat/none)", () -> {
+                int idx = (java.util.Arrays.asList("vanilla", "mid", "low", "flat", "none").indexOf(cfg.firePreset) + 1) % 5;
+                cfg.firePreset = new String[]{"vanilla", "mid", "low", "flat", "none"}[idx];
                 fireChanged = true;
                 refreshCategoryWidgets();
             }); y += spacing;
@@ -434,7 +434,7 @@ public class PvpTweaksHubScreen extends Screen {
             context.drawString(font, Component.literal("\u00a7l\u2139 ABOUT PVP TWEAKS"), textX, iy, UiPalette.ACCENT_BLUE);
             iy += 22;
 
-            context.drawString(font, Component.literal("\u00a77Version: \u00a7f1.9.3"), textX, iy, 0xFFAAAAAA);
+            context.drawString(font, Component.literal("\u00a77Version: \u00a7f1.9.4"), textX, iy, 0xFFAAAAAA);
             iy += lh + 2;
             context.drawString(font, Component.literal("\u00a77Author: \u00a7fviper-trick"), textX, iy, 0xFFAAAAAA);
             iy += lh + 2;

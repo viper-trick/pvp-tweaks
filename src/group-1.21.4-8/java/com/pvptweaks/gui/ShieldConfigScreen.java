@@ -32,6 +32,13 @@ public class ShieldConfigScreen extends Screen {
 
         addSlider(x, y, "Scale", cfg.shieldScalePct, 25, 300, 100, v -> cfg.shieldScalePct = v.intValue());
         
+        y += 26;
+        addRenderableWidget(new ModernButtonWidget(x, y, 180, 20, Component.literal("Show Sample Shield: " + (cfg.shieldSampleShield ? "ON" : "OFF")), () -> {
+            cfg.shieldSampleShield = !cfg.shieldSampleShield;
+            clearWidgets();
+            init();
+        }));
+        
         addRenderableWidget(new ModernButtonWidget(this.width - PANEL_W + 20, height - 35, 50, 20, Component.literal("Vanilla"), () -> {
             cfg.shieldOffsetX = 0; cfg.shieldOffsetY = 0; cfg.shieldOffsetZ = 0;
             cfg.shieldRotX = 0; cfg.shieldRotY = 0; cfg.shieldRotZ = 0;

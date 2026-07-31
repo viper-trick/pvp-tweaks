@@ -36,6 +36,7 @@ public class PvpTweaksConfig {
     public int shieldRotX        = 0;  // degrees
     public int shieldRotY        = 0;
     public int shieldRotZ        = 0;
+    public boolean shieldSampleShield = false;
     public SoundProfile soundShieldBreak = new SoundProfile();
     public int totemScalePct       = 100;
     public int goldenAppleScalePct = 100;
@@ -59,7 +60,7 @@ public class PvpTweaksConfig {
     public int fireOverlayScalePct = 20;
     public int     fireEntityScalePct  = 30;
     public boolean hideFireOnGround    = false;
-    public String  firePreset           = "flat"; // vanilla | full | mid | low | flat | none
+    public String  firePreset           = "flat"; // vanilla | mid | low | flat | none
     public int     endCrystalScalePct  = 100;
 
     // CPS HUD
@@ -415,6 +416,7 @@ public class PvpTweaksConfig {
         cfg.shieldRotX = 0;
         cfg.shieldRotY = 0;
         cfg.shieldRotZ = 0;
+        cfg.shieldSampleShield = false;
         cfg.totemScalePct = 100;
         cfg.goldenAppleScalePct = 100;
         cfg.anchorScalePct = 100;

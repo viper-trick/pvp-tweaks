@@ -1,4 +1,4 @@
-# PVP Tweaks 1.9.3
+# PVP Tweaks 1.9.4
 
 Comprehensive PVP performance and visual optimizations for Modern Minecraft (1.21.4–26.2).
 

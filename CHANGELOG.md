@@ -1,3 +1,13 @@
+## 1.9.4
+
+### Added
+- **Shield Adjuster: sample shield** — "Show Sample Shield" toggle displays a shield in the off-hand while the adjuster is open, so scale/position changes are visible in real time
+- **Shield Adjuster: Active Pose** — "Active Pose" toggle shows the sample shield in the blocking pose
+
+### Changed
+- Removed the "Full" fire block height preset (presets are now vanilla/mid/low/flat/none)
+- Updated mod version to 1.9.4 across all supported Minecraft versions
+
 ## 1.9.3
 
 ### Added

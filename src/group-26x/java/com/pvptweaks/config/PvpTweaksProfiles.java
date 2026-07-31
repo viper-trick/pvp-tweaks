@@ -256,6 +256,7 @@ public class PvpTweaksProfiles {
         c.shieldRotX          = 0;
         c.shieldRotY          = 0;
         c.shieldRotZ          = 0;
+        c.shieldSampleShield  = false;
         c.totemScalePct       = 100;
         c.goldenAppleScalePct = 100;
         c.anchorScalePct      = 100;
