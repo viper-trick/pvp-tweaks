@@ -10,20 +10,16 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import com.llamalad7.mixinextras.sugar.Local;
+import com.mojang.blaze3d.vertex.PoseStack;
 
 @Mixin(ItemInHandRenderer.class)
 public class ShieldRendererMixin {
 
     @Shadow private ItemStack offHandItem;
 
-    @Inject(method = "submitHandsWithItems", at = @At("HEAD"))
-    private void pvptweaks$sampleShieldPreRender(
-            float tickDelta,
-            com.mojang.blaze3d.vertex.PoseStack matrices,
-            net.minecraft.client.renderer.SubmitNodeCollector collector,
-            net.minecraft.client.player.LocalPlayer player,
-            int light,
-            CallbackInfo ci) {
+    @Inject(method = {"renderHandsWithItems", "submitHandsWithItems"}, remap = true, at = @At("HEAD"), require = 0)
+    private void pvptweaks$sampleShieldPreRender(CallbackInfo ci) {
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         if (cfg.shieldSampleShield && PvpTweaksConfig.adjusterOpen) {
             if (offHandItem == null || offHandItem.isEmpty()) {
@@ -32,15 +28,11 @@ public class ShieldRendererMixin {
         }
     }
 
-    @Inject(method = "renderItem", at = @At("HEAD"))
+    @Inject(method = "renderItem", remap = true, at = @At("HEAD"), require = 0)
     private void pvptweaks$shieldOffset(
-            net.minecraft.world.entity.LivingEntity entity,
-            ItemStack itemStack,
-            net.minecraft.world.item.ItemDisplayContext displayContext,
-            com.mojang.blaze3d.vertex.PoseStack matrices,
-            net.minecraft.client.renderer.SubmitNodeCollector collector,
-            int light,
-            CallbackInfo ci) {
+            CallbackInfo ci,
+            @Local(argsOnly = true) PoseStack matrices,
+            @Local(argsOnly = true) ItemStack itemStack) {
 
         if (matrices == null || itemStack == null || itemStack.isEmpty()) return;
         if (itemStack.getItem() != Items.SHIELD) return;

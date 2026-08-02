@@ -18,7 +18,7 @@ public class ShieldRendererMixin {
 
     @Shadow private ItemStack offHandItem;
 
-    @Inject(method = "method_22976", remap = false, at = @At("HEAD"), require = 0)
+    @Inject(method = {"renderHandsWithItems", "submitHandsWithItems"}, remap = true, at = @At("HEAD"), require = 0)
     private void pvptweaks$sampleShieldPreRender(CallbackInfo ci) {
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         if (cfg.shieldSampleShield && PvpTweaksConfig.adjusterOpen) {
@@ -28,7 +28,7 @@ public class ShieldRendererMixin {
         }
     }
 
-    @Inject(method = "method_3233", remap = false, at = @At("HEAD"), require = 0)
+    @Inject(method = "renderItem", remap = true, at = @At("HEAD"), require = 0)
     private void pvptweaks$shieldOffset(
             CallbackInfo ci,
             @Local(argsOnly = true) PoseStack matrices,
