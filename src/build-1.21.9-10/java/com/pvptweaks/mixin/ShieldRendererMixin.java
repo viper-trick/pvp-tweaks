@@ -1,10 +1,12 @@
 package com.pvptweaks.mixin;
 
 import com.pvptweaks.config.PvpTweaksConfig;
+import com.pvptweaks.util.ShieldSampleStack;
 import net.minecraft.client.renderer.ItemInHandRenderer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -14,13 +16,16 @@ import com.mojang.blaze3d.vertex.PoseStack;
 @Mixin(ItemInHandRenderer.class)
 public class ShieldRendererMixin {
 
-    @org.spongepowered.asm.mixin.injection.ModifyVariable(method = "method_3233", at = @org.spongepowered.asm.mixin.injection.At("HEAD"), require = 0)
-    private net.minecraft.world.item.ItemStack pvptweaks$sampleShield(net.minecraft.world.item.ItemStack item) {
-        com.pvptweaks.config.PvpTweaksConfig cfg = com.pvptweaks.config.PvpTweaksConfig.get();
-        if (cfg.shieldSampleShield && (item == null || item.isEmpty())) {
-            return new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.SHIELD);
+    @Shadow private ItemStack offHandItem;
+
+    @Inject(method = "method_22976", remap = false, at = @At("HEAD"), require = 0)
+    private void pvptweaks$sampleShieldPreRender(CallbackInfo ci) {
+        PvpTweaksConfig cfg = PvpTweaksConfig.get();
+        if (cfg.shieldSampleShield && PvpTweaksConfig.adjusterOpen) {
+            if (offHandItem == null || offHandItem.isEmpty()) {
+                offHandItem = ShieldSampleStack.INSTANCE;
+            }
         }
-        return item;
     }
 
     @Inject(method = "method_3233", remap = false, at = @At("HEAD"), require = 0)

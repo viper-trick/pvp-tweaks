@@ -16,7 +16,7 @@ public class ShieldRendererMixin {
 
     @Shadow private ItemStack offHandItem;
 
-    @Inject(method = "submitHandsWithItems", at = @At("HEAD"))
+    @Inject(method = {"submitHandsWithItems", "renderHandsWithItems"}, at = @At("HEAD"), require = 0)
     private void pvptweaks$sampleShieldPreRender(
             float tickDelta,
             com.mojang.blaze3d.vertex.PoseStack matrices,

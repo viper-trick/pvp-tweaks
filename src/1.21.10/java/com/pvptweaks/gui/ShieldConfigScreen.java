@@ -18,6 +18,7 @@ public class ShieldConfigScreen extends Screen {
 
     @Override
     protected void init() {
+        PvpTweaksConfig.adjusterOpen = true;
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         int x = this.width - PANEL_W + 20;
         int y = 45;
@@ -36,6 +37,13 @@ public class ShieldConfigScreen extends Screen {
         y += 26;
         addRenderableWidget(new ModernButtonWidget(x, y, 180, 20, Component.literal("Show Sample Shield: " + (cfg.shieldSampleShield ? "ON" : "OFF")), () -> {
             cfg.shieldSampleShield = !cfg.shieldSampleShield;
+            clearWidgets();
+            init();
+        }));
+        
+        y += 26;
+        addRenderableWidget(new ModernButtonWidget(x, y, 180, 20, Component.literal("Active Pose: " + (cfg.shieldSampleActive ? "ON" : "OFF")), () -> {
+            cfg.shieldSampleActive = !cfg.shieldSampleActive;
             clearWidgets();
             init();
         }));
@@ -96,4 +104,10 @@ public class ShieldConfigScreen extends Screen {
     }
 
     @Override public boolean isPauseScreen() { return false; }
+
+    
+    public void removed() {
+        PvpTweaksConfig.adjusterOpen = false;
+        super.removed();
+    }
 }

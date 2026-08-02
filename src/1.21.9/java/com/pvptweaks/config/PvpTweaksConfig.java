@@ -27,6 +27,7 @@ public class PvpTweaksConfig {
     private static PvpTweaksConfig LEGACY_INSTANCE = new PvpTweaksConfig();
 
     public static boolean useLegacyMenu = false;
+    public static boolean adjusterOpen = false;
     public int swordScalePct       = 70;
     public int axeScalePct         = 100;
     public int shieldScalePct      = 70;
@@ -37,6 +38,7 @@ public class PvpTweaksConfig {
     public int shieldRotY        = 0;
     public int shieldRotZ        = 0;
     public boolean shieldSampleShield = false;
+    public boolean shieldSampleActive = false;
     public SoundProfile soundShieldBreak = new SoundProfile();
     public int totemScalePct       = 100;
     public int goldenAppleScalePct = 100;
@@ -417,6 +419,7 @@ public class PvpTweaksConfig {
         cfg.shieldRotY = 0;
         cfg.shieldRotZ = 0;
         cfg.shieldSampleShield = false;
+        cfg.shieldSampleActive = false;
         cfg.totemScalePct = 100;
         cfg.goldenAppleScalePct = 100;
         cfg.anchorScalePct = 100;
