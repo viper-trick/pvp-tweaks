@@ -18,7 +18,7 @@ public class ShieldRendererMixin {
 
     @Shadow private ItemStack offHandItem;
 
-    @Inject(method = "method_22976", remap = false, at = @At("HEAD"), require = 0)
+    @Inject(method = {"method_22976", "submitHandsWithItems"}, remap = false, at = @At("HEAD"), require = 0)
     private void pvptweaks$sampleShieldPreRender(CallbackInfo ci) {
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         if (cfg.shieldSampleShield && PvpTweaksConfig.adjusterOpen) {
