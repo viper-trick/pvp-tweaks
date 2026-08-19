@@ -4,15 +4,15 @@ Comprehensive PVP performance and visual optimizations for Modern Minecraft (1.2
 
 ## Features
 
-- **Home** — Settings dashboard, mod version info, quick links.
-- **Item Sizes** — Per-item-type scale and offset adjustments (held items, armor, tools, food, etc.).
-- **Visuals** — Fire preset system (entity fire height/opacity, ground fire toggle), fire overlay scaling, fullbright, custom FOV, potion color override, menu background blur toggle.
-- **HUD** — CPS counter, armor durability %, coordinates, potion effects display — all movable and scalable via built-in adjuster screens.
-- **Sounds** — Profile-based sound replacement with a built-in picker GUI, import/export, per-profile sound packs, and pitch/tempo control.
-- **Optimization** — ExplosionTracker suppresses crystal and respawn anchor explosion sounds, particles, and animations through adjustable post-explosion cooldowns.
-- **Profiles** — Save, load, import, and export full config profiles.
-- **Zoom** — Configurable zoom (smooth or instant) with adjustable FOV and scroll sensitivity.
-- **General QoL** — Smooth scrolling in GUIs, vertical sync toggle, item tooltip scaling, and more.
+- **Home** - Settings dashboard, mod version info, quick links.
+- **Item Sizes** - Per-item-type scale and offset adjustments (held items, armor, tools, food, etc.).
+- **Visuals** - Fire preset system (entity fire height/opacity, ground fire toggle), fire overlay scaling, fullbright, custom FOV, potion color override, menu background blur toggle.
+- **HUD** - CPS counter, armor durability %, coordinates, potion effects display — all movable and scalable via built-in adjuster screens.
+- **Sounds** - Profile-based sound replacement with a built-in picker GUI, import/export, per-profile sound packs, and pitch/tempo control.
+- **Optimization** - ExplosionTracker suppresses crystal and respawn anchor explosion sounds, particles, and animations through adjustable post-explosion cooldowns.
+- **Profiles** - Save, load, import, and export full config profiles.
+- **Zoom** - Configurable zoom (smooth or instant) with adjustable FOV and scroll sensitivity.
+- **General QoL** - Smooth scrolling in GUIs, vertical sync toggle, item tooltip scaling, and more.
 
 Access settings via the config keybind or the Mod Menu screen (if installed). A modern hub GUI is available by default; a Cloth Config–based legacy menu can be enabled as an alternative.
 
