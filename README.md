@@ -7,7 +7,7 @@ Comprehensive PVP performance and visual optimizations for Modern Minecraft (1.2
 - **Home** - Settings dashboard, mod version info, quick links.
 - **Item Sizes** - Per-item-type scale and offset adjustments (held items, armor, tools, food, etc.).
 - **Visuals** - Fire preset system (entity fire height/opacity, ground fire toggle), fire overlay scaling, fullbright, custom FOV, potion color override, menu background blur toggle.
-- **HUD** - CPS counter, armor durability %, coordinates, potion effects display — all movable and scalable via built-in adjuster screens.
+- **HUD** - CPS counter, armor durability %, coordinates, potion effects display - all movable and scalable via built-in adjuster screens.
 - **Sounds** - Profile-based sound replacement with a built-in picker GUI, import/export, per-profile sound packs, and pitch/tempo control.
 - **Optimization** - ExplosionTracker suppresses crystal and respawn anchor explosion sounds, particles, and animations through adjustable post-explosion cooldowns.
 - **Profiles** - Save, load, import, and export full config profiles.
