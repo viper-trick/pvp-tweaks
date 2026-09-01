@@ -1,17 +1,17 @@
 package com.pvptweaks.mixin;
 
 import com.pvptweaks.config.PvpTweaksConfig;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.InteractionHand;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(LivingEntity.class)
+@Mixin(LocalPlayer.class)
 public class PlayerUseItemMixin {
 
-    @Inject(method = "method_6115", remap = false, at = @At("RETURN"), cancellable = true)
+    @Inject(method = "isUsingItem", remap = true, at = @At("RETURN"), cancellable = true)
     private void pvptweaks$sampleActive(CallbackInfoReturnable<Boolean> cir) {
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         if (cfg.shieldSampleShield && cfg.shieldSampleActive && PvpTweaksConfig.adjusterOpen) {
@@ -19,7 +19,7 @@ public class PlayerUseItemMixin {
         }
     }
 
-    @Inject(method = "method_6058", remap = false, at = @At("RETURN"), cancellable = true)
+    @Inject(method = "getUsedItemHand", remap = true, at = @At("RETURN"), cancellable = true)
     private void pvptweaks$sampleActiveHand(CallbackInfoReturnable<InteractionHand> cir) {
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         if (cfg.shieldSampleShield && cfg.shieldSampleActive && PvpTweaksConfig.adjusterOpen) {
@@ -27,4 +27,11 @@ public class PlayerUseItemMixin {
         }
     }
 
+    @Inject(method = "isBlocking", remap = true, at = @At("RETURN"), cancellable = true)
+    private void pvptweaks$sampleIsBlocking(CallbackInfoReturnable<Boolean> cir) {
+        PvpTweaksConfig cfg = PvpTweaksConfig.get();
+        if (cfg.shieldSampleShield && cfg.shieldSampleActive && PvpTweaksConfig.adjusterOpen) {
+            cir.setReturnValue(true);
+        }
+    }
 }

@@ -17,7 +17,14 @@ public class LivingEntityShieldMixin {
         return cfg.shieldSampleShield && cfg.shieldSampleActive && PvpTweaksConfig.adjusterOpen;
     }
 
-    @Inject(method = "method_6079", remap = false, at = @At("RETURN"), cancellable = true)
+    @Inject(method = "isBlocking", remap = true, at = @At("RETURN"), cancellable = true)
+    private void pvptweaks$sampleIsBlocking(CallbackInfoReturnable<Boolean> cir) {
+        if (shouldFakeActive()) {
+            cir.setReturnValue(true);
+        }
+    }
+
+    @Inject(method = "getOffhandItem", remap = true, at = @At("RETURN"), cancellable = true)
     private void pvptweaks$sampleShield(CallbackInfoReturnable<ItemStack> cir) {
         ItemStack current = cir.getReturnValue();
         if (current != null && !current.isEmpty()) return;
@@ -27,14 +34,14 @@ public class LivingEntityShieldMixin {
         }
     }
 
-    @Inject(method = "method_6030", remap = false, at = @At("RETURN"), cancellable = true)
+    @Inject(method = "getUseItem", remap = true, at = @At("RETURN"), cancellable = true)
     private void pvptweaks$sampleUseItem(CallbackInfoReturnable<ItemStack> cir) {
         if (shouldFakeActive()) {
             cir.setReturnValue(ShieldSampleStack.INSTANCE);
         }
     }
 
-    @Inject(method = "method_6014", remap = false, at = @At("RETURN"), cancellable = true)
+    @Inject(method = "getUseItemRemainingTicks", remap = true, at = @At("RETURN"), cancellable = true)
     private void pvptweaks$sampleUseTicks(CallbackInfoReturnable<Integer> cir) {
         if (shouldFakeActive()) {
             cir.setReturnValue(100);

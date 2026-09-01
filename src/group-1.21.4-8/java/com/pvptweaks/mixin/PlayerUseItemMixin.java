@@ -1,14 +1,14 @@
 package com.pvptweaks.mixin;
 
 import com.pvptweaks.config.PvpTweaksConfig;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.InteractionHand;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(LivingEntity.class)
+@Mixin(LocalPlayer.class)
 public class PlayerUseItemMixin {
 
     @Inject(method = "isUsingItem", remap = true, at = @At("RETURN"), cancellable = true)
@@ -26,5 +26,4 @@ public class PlayerUseItemMixin {
             cir.setReturnValue(InteractionHand.OFF_HAND);
         }
     }
-
 }
