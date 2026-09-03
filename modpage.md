@@ -152,14 +152,16 @@ Clicking the in-game **"PVP Tweaks"** button opens a dedicated hub screen with i
 <details>
 <summary>🛠️ Issues, Support & Development</summary>
 
-* **Issue Tracker:** Report bugs or crashes on [GitHub Issues](https://github.com/viper-trick/pvp-tweaks/issues). Please attach your `latest.log` file along with a description of the issue.
-* **Direct Contact:** Reach out via email at `yag.fvt@gmail.com`.
+* **Issue Tracker:**
+ [![Report Issues](https://img.shields.io/badge/Report_an_Issue-GitHub-181717?style=for-the-badge&logo=github)](https://github.com/viper-trick/pvp-tweaks/issues)
+
+* **Direct Contact:** Reach out via email at `yag.fvt@gmail.com`
 
 *Note: AI assistance was utilized during development to optimize workflow; all code has been line-by-line reviewed, tested, and verified for security and stability by a human developer.*
 
 💡 Notes on Compatibility & Testing
 
-> Primary testing is conducted on Minecraft **26.2** *(Linux Mint, GNOME, X11)*.
+> Primary testing is conducted on Minecraft **26.2-1.21.11** *(Linux Mint, GNOME, X11)*.
 > All other supported versions are currently in Beta - while core features should function normally, minor version-specific variations may occur.
 >I need beta testers please contact me on Discord: vipertrick
 
@@ -172,11 +174,20 @@ The mod hasn't really been officially released yet, it's still in development. I
 ---
 
 <details>
+<summary>🤙Talk to me</summary>
+  
+## Discord: vipertrick
+## mail: yag.fvt@gmail.com
+
+</details>
+
+
+---
+<details>
 <summary>📌 License & Code Usage</summary>
 
 This project is published under **All Rights Reserved**.
 
-If you would like to use parts of this code in another project or integrate it elsewhere, please contact `yag.fvt@gmail.com` first. Requests are generally welcomed! However, reuploading this mod or modified versions of it to any platform (Modrinth, CurseForge, etc.) without explicit prior permission is strictly prohibited.
+If you would like to use parts of this code in another project or integrate it elsewhere, please contact me first. Requests are generally welcomed! However, reuploading this mod or modified versions of it to any platform (Modrinth, CurseForge, etc.) without explicit prior permission is strictly prohibited.
 
 </details>
-
