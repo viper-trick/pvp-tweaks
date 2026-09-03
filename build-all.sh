@@ -2,7 +2,7 @@
 set -uo pipefail
 cd "$(dirname "$0")"
 
-# Group builds — each JAR covers a range of compatible MC versions
+# Group builds - each JAR covers a range of compatible MC versions
 VERSION_GROUPS=(
     "1.21.4-5"
     "1.21.6-8"

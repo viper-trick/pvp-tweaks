@@ -12,7 +12,7 @@ import java.util.List;
 
 /**
  * Injects the PVP Tweaks dynamic resource pack into the reload pipeline.
- * createReload(Executor, Executor, CompletableFuture, List) — we inject at
+ * createReload(Executor, Executor, CompletableFuture, List) - we inject at
  * RETURN and swap in a modified list for the ReloadInstance.
  *
  * Note: This doesn't let us modify the original list param, but the dynamic
@@ -23,7 +23,7 @@ public class ResourcePackInjectMixin {
 
     @Inject(method = "createReload", at = @At("HEAD"), require = 0)
     private void pvptweaks$injectFirePack(CallbackInfoReturnable<?> cir) {
-        // This mixin is intentionally minimal — the PvpTweaksDynamicPack is
+        // This mixin is intentionally minimal - the PvpTweaksDynamicPack is
         // injected through the PackRepository mixin instead.
         // Keeping this as a placeholder to avoid class load failures.
     }

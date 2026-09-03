@@ -206,7 +206,7 @@ public class ModernSoundPickerScreen extends Screen {
                 return;
             }
         }
-        // File is in SOUNDS_DIR but not auto-selected (shouldn't happen) — just show it
+        // File is in SOUNDS_DIR but not auto-selected (shouldn't happen) - just show it
     }
 
     public void refreshCustomTab() { if (tab == 2) list.refresh(2); }

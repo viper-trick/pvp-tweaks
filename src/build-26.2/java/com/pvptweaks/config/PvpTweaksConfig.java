@@ -100,7 +100,7 @@ public class PvpTweaksConfig {
     public int     anchorExplosionParticlePct = 0;  // anchor explosion volume  // crystal explosion particles
     public boolean showHitParticles     = true;
 
-    // Other Explosions — per-type volume + particles
+    // Other Explosions - per-type volume + particles
     public int tntExplosionVolumePct       = 100;
     public int tntExplosionParticlePct     = 100;
     public int creeperExplosionVolumePct   = 100;
@@ -153,7 +153,7 @@ public class PvpTweaksConfig {
     public boolean zoomSmoothCamera = true;
     public String zoomManagementMode = net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("zoomify") ? "zoomify" : "pvp-tweaks";
 
-    // Plants Control (ported from GRM — client-side only)
+    // Plants Control (ported from GRM - client-side only)
     public boolean plantsControlEnabled = false;
     public java.util.Set<String> hiddenPlants  = new java.util.HashSet<>();
     public java.util.Set<String> outlinePlants = new java.util.HashSet<>();
@@ -186,14 +186,14 @@ public class PvpTweaksConfig {
     public float getTotemPopAnimScale()    { return totemPopAnimScalePct / 100.0f; }
     public float getArmorScale()           { return armorScalePct / 100.0f; }
 
-    // Per-type explosion multipliers — volume
+    // Per-type explosion multipliers - volume
     public float getTntExplosionMultiplier()     { return tntExplosionVolumePct     / 100.0f; }
     public float getCreeperExplosionMultiplier() { return creeperExplosionVolumePct / 100.0f; }
     public float getBedExplosionMultiplier()     { return bedExplosionVolumePct     / 100.0f; }
     public float getGhastExplosionMultiplier()   { return ghastExplosionVolumePct   / 100.0f; }
     public float getWindChargeMultiplier()       { return windChargeVolumePct       / 100.0f; }
 
-    // Per-type explosion multipliers — particles
+    // Per-type explosion multipliers - particles
     public float getTntExplosionParticleRatio()     { return tntExplosionParticlePct     / 100.0f; }
     public float getCreeperExplosionParticleRatio() { return creeperExplosionParticlePct / 100.0f; }
     public float getBedExplosionParticleRatio()     { return bedExplosionParticlePct     / 100.0f; }

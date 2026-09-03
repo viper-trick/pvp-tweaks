@@ -27,8 +27,8 @@ All Rights Reserved. The source code is made available for educational and revie
 - Fabric API (any version matching the Minecraft target)
 
 **Optional:**
-- Mod Menu — adds a config screen button in the mods list
-- Cloth Config — required for the legacy settings screen
+- Mod Menu - adds a config screen button in the mods list
+- Cloth Config - required for the legacy settings screen
 
 ## Building
 

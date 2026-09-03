@@ -36,7 +36,7 @@ public class ParticleManagerMixin {
 
         if (seen.add(p)) PvpTweaksMod.LOGGER.info("[PVP Tweaks] Particle seen: {}", p);
 
-        // Explosion particles — crystal and anchor use own sliders; "other" uses per-type
+        // Explosion particles - crystal and anchor use own sliders; "other" uses per-type
         if (p.equals("explosion") || p.equals("explosion_emitter")
                 || p.equals("poof") || p.equals("large_smoke") || p.equals("smoke")) {
             float r;

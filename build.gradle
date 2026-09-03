@@ -10,7 +10,7 @@ buildscript {
 }
 
 subprojects {
-    // 26.x versions are unobfuscated — use the non-remapping loom plugin
+    // 26.x versions are unobfuscated - use the non-remapping loom plugin
     def isUnobfuscated = project.name.startsWith('26')
 
     if (isUnobfuscated) {

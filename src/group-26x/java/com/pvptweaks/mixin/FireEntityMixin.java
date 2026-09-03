@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * In 26.1, FlameFeatureRenderer.renderSolid(SubmitNodeCollection, MultiBufferSource$BufferSource, AtlasManager)
  * replaces the old FireCommandRenderer.method_73005(MatrixStack.Entry, ...).
- * The new API has no PoseStack to scale — fire entity scaling is not directly portable.
+ * The new API has no PoseStack to scale - fire entity scaling is not directly portable.
  */
 @Mixin(FlameFeatureRenderer.class)
 public class FireEntityMixin {

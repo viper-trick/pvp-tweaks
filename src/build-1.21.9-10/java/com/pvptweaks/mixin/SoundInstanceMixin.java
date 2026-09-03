@@ -22,7 +22,7 @@ public class SoundInstanceMixin {
         float original = cir.getReturnValue();
         String path = id.getPath();
 
-        // entity.generic.explode — identify by position what kind of explosion this is
+        // entity.generic.explode - identify by position what kind of explosion this is
         if (path.equals("entity.generic.explode") || path.contains("explode") || path.contains("explosion")) {
             double x = self.getX(), y = self.getY(), z = self.getZ();
             if (ExplosionTracker.isNearCrystal(x, y, z)) {

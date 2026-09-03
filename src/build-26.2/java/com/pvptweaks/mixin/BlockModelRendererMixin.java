@@ -11,9 +11,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * Ported from GRM (your own code — no license concerns).
+ * Ported from GRM (your own code - no license concerns).
  *
- * Targets BlockBehaviour.BlockStateBase.getRenderType() —
+ * Targets BlockBehaviour.BlockStateBase.getRenderType() -
  * called by EVERY renderer (vanilla, Sodium, Iris, etc.) before any geometry is built.
  * Returning INVISIBLE means the block is skipped entirely at the chunk-build stage.
  */

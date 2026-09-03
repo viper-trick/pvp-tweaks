@@ -12,7 +12,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 
 /**
- * Plants Control screen — ported from GRM (user's own code, client-side only).
+ * Plants Control screen - ported from GRM (user's own code, client-side only).
  *
  * Two tabs: Hide (hides rendering) and Outline (hides selection outline).
  * Features: search, scroll, Select All / Deselect All, per-block toggles.
@@ -183,7 +183,7 @@ public class PlantsControlScreen extends Screen {
 
         String tabLabel = tab == 0 ? "§aHide Rendering" : "§bHide Outline";
         ctx.drawString(font,
-            Component.literal("§7" + tabLabel + "  §8— Click a plant to toggle"),
+            Component.literal("§7" + tabLabel + "  §8- Click a plant to toggle"),
             4, LIST_Y - 32, 0xFFAAAAAA);
 
         if (!statusMsg.isEmpty())

@@ -14,7 +14,7 @@ import org.lwjgl.glfw.GLFW;
 @Environment(EnvType.CLIENT)
 public class PvpTweaksClient implements ClientModInitializer {
 
-    /** Gamma saved before fullbright was enabled — restored when disabled. */
+    /** Gamma saved before fullbright was enabled - restored when disabled. */
     private static double savedGamma = -1.0;
     
     public static KeyMapping openMenuKeyBinding;

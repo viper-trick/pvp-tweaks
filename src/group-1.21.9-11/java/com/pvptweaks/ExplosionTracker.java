@@ -15,7 +15,7 @@ public final class ExplosionTracker {
     private static double crystalX, crystalY, crystalZ;
     private static long   crystalTime = 0L;
 
-    // "Other" explosion — latest recorded position + type
+    // "Other" explosion - latest recorded position + type
     private static double   otherX, otherY, otherZ;
     private static long     otherTime = 0L;
     private static OtherType otherType = OtherType.GENERIC;

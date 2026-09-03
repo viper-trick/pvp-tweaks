@@ -12,10 +12,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Ported from GRM (your own code — no license concerns).
+ * Ported from GRM (your own code - no license concerns).
  *
  * Cancels the selection outline for blocks listed in cfg.outlinePlants.
- * Handler intentionally takes only CallbackInfo — Mixin allows this
+ * Handler intentionally takes only CallbackInfo - Mixin allows this
  * even if the target method has many params.
  */
 @Mixin(LevelRenderer.class)

@@ -105,7 +105,7 @@ public class DurabilityHudRenderer {
                 // Trigger alert sound
                 boolean shouldPlay;
                 if (cfg.durabilityAlertSoundOnce) {
-                    // Play once only — stop repeating after first play
+                    // Play once only - stop repeating after first play
                     shouldPlay = !alertPlayed;
                 } else {
                     // Original behaviour: repeat every 5 seconds

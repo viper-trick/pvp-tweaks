@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Manages named profiles — snapshots of the full PvpTweaksConfig and Minecraft Keybinds.
+ * Manages named profiles - snapshots of the full PvpTweaksConfig and Minecraft Keybinds.
  * Each profile is stored as a separate JSON file in:
  *   config/pvptweaks/profiles/<name>.json
  */
@@ -306,13 +306,13 @@ public class PvpTweaksProfiles {
         c.crystalOptimizer = true;
         c.anchorOptimizer  = true;
 
-        // Sounds — Silent Explosions
+        // Sounds - Silent Explosions
         c.explosionVolumePct       = 0;
         c.hitVolumePct             = 100;
         c.crystalPopVolumePct      = 0;
         c.respawnAnchorExplosionPct = 0;
 
-        // Particles — Minimal
+        // Particles - Minimal
         c.explosionParticlePct      = 0;
         c.crystalParticlePct        = 0;
         c.enderExplosionParticlePct = 5;  // Totem particles 5

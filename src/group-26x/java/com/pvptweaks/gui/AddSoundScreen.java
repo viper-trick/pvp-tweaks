@@ -60,7 +60,7 @@ public class AddSoundScreen extends Screen {
         }));
 
         int row3 = row2 + 28;
-        // Import & Save — the main action
+        // Import & Save - the main action
         addRenderableWidget(new ModernButtonWidget(cx - 155, row3, 310, 24,
                 Component.literal("\u00a7a\u2714 Import & Save"), () -> {
             String input = pathField.getValue().trim();
@@ -73,7 +73,7 @@ public class AddSoundScreen extends Screen {
                 Component.literal("\u2716 Cancel"), () -> minecraft.setScreen(parent)));
     }
 
-    /** Vanilla drag-and-drop (may be blocked in Flatpak — Browse button is the fallback). */
+    /** Vanilla drag-and-drop (may be blocked in Flatpak - Browse button is the fallback). */
     @Override
     public void onFilesDrop(List<Path> paths) {
         if (!paths.isEmpty()) {
@@ -92,7 +92,7 @@ public class AddSoundScreen extends Screen {
         new Thread(() -> {
             String picked = null;
 
-            // 1. Swing JFileChooser — universal Java, works on Windows/Mac/Linux
+            // 1. Swing JFileChooser - universal Java, works on Windows/Mac/Linux
             picked = swingPicker();
 
             // 2. Flatpak portal zenity
@@ -138,7 +138,7 @@ public class AddSoundScreen extends Screen {
         }, "PvpTweaks-FilePicker").start();
     }
 
-    /** Swing JFileChooser — runs in its own daemon thread to avoid EDT/LWJGL conflicts. */
+    /** Swing JFileChooser - runs in its own daemon thread to avoid EDT/LWJGL conflicts. */
     private String swingPicker() {
         final String[] result = {null};
         try {

@@ -17,7 +17,7 @@ public class ExplosionPacketMixin {
         Vec3 c = packet.center();
         float radius = packet.radius();
 
-        // Crystal (radius ≥ 5.5) and Anchor (radius ≥ 4.5) — existing logic
+        // Crystal (radius ≥ 5.5) and Anchor (radius ≥ 4.5) - existing logic
         if (radius >= 5.5f) {
             ExplosionTracker.recordCrystal(c.x, c.y, c.z);
             return;

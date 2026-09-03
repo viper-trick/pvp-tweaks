@@ -54,7 +54,7 @@ public class SoundSubCategoryScreen extends Screen {
                 y += spacing;
             }
             if (cfg.extraSounds.isEmpty()) {
-                addRenderableWidget(new ModernButtonWidget(x, y, 200, 20, Component.literal("No extra sounds yet — add one below"), () -> {}));
+                addRenderableWidget(new ModernButtonWidget(x, y, 200, 20, Component.literal("No extra sounds yet - add one below"), () -> {}));
                 y += spacing;
             }
             addRenderableWidget(new ModernButtonWidget(x, y, 110, 20, Component.literal("+ Add Sound"), () -> {

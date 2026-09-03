@@ -29,7 +29,7 @@ public class ModMenuIntegration implements ModMenuApi {
     public Map<String, ConfigScreenFactory<?>> getProvidedConfigScreenFactories() {
         Map<String, ConfigScreenFactory<?>> map = new LinkedHashMap<>();
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
-        // Sound Pickers — אחד לכל קטגוריה
+        // Sound Pickers - אחד לכל קטגוריה
         map.put("pvptweaks:sound_totem",
             parent -> new SoundPickerScreen(parent, parent, cfg.soundTotem,    "Totem Pop",       PvpTweaksConfig::save));
         map.put("pvptweaks:sound_crystal",
