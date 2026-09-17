@@ -16,10 +16,6 @@ Comprehensive PVP performance and visual optimizations for Modern Minecraft (1.2
 
 Access settings via the config keybind or the Mod Menu screen (if installed). A modern hub GUI is available by default; a Cloth Config–based legacy menu can be enabled as an alternative.
 
-## License
-
-All Rights Reserved. The source code is made available for educational and review purposes only. You may not distribute, sublicense, or sell modified or unmodified builds of this mod.
-
 ## Dependencies
 
 **Required:**
