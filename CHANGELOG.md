@@ -9,6 +9,7 @@
 - Updated mod version to 1.9.4 across all supported Minecraft versions
 - Ported the sample shield / Active Pose feature set to all 1.21.x branches (1.21.4–1.21.11), using a shared `ShieldSampleStack` so the sample renders reliably across group builds
 - Added missing `pvptweaks.mixins.json` to the 1.21.4–5, 1.21.6–8, and 1.21.9–10 build trees
+- Combined 26.2 and 26.3 into `26.2-3` group build, adding compatibility for Minecraft 26.3
 
 ## 1.9.3
 

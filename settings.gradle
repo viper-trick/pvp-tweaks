@@ -14,7 +14,7 @@ def groups = [
     "1.21.9-10": "build-1.21.9-10",
     "1.21.11":   "build-1.21.11",
     "26.1.x":    "build-26.1",
-    "26.2":      "build-26.2",
+    "26.2-3":    "build-26.2-3",
 ]
 groups.each { name, dir ->
     String safeName = name.replace('.', '_').replace('-', '_')
