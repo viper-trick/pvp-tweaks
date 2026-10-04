@@ -44,4 +44,5 @@ if [ ${#FAILED[@]} -eq 0 ]; then
 else
     echo "The following groups FAILED: ${FAILED[*]}"
     echo "Successful JARs copied to final-jars/"
+    exit 1
 fi
