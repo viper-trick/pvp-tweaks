@@ -184,7 +184,7 @@ public class PlantsControlScreen extends Screen {
 
         String tabLabel = tab == 0 ? "§aHide Rendering" : "§bHide Outline";
         ctx.text(font,
-            Component.literal("§7" + tabLabel + "  §8- MouseButtonEvent a plant to toggle"),
+            Component.literal("§7" + tabLabel + "  §8— MouseButtonEvent a plant to toggle"),
             4, LIST_Y - 32, 0xFFAAAAAA);
 
         if (!statusMsg.isEmpty())

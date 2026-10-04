@@ -1,5 +1,4 @@
 package com.pvptweaks.mixin;
-
 import com.pvptweaks.config.PvpTweaksConfig;
 import com.pvptweaks.util.ShieldSampleStack;
 import net.minecraft.client.renderer.ItemInHandRenderer;
@@ -10,20 +9,21 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 @Mixin(ItemInHandRenderer.class)
 public class ShieldRendererMixin {
-
     @Shadow private ItemStack offHandItem;
 
-    @Inject(method = {"submitHandsWithItems", "renderHandsWithItems"}, at = @At("HEAD"), require = 0)
+    @Inject(method = "submitHandsWithItems", at = @At("HEAD"))
     private void pvptweaks$sampleShieldPreRender(
-            float tickDelta,
-            com.mojang.blaze3d.vertex.PoseStack matrices,
-            net.minecraft.client.renderer.SubmitNodeCollector collector,
-            net.minecraft.client.player.LocalPlayer player,
-            int light,
-            CallbackInfo ci) {
+            final float tickDelta,
+            final PoseStack matrices,
+            final SubmitNodeCollector collector,
+            final net.minecraft.client.player.LocalPlayer player,
+            final int light,
+            final CallbackInfo ci
+    ) {
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         if (cfg.shieldSampleShield && PvpTweaksConfig.adjusterOpen) {
             if (offHandItem == null || offHandItem.isEmpty()) {
@@ -34,14 +34,14 @@ public class ShieldRendererMixin {
 
     @Inject(method = "renderItem", at = @At("HEAD"))
     private void pvptweaks$shieldOffset(
-            net.minecraft.world.entity.LivingEntity entity,
-            ItemStack itemStack,
-            net.minecraft.world.item.ItemDisplayContext displayContext,
-            com.mojang.blaze3d.vertex.PoseStack matrices,
-            net.minecraft.client.renderer.SubmitNodeCollector collector,
-            int light,
-            CallbackInfo ci) {
-
+            final net.minecraft.world.entity.LivingEntity entity,
+            final ItemStack itemStack,
+            final net.minecraft.world.item.ItemDisplayContext displayContext,
+            final PoseStack matrices,
+            final SubmitNodeCollector collector,
+            final int light,
+            final CallbackInfo ci
+    ) {
         if (matrices == null || itemStack == null || itemStack.isEmpty()) return;
         if (itemStack.getItem() != Items.SHIELD) return;
 
