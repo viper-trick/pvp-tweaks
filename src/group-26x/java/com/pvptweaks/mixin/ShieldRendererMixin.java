@@ -15,7 +15,7 @@ import net.minecraft.client.renderer.SubmitNodeCollector;
 public class ShieldRendererMixin {
     @Shadow private ItemStack offHandItem;
 
-    @Inject(method = "submitHandsWithItems", at = @At("HEAD"))
+    @Inject(method = "renderHandsWithItems", at = @At("HEAD"))
     private void pvptweaks$sampleShieldPreRender(
             final float tickDelta,
             final PoseStack matrices,
