@@ -1,4 +1,6 @@
-package com.pvptweaks.mixin;
+import glob
+
+content = """package com.pvptweaks.mixin;
 
 import com.pvptweaks.config.PvpTweaksConfig;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -32,3 +34,9 @@ public class InGameOverlayRendererMixin {
         }
     }
 }
+"""
+
+for path in glob.glob("src/group-26x/**/InGameOverlayRendererMixin.java", recursive=True) + glob.glob("src/build-26.3/**/InGameOverlayRendererMixin.java", recursive=True):
+    with open(path, "w") as f:
+        f.write(content)
+    print(f"Updated: {path}")

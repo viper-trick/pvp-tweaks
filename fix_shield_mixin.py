@@ -1,4 +1,6 @@
-package com.pvptweaks.mixin;
+import glob
+
+content = """package com.pvptweaks.mixin;
 
 import com.pvptweaks.config.PvpTweaksConfig;
 import com.pvptweaks.util.ShieldSampleStack;
@@ -72,3 +74,10 @@ public class ShieldRendererMixin {
         }
     }
 }
+"""
+
+for path in glob.glob("src/build-26.3/**/ShieldRendererMixin.java", recursive=True):
+    with open(path, "w") as f:
+        f.write(content)
+    print(f"Successfully updated {path}")
+

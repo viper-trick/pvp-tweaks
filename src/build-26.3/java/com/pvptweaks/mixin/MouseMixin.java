@@ -6,7 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.MouseButtonInfo;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -23,7 +23,7 @@ public class MouseMixin {
 
     @Inject(method = "onButton", at = @At("HEAD"))
     private void pvptweaks$onMouseButton(long window, MouseButtonInfo info, int action, CallbackInfo ci) {
-        if (action == GLFW.GLFW_PRESS && minecraft != null && minecraft.options != null) {
+        if (action == InputConstants.PRESS && minecraft != null && minecraft.options != null) {
             MouseButtonEvent click = new MouseButtonEvent(0.0, 0.0, info);
             if (minecraft.options.keyAttack.matchesMouse(click)) {
                 CpsTracker.registerClick(0);

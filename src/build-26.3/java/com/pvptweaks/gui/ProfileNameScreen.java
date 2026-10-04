@@ -5,7 +5,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
 import net.minecraft.client.input.KeyEvent;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 import java.util.function.Consumer;
 
 public class ProfileNameScreen extends Screen {
@@ -43,8 +43,8 @@ public class ProfileNameScreen extends Screen {
 
     @Override
     public boolean keyPressed(KeyEvent input) {
-        if (input.key() == GLFW.GLFW_KEY_ENTER) { confirm(); return true; }
-        if (input.key() == GLFW.GLFW_KEY_ESCAPE) { minecraft.setScreenAndShow(parent); return true; }
+        if (input.key() == InputConstants.KEY_RETURN) { confirm(); return true; }
+        if (input.key() == InputConstants.KEY_ESCAPE) { minecraft.setScreenAndShow(parent); return true; }
         return super.keyPressed(input);
     }
 

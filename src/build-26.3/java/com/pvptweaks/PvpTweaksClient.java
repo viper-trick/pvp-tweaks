@@ -11,7 +11,6 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.resources.Identifier;
 import com.mojang.blaze3d.platform.InputConstants;
-import org.lwjgl.glfw.GLFW;
 
 @Environment(EnvType.CLIENT)
 public class PvpTweaksClient implements ClientModInitializer {
@@ -27,15 +26,15 @@ public class PvpTweaksClient implements ClientModInitializer {
 
         openMenuKeyBinding = new KeyMapping(
                 "key.pvptweaks.open_menu",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_UNKNOWN,
+                InputConstants.Type.KEYBOARD,
+                InputConstants.UNKNOWN.getValue(),
                 KeyMapping.Category.MISC
         );
 
         zoomKeyBinding = new KeyMapping(
                 "key.pvptweaks.zoom",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_C,
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_C,
                 KeyMapping.Category.MISC
         );
 

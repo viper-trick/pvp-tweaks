@@ -28,7 +28,7 @@ public abstract class SoundRedirectMixin {
     @Unique
     private SoundProfile pvptweaks$matchedProfile;
 
-    @Inject(method = "resolve", at = @At("HEAD"))
+    @Inject(method = "getOrResolve", at = @At("HEAD"))
     private void pvptweaks$identifyProfile(SoundManager manager, CallbackInfoReturnable<WeighedSoundEvents> cir) {
         SoundInstance self = (SoundInstance)(Object) this;
         Identifier current = self.getIdentifier();
@@ -100,7 +100,7 @@ public abstract class SoundRedirectMixin {
         }
     }
 
-    @Inject(method = "resolve", at = @At("RETURN"))
+    @Inject(method = "getOrResolve", at = @At("RETURN"))
     private void pvptweaks$redirectSoundSet(SoundManager manager,
             CallbackInfoReturnable<WeighedSoundEvents> cir) {
 

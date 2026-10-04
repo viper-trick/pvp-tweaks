@@ -36,12 +36,15 @@ public class ResourcePackManagerMixin {
         );
 
         Pack.ResourcesSupplier factory = new Pack.ResourcesSupplier() {
-            @Override public PackResources openPrimary(PackLocationInfo info) {
-                return new com.pvptweaks.resources.PvpTweaksDynamicPack();
+            @Override
+            public net.minecraft.server.packs.PackMetadataResources openMetadata(PackLocationInfo info) {
+                return null;
             }
-            @Override public PackResources openFull(PackLocationInfo info, Pack.Metadata metadata) {
-                return openPrimary(info);
+
+            @Override public java.util.stream.Stream<PackResources> openResources(PackLocationInfo info, Pack.Metadata metadata) {
+                return java.util.stream.Stream.of(new com.pvptweaks.resources.PvpTweaksDynamicPack());
             }
+            
         };
 
         Pack profile = Pack.readMetaAndCreate(

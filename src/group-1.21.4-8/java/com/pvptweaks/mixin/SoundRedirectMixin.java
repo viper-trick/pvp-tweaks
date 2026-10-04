@@ -28,7 +28,7 @@ public abstract class SoundRedirectMixin {
     @Unique
     private SoundProfile pvptweaks$matchedProfile;
 
-    @Inject(method = "resolve", at = @At("HEAD"))
+    @Inject(method = "getOrResolve", at = @At("HEAD"))
     private void pvptweaks$identifyProfile(SoundManager manager, CallbackInfoReturnable<WeighedSoundEvents> cir) {
         SoundInstance self = (SoundInstance)(Object) this;
         ResourceLocation current = self.getLocation();
@@ -64,7 +64,7 @@ public abstract class SoundRedirectMixin {
         else if (path.contains("shield") && path.contains("break")) pvptweaks$matchedProfile = cfg.soundShieldBreak;
     }
 
-    @Inject(method = "resolve", at = @At("RETURN"), cancellable = true)
+    @Inject(method = "getOrResolve", at = @At("RETURN"), cancellable = true)
     private void pvptweaks$redirectSoundSet(SoundManager manager,
             CallbackInfoReturnable<WeighedSoundEvents> cir) {
 

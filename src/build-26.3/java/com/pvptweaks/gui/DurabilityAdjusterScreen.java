@@ -10,8 +10,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
-import org.lwjgl.glfw.GLFW;
-
+import com.mojang.blaze3d.platform.InputConstants;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -210,11 +209,11 @@ public class DurabilityAdjusterScreen extends Screen {
     public boolean keyPressed(KeyEvent input) {
         PvpTweaksConfig cfg = PvpTweaksConfig.get();
         float step = 0.1f;
-        if (input.key() == GLFW.GLFW_KEY_UP) { cfg.durabilityHudY -= step; }
-        else if (input.key() == GLFW.GLFW_KEY_DOWN) { cfg.durabilityHudY += step; }
-        else if (input.key() == GLFW.GLFW_KEY_LEFT) { cfg.durabilityHudX -= step; }
-        else if (input.key() == GLFW.GLFW_KEY_RIGHT) { cfg.durabilityHudX += step; }
-        else if (input.key() == GLFW.GLFW_KEY_ESCAPE || input.key() == GLFW.GLFW_KEY_H) {
+        if (input.key() == InputConstants.KEY_UP) { cfg.durabilityHudY -= step; }
+        else if (input.key() == InputConstants.KEY_DOWN) { cfg.durabilityHudY += step; }
+        else if (input.key() == InputConstants.KEY_LEFT) { cfg.durabilityHudX -= step; }
+        else if (input.key() == InputConstants.KEY_RIGHT) { cfg.durabilityHudX += step; }
+        else if (input.key() == InputConstants.KEY_ESCAPE || input.key() == InputConstants.KEY_H) {
             PvpTweaksConfig.save(); minecraft.setScreenAndShow(parent); return true;
         }
         cfg.durabilityHudX = Mth.clamp(cfg.durabilityHudX, 0, 100);

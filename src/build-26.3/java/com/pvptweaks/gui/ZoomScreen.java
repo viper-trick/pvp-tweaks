@@ -8,7 +8,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 public class ZoomScreen extends Screen {
     private final Screen parent;
@@ -136,7 +136,7 @@ public class ZoomScreen extends Screen {
     @Override
     public boolean keyPressed(KeyEvent input) {
         if (listeningForKeybind) {
-            if (input.key() == GLFW.GLFW_KEY_ESCAPE) {
+            if (input.key() == InputConstants.KEY_ESCAPE) {
                 PvpTweaksClient.zoomKeyBinding.setKey(InputConstants.UNKNOWN);
             } else {
                 PvpTweaksClient.zoomKeyBinding.setKey(InputConstants.getKey(input));

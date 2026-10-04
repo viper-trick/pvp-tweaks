@@ -26,7 +26,7 @@
   "mixins": [ "pvptweaks.mixins.json" ],
 
   "depends": {
-    "fabricloader": ">=0.18.4",
+    "fabricloader": ">=0.19.5",
     "fabric-api":   "*",
     "minecraft":    "${minecraft_version_range}"
   },

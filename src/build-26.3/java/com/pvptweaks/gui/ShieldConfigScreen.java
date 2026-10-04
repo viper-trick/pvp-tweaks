@@ -5,7 +5,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.client.input.KeyEvent;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 public class ShieldConfigScreen extends Screen {
     private final Screen parent;
@@ -95,7 +95,7 @@ public class ShieldConfigScreen extends Screen {
 
     @Override
     public boolean keyPressed(KeyEvent input) {
-        if (input.key() == GLFW.GLFW_KEY_H || input.key() == GLFW.GLFW_KEY_ESCAPE) {
+        if (input.key() == InputConstants.KEY_H || input.key() == InputConstants.KEY_ESCAPE) {
             PvpTweaksConfig.save();
             minecraft.setScreenAndShow(parent);
             return true;
