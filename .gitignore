@@ -22,11 +22,25 @@ Thumbs.db
 # Build output
 bin/
 final-jars/
+local-jar/
 Archivesrc/
+
+# Per-subproject build/run output (Gradle buildDir lands inside src/)
+src/build-*/build/
+src/build-*/run/
 
 # Minecraft dev
 run/
 tmp_src/
 
+# Stray decompiled classes
+/net/
+
 # Scratch
 untitled/
+
+# Leftover dirs committed by mistake (untrack with: git rm -r --cached 26_1_x 26_2 26_3 assets)
+/26_1_x/
+/26_2/
+/26_3/
+/assets/
