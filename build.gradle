@@ -78,6 +78,12 @@ subprojects {
 
         minecraft "com.mojang:minecraft:${project.minecraft_version}"
 
+        // Mapping selection is driven per group by `use_mojmap` / `yarn_mappings`.
+        // 26.x is unobfuscated (no client_mappings / no intermediary): Loom pins the
+        // production namespace to `official` automatically, so those groups already
+        // compile against Mojang's official names (mojmap) and declaring mappings
+        // there is rejected ("Cannot use Mojang mappings in a non-obfuscated
+        // environment"). Hence `use_mojmap=true` on 26.x is implicit, not declared.
         if (!isUnobfuscated) {
             if (project.hasProperty('use_mojmap') && project.use_mojmap == "true") {
                 mappings loom.officialMojangMappings()

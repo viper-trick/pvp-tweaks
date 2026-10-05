@@ -1,34 +1,40 @@
 package com.pvptweaks.mixin;
 
 import com.pvptweaks.config.PvpTweaksConfig;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.ScreenEffectRenderer;
-import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.state.level.PlayerRenderState;
+import com.mojang.blaze3d.vertex.PoseStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 @Mixin(ScreenEffectRenderer.class)
 public class InGameOverlayRendererMixin {
 
-    @Inject(method = "renderItemActivationAnimation", at = @At("HEAD"), cancellable = true)
-    private void pvptweaks$scaleTotemAnim(
-            PlayerRenderState playerRenderState,
-            PoseStack poseStack,
-            float partialTick,
-            SubmitNodeCollector submitNodeCollector,
-            CallbackInfo ci
-    ) {
-        PvpTweaksConfig cfg = PvpTweaksConfig.get();
-        if (cfg == null) return;
+    @Inject(method = "renderItemActivationAnimation", at = @At("HEAD"), cancellable = true, require = 0)
+    private void pvptweaks$cancelTotemAnim(PlayerRenderState playerRenderState, PoseStack poseStack, float alpha, net.minecraft.client.renderer.SubmitNodeCollector submitNodes, CallbackInfo ci) {
 
-        float scale = cfg.getTotemPopAnimScale();
-        if (scale <= 0.0f) {
+        if (PvpTweaksConfig.get().getTotemPopAnimScale() <= 0.0f)
             ci.cancel();
-        } else if (scale != 1.0f) {
-            poseStack.scale(scale, scale, scale);
+    }
+
+    @ModifyArgs(
+        method = "renderItemActivationAnimation",
+        at = @At(
+            value = "INVOKE",
+            target = "Lcom/mojang/blaze3d/vertex/PoseStack;scale(FFF)V"
+        ),
+        require = 0
+    )
+    private static void pvptweaks$scaleTotemAnim(Args args) {
+        float s = PvpTweaksConfig.get().getTotemPopAnimScale();
+        if (s > 0.0f && Float.compare(s, 1.0f) != 0) {
+            args.set(0, (float) args.get(0) * s);
+            args.set(1, (float) args.get(1) * s);
+            args.set(2, (float) args.get(2) * s);
         }
     }
 }
