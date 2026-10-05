@@ -79,16 +79,15 @@ The subproject name uses underscores in place of dots and hyphens (`1_21_4_5` fo
 │
 ├── src/
 │   ├── group-1.21.4-8/       # Shared source: MC 1.21.4–1.21.10 (PoseStack/ResourceLocation API)
-│   │   ├── java/             # Shared Mojang-mapped source
-│   │   └── resources/        # Shared assets, mixin configs, mod metadata, icons
+│   │   └── java/             # Shared Mojang-mapped source
 │   │
-│   ├── group-1.21.9-11/      # Shared source: MC 1.21.11 (newest Identifier/Util API)
-│   │   ├── java/             # Shared Mojang-mapped source
-│   │   └── resources/        # Shared assets
+│   ├── group-1.21.11/        # Shared source: MC 1.21.11 (newest Identifier/Util API)
+│   │   └── java/             # Shared Mojang-mapped source
 │   │
-│   ├── group-26x/            # Shared source: MC 26.1–26.2 (unobfuscated shared API)
-│   │   ├── java/             # Shared Mojang-mapped source
-│   │   └── resources/        # Shared assets
+│   ├── group-26x/            # Shared source: MC 26.1–26.3 (unobfuscated shared API)
+│   │   └── java/             # Shared Mojang-mapped source
+│   │
+│   ├── shared-resources/     # Shared resources for all builds (icon.png, fire preset models)
 │   │
 │   ├── build-1.21.4-5/       # Build group: JAR covers MC 1.21.4–1.21.5
 │   │   ├── java/             # Override source
@@ -117,7 +116,7 @@ The project uses **shared source groups** to minimise duplication across 12 MC v
 | `build-1.21.4-5` | `group-1.21.4-8` | 1.21.4, 1.21.5 | `PoseStack` / `Matrix3x2fStack` |
 | `build-1.21.6-8` | `group-1.21.4-8` | 1.21.6, 1.21.7, 1.21.8 | `PoseStack` + `ItemStack` rendering API |
 | `build-1.21.9-10` | `group-1.21.4-8` | 1.21.9, 1.21.10 | Same API as 1.21.6-8 (only cosmetic diff) |
-| `build-1.21.11` | `group-1.21.9-11` | 1.21.11 | `Identifier`, new `Util`, `onPress` mouse handler |
+| `build-1.21.11` | `group-1.21.11` | 1.21.11 | `Identifier`, new `Util`, `onPress` mouse handler |
 | `build-26.1` | `group-26x` | 26.1, 26.1.1, 26.1.2 | Unobfuscated, pre-Vulkan API |
 | `build-26.2` | `group-26x` | 26.2 | Unobfuscated, Vulkan rendering API |
 

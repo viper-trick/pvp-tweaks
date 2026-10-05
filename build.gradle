@@ -34,9 +34,9 @@ subprojects {
     } else {
         def parts = mcVer.split('\\.') as List
         def patch = parts.size() > 2 ? Integer.parseInt(parts[2]) : 0
-        // Group: 1.21.11 uses Identifier/newer API; 1.21.4-10 uses ResourceLocation/older API
+        // Group: 1.21.11+ uses Identifier/newer API; 1.21.4-10 uses ResourceLocation/older API
         if (patch >= 11) {
-            sharedDir = "${rootProject.projectDir}/src/group-1.21.9-11/java"
+            sharedDir = "${rootProject.projectDir}/src/group-1.21.11/java"
         } else {
             sharedDir = "${rootProject.projectDir}/src/group-1.21.4-8/java"
         }
@@ -63,7 +63,8 @@ subprojects {
             } else {
                 java.srcDirs = [projJava, file(sharedDir)]
             }
-            resources.srcDirs = ["$projectDir/resources"]
+            // Build-specific resources first, shared resources (icon, fire models) last
+            resources.srcDirs = ["$projectDir/resources", "${rootProject.projectDir}/src/shared-resources"]
         }
     }
 
